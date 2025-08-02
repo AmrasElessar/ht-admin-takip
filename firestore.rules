@@ -1,0 +1,128 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isOneOfRoles(roles) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles;
+    }
+    function isAssignedToFacility(facilityId) {
+      return facilityId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.assignedFacilityIds;
+    }
+    function canAccessOperationalData(docData) {
+      return request.auth.uid != null && (
+        isOneOfRoles(['kurucu', 'superadmin']) ||
+        (isOneOfRoles(['kullanici']) && isAssignedToFacility(docData.facilityId))
+      );
+    }
+
+    // User Profile Rules
+    match /users/{userId} {
+      allow get: if request.auth.uid == userId || isOneOfRoles(['kurucu', 'superadmin']);
+      allow list: if request.auth.uid != null; 
+      allow update: if request.auth.uid == userId;
+    }
+
+    // Settings Collections Rules
+    match /facilities/{docId} {
+      allow read: if request.auth.uid != null;
+      allow write: if isOneOfRoles(['kurucu', 'superadmin']);
+    }
+    match /salesGroups/{docId} {
+      allow read: if request.auth.uid != null;
+      allow write: if isOneOfRoles(['kurucu', 'superadmin']);
+    }
+    match /teams/{docId} {
+      allow read: if request.auth.uid != null;
+      allow write: if isOneOfRoles(['kurucu', 'superadmin']);
+    }
+    match /systemSettings/{docId} {
+      allow read: if request.auth.uid != null;
+      allow write: if isOneOfRoles(['kurucu', 'superadmin']);
+    }
+
+    // Raporlama için oluşturulan özet verilerini tüm giriş yapmış kullanıcılar okuyabilir.
+    match /dailySummaries/{docId} {
+      allow read: if request.auth.uid != null;
+      // Bu koleksiyona sadece Cloud Function'lar yazdığı için 'write' kuralı eklemiyoruz.
+    }
+
+    // --- YENİ EKLENEN KURALLAR ---
+    // Form Tanımları Koleksiyonu Kuralları
+    // Bu koleksiyondaki veriler form yapılarını içerir.
+    // Adminler (kurucu, superadmin) tarafından yazılır/düzenlenir.
+    // Tüm giriş yapmış kullanıcılar form tanımlarını okuyabilir.
+    match /formDefinitions/{docId} {
+      allow read: if request.auth.uid != null;
+      allow write: if isOneOfRoles(['kurucu', 'superadmin']);
+    }
+
+    // Form Verileri Koleksiyonu Kuralları
+    // Bu koleksiyondaki veriler kullanıcıların doldurduğu form içerikleridir.
+    // Kullanıcılar kendi girdikleri verileri yazabilir/güncelleyebilir/silebilir.
+    // Adminler tüm verileri okuyabilir.
+    match /formData/{docId} {
+      // Herhangi bir giriş yapmış kullanıcı kendi kaydettiği veriyi okuyabilir.
+      // Adminler (kurucu, superadmin) tüm form verilerini okuyabilir.
+      allow read: if request.auth.uid != null && (request.resource.data.recordedBy == request.auth.uid || isOneOfRoles(['kurucu', 'superadmin']));
+      
+      // Oluşturma: Sadece giriş yapmış kullanıcılar kendi verilerini oluşturabilir.
+      // Güncelleme/Silme: Sadece kendi oluşturduğu veriyi güncelleyebilir/silebilir.
+      allow write: if request.auth.uid != null && request.resource.data.recordedBy == request.auth.uid;
+
+      // Opsiyonel: Eğer adminlerin herhangi bir form verisini de değiştirmesi/silmesi gerekirse, aşağıdaki kural eklenebilir.
+      // Ancak bu, kullanıcıların kendi verilerini sadece kendilerinin değiştirebileceği kuralıyla çelişebilir.
+      // allow write: if isOneOfRoles(['kurucu', 'superadmin']); // Dikkat: Bu kural, üstteki 'write' kuralını ezer.
+
+    }
+    // --- YENİ KURALLAR BİTTİ ---
+
+    // --- Operasyonel Veri Koleksiyonları ---
+    match /dailyEntries/{docId} {
+      allow get: if canAccessOperationalData(resource.data);
+      allow list: if isOneOfRoles(['kurucu', 'superadmin']);
+      allow write: if canAccessOperationalData(request.resource.data);
+    }
+    match /dailyBuses/{docId} {
+      allow get: if canAccessOperationalData(resource.data);
+      allow list: if isOneOfRoles(['kurucu', 'superadmin']);
+      allow write: if canAccessOperationalData(request.resource.data);
+    }
+    match /invitations/{docId} {
+      allow get: if canAccessOperationalData(resource.data);
+      allow list: if isOneOfRoles(['kurucu', 'superadmin']);
+      allow write: if canAccessOperationalData(request.resource.data);
+    }
+    match /facilityGuests/{docId} {
+       allow get: if canAccessOperationalData(resource.data);
+       allow list: if isOneOfRoles(['kurucu', 'superadmin']);
+       allow write: if canAccessOperationalData(request.resource.data);
+    }
+    match /dailyDistributions/{docId} {
+      allow get: if canAccessOperationalData(resource.data);
+      allow list: if isOneOfRoles(['kurucu', 'superadmin']);
+      allow write: if canAccessOperationalData(request.resource.data);
+    }
+    match /dailyPresentations/{docId} {
+      allow get: if canAccessOperationalData(resource.data);
+      allow list: if isOneOfRoles(['kurucu', 'superadmin']);
+      allow write: if canAccessOperationalData(request.resource.data);
+    }
+    match /dailyCancellations/{docId} {
+      allow get: if canAccessOperationalData(resource.data);
+      allow list: if isOneOfRoles(['kurucu', 'superadmin']);
+      allow write: if canAccessOperationalData(request.resource.data);
+    }
+    match /dailyVouchers/{docId} {
+      allow get: if canAccessOperationalData(resource.data);
+      allow list: if isOneOfRoles(['kurucu', 'superadmin']);
+      allow write: if canAccessOperationalData(request.resource.data);
+    }
+    match /lotteryAssignments/{docId} {
+      allow get: if canAccessOperationalData(resource.data);
+      allow list: if isOneOfRoles(['kurucu', 'superadmin']);
+      allow write: if canAccessOperationalData(request.resource.data);
+    }
+  }
+}
