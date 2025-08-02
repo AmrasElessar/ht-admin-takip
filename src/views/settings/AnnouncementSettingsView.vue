@@ -58,7 +58,7 @@ onMounted(async () => {
             <div class="toggle-container">
               <span>Kapalı</span>
               <label class="switch">
-                <input type="checkbox" v-model="isEnabled" />
+                <input v-model="isEnabled" type="checkbox" />
                 <span class="slider round"></span>
               </label>
               <span>Açık</span>
@@ -70,12 +70,12 @@ onMounted(async () => {
               Düşük saniye daha hızlı, yüksek saniye daha yavaş kaydırır (1-25 saniye).
             </p>
             <input
+              id="speed-slider"
+              v-model.number="speed"
               type="range"
               min="1"
               max="25"
-              v-model.number="speed"
               class="speed-slider"
-              id="speed-slider"
             />
           </div>
         </div>

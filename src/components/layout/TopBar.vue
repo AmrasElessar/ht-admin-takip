@@ -61,7 +61,7 @@ onUnmounted(() => {
       <span>Sistem Adı: HT Admin Takip</span>
     </div>
     <div class="right-section">
-      <button @click="themeStore.toggleTheme" class="theme-toggle-btn" title="Temayı Değiştir">
+      <button class="theme-toggle-btn" title="Temayı Değiştir" @click="themeStore.toggleTheme">
         <i v-if="themeStore.currentTheme === 'light'" class="fas fa-moon"></i>
         <i v-else class="fas fa-sun"></i>
       </button>
@@ -84,7 +84,7 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <button @click="handleSignOut" class="logout-btn">
+      <button class="logout-btn" @click="handleSignOut">
         <i class="fas fa-sign-out-alt"></i> Çıkış Yap
       </button>
     </div>

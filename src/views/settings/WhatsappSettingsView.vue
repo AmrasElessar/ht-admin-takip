@@ -73,35 +73,35 @@ onMounted(fetchTemplates)
     <div class="card">
       <div class="template-tabs">
         <button
-          @click="activeTemplateTab = 'invitation_report'"
           :class="{ active: activeTemplateTab === 'invitation_report' }"
+          @click="activeTemplateTab = 'invitation_report'"
         >
           Davet Raporu
         </button>
         <button
-          @click="activeTemplateTab = 'facility_arrival_report'"
           :class="{ active: activeTemplateTab === 'facility_arrival_report' }"
+          @click="activeTemplateTab = 'facility_arrival_report'"
         >
           Tesise Gelen Aile Raporu
         </button>
         <button
-          @click="activeTemplateTab = 'presentation_report'"
           :class="{ active: activeTemplateTab === 'presentation_report' }"
+          @click="activeTemplateTab = 'presentation_report'"
         >
           Tanıtım Katılım Raporu
         </button>
-        <button @click="activeTemplateTab = 'bus'" :class="{ active: activeTemplateTab === 'bus' }">
+        <button :class="{ active: activeTemplateTab === 'bus' }" @click="activeTemplateTab = 'bus'">
           Otobüs Raporu
         </button>
         <button
-          @click="activeTemplateTab = 'arrival'"
           :class="{ active: activeTemplateTab === 'arrival' }"
+          @click="activeTemplateTab = 'arrival'"
         >
           Ekip Gelen (Eski)
         </button>
         <button
-          @click="activeTemplateTab = 'voucher'"
           :class="{ active: activeTemplateTab === 'voucher' }"
+          @click="activeTemplateTab = 'voucher'"
         >
           Fiş (Eski)
         </button>
@@ -253,7 +253,7 @@ onMounted(fetchTemplates)
           </div>
         </div>
       </div>
-      <button @click="saveTemplates" class="save-btn">Tüm Şablonları Kaydet</button>
+      <button class="save-btn" @click="saveTemplates">Tüm Şablonları Kaydet</button>
     </div>
   </div>
 </template>

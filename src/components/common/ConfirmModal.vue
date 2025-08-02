@@ -8,8 +8,12 @@ const props = defineProps({
     type: String,
     default: 'Onay',
   },
-  message: String,
-  // YENİ: Onay için metin girişi gerektiren prop
+  // --- DÜZELTME BURADA ---
+  message: {
+    type: String,
+    default: '', // Varsayılan değer olarak boş bir metin atandı.
+  },
+  // -------------------------
   confirmationText: {
     type: String,
     default: null,
@@ -54,15 +58,15 @@ watch(
         Lütfen devam etmek için aşağıdaki metni kutucuğa yazın:
         <strong>{{ confirmationText }}</strong>
       </p>
-      <input type="text" v-model="userInput" :placeholder="confirmationText" />
+      <input v-model="userInput" type="text" :placeholder="confirmationText" />
     </div>
 
     <template #actions>
-      <button @click="emit('close')" class="btn-cancel">İptal</button>
+      <button class="btn-cancel" @click="emit('close')">İptal</button>
       <button
-        @click="emit('confirm')"
         class="btn-confirm-danger"
         :disabled="confirmationText && !isConfirmationMatch"
+        @click="emit('confirm')"
       >
         Evet, Onayla
       </button>

@@ -166,40 +166,39 @@ const executeReset = async () => {
       <h3>Sıfırlanacak Verileri Seçin</h3>
       <div class="checkbox-group">
         <label
-          ><input type="checkbox" v-model="resetOptions.resetData" /> Günlük Sayım Verileri (Davet,
+          ><input v-model="resetOptions.resetData" type="checkbox" /> Günlük Sayım Verileri (Davet,
           Gelen, Fiş, Otobüs, İptaller, Sunumlar, Tesis Misafirleri)</label
         >
         <label
           ><input
-            type="checkbox"
             v-model="resetOptions.resetInvitations"
+            type="checkbox"
             :disabled="resetOptions.resetData"
           />
           Davet Kayıtları</label
         >
         <label
           ><input
-            type="checkbox"
             v-model="resetOptions.resetPresentationAttendance"
+            type="checkbox"
             :disabled="resetOptions.resetData"
           />
           Tanıtım Katılım Kayıtları</label
         >
-        <label><input type="checkbox" v-model="resetOptions.resetTeams" /> Ekipler</label>
+        <label><input v-model="resetOptions.resetTeams" type="checkbox" /> Ekipler</label>
         <label
           ><input
-            type="checkbox"
             v-model="resetOptions.resetSalesGroups"
+            type="checkbox"
             :disabled="resetOptions.resetFacilities"
           />
           Satış Grupları (Yarı Kritik)</label
         >
         <label
-          ><input type="checkbox" v-model="resetOptions.resetFacilities" /> Tesisler (Kritik)</label
+          ><input v-model="resetOptions.resetFacilities" type="checkbox" /> Tesisler (Kritik)</label
         >
       </div>
       <button
-        @click="confirmReset"
         class="reset-btn"
         :disabled="
           isLoading ||
@@ -210,6 +209,7 @@ const executeReset = async () => {
             !resetOptions.resetInvitations &&
             !resetOptions.resetPresentationAttendance)
         "
+        @click="confirmReset"
       >
         <span v-if="isLoading">Sıfırlanıyor...</span>
         <span v-else>Seçilenleri Sıfırla</span>
@@ -223,7 +223,7 @@ const executeReset = async () => {
       :show="showConfirmModal"
       title="Sıfırlama Onayı"
       :message="confirmModalMessage"
-      :confirmationText="'ONAYLIYORUM'"
+      :confirmation-text="'ONAYLIYORUM'"
       @close="showConfirmModal = false"
       @confirm="executeReset"
     />

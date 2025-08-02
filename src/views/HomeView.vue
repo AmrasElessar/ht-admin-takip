@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { db, auth } from '../firebaseConfig'
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
 import SkeletonLoader from '../components/common/SkeletonLoader.vue'
 import { handleError } from '@/utils/errorHandler'
@@ -123,11 +123,11 @@ watch([startDate, endDate], fetchDashboardData)
       <div class="filters-container">
         <div class="form-group">
           <label for="start-date">Başlangıç:</label>
-          <input type="date" id="start-date" v-model="startDate" />
+          <input id="start-date" v-model="startDate" type="date" />
         </div>
         <div class="form-group">
           <label for="end-date">Bitiş:</label>
-          <input type="date" id="end-date" v-model="endDate" />
+          <input id="end-date" v-model="endDate" type="date" />
         </div>
       </div>
     </div>

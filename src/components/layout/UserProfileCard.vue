@@ -5,7 +5,8 @@ import { useUserStore } from '../../stores/userStore'
 defineProps({
   show: { type: Boolean, required: true },
 })
-const emit = defineEmits(['close'])
+
+defineEmits(['close'])
 
 const userStore = useUserStore()
 let debounceTimer = null
@@ -46,14 +47,14 @@ const assignedFacilities = computed(() => {
     <div class="profile-card">
       <div class="card-header">
         <h4>Profil Kartı</h4>
-        <button @click="$emit('close')" class="close-btn">×</button>
+        <button class="close-btn" @click="$emit('close')">×</button>
       </div>
       <div v-if="currentUser" class="card-content">
         <input
+          v-model="statusMessage"
           type="text"
           class="status-input"
           placeholder="Durum mesajı yazın..."
-          v-model="statusMessage"
           @input="onMessageInput"
         />
         <div class="info-item">

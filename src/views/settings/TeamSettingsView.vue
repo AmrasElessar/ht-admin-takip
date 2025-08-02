@@ -57,7 +57,6 @@ const fetchTeams = async () => {
   teams.value = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 }
 
-// EKSİK OLAN FONKSİYON: Ekipleri Tesis ve Gruba göre gruplayan computed property
 const groupedAndSortedTeams = computed(() => {
   if (!teams.value.length) return []
 
@@ -117,9 +116,9 @@ const addTeam = async (values, { resetForm }) => {
     toast.success('Ekip başarıyla eklendi!')
     resetForm({ values: { newTeamName: '', selectedFacility: '', selectedSalesGroup: '' } })
     fetchTeams()
-  } catch (e) {
+  } catch (error) {
     toast.error('Ekip eklenemedi!')
-    console.error(e)
+    console.error(error)
   }
 }
 
@@ -129,7 +128,7 @@ const deleteTeam = async (id) => {
     await deleteDoc(doc(db, 'teams', id))
     toast.info('Ekip silindi.')
     fetchTeams()
-  } catch (e) {
+  } catch {
     toast.error('Ekip silinemedi!')
   }
 }
@@ -159,9 +158,9 @@ const saveEdit = async () => {
     toast.success('Ekip başarıyla güncellendi!')
     cancelEdit()
     fetchTeams()
-  } catch (e) {
+  } catch (error) {
     toast.error('Ekip güncellenemedi!')
-    console.error(e)
+    console.error(error)
   }
 }
 
@@ -293,31 +292,31 @@ onMounted(() => {
     <div class="card data-actions-card">
       <h3>Toplu Veri İşlemleri</h3>
       <div class="button-group">
-        <button @click="downloadTemplate" class="btn-secondary">
+        <button class="btn-secondary" @click="downloadTemplate">
           <i class="fas fa-file-alt"></i> Boş Şablon İndir
         </button>
-        <button @click="triggerFileUpload" class="btn-success">
+        <button class="btn-success" @click="triggerFileUpload">
           <i class="fas fa-file-import"></i> CSV'den İçe Aktar
         </button>
-        <button @click="exportData" class="btn-info">
+        <button class="btn-info" @click="exportData">
           <i class="fas fa-file-export"></i> Tümünü Dışa Aktar
         </button>
-        <button @click="confirmClearAllData" class="btn-danger">
+        <button class="btn-danger" @click="confirmClearAllData">
           <i class="fas fa-trash-alt"></i> Tüm Ekipleri Sil
         </button>
       </div>
       <input
-        type="file"
         ref="fileInput"
-        @change="handleFileUpload"
+        type="file"
         style="display: none"
         accept=".csv"
+        @change="handleFileUpload"
       />
     </div>
 
     <div class="card">
       <h3>Ekip Ekle / Düzenle</h3>
-      <Form @submit="addTeam" class="add-form-grid" v-slot="{ meta }">
+      <Form v-slot="{ meta }" class="add-form-grid" @submit="addTeam">
         <div class="form-field">
           <Field name="newTeamName" type="text" placeholder="Yeni ekip adı" :rules="isRequired" />
           <ErrorMessage name="newTeamName" class="error-message" />
@@ -352,7 +351,7 @@ onMounted(() => {
               :class="{ 'is-open': openFacilityIds.includes(facility.id) }"
             ></i>
           </div>
-          <div class="accordion-content" v-if="openFacilityIds.includes(facility.id)">
+          <div v-if="openFacilityIds.includes(facility.id)" class="accordion-content">
             <div v-for="group in facility.groups" :key="group.id" class="accordion-item-inner">
               <div class="accordion-header-inner" @click="toggleGroup(group.id)">
                 <span><i class="fas fa-users"></i> {{ group.name }}</span>
@@ -361,32 +360,32 @@ onMounted(() => {
                   :class="{ 'is-open': openGroupIds.includes(group.id) }"
                 ></i>
               </div>
-              <ul class="team-list" v-if="openGroupIds.includes(group.id)">
+              <ul v-if="openGroupIds.includes(group.id)" class="team-list">
                 <li v-for="team in group.teams" :key="team.id">
                   <div v-if="editingTeamId !== team.id" class="team-display">
                     <span>{{ team.name }}</span>
                     <div class="actions">
-                      <button @click="startEdit(team)" class="edit-btn">Düzenle</button>
-                      <button @click="deleteTeam(team.id)" class="delete-btn">Sil</button>
+                      <button class="edit-btn" @click="startEdit(team)">Düzenle</button>
+                      <button class="delete-btn" @click="deleteTeam(team.id)">Sil</button>
                     </div>
                   </div>
                   <Form
                     v-else
-                    @submit="saveEdit"
-                    class="team-edit-form"
                     v-slot="{ meta }"
+                    class="team-edit-form"
                     :initial-values="editingTeamData"
+                    @submit="saveEdit"
                   >
                     <Field
+                      v-model="editingTeamData.name"
                       name="name"
                       type="text"
-                      v-model="editingTeamData.name"
                       :rules="isRequired"
                     />
                     <Field
+                      v-model="editingTeamData.facilityId"
                       name="facilityId"
                       as="select"
-                      v-model="editingTeamData.facilityId"
                       :rules="isRequired"
                     >
                       <option v-for="f in facilities" :key="f.id" :value="f.id">
@@ -394,9 +393,9 @@ onMounted(() => {
                       </option>
                     </Field>
                     <Field
+                      v-model="editingTeamData.salesGroupId"
                       name="salesGroupId"
                       as="select"
-                      v-model="editingTeamData.salesGroupId"
                       :rules="isRequired"
                     >
                       <option v-for="g in salesGroups" :key="g.id" :value="g.id">
@@ -407,7 +406,7 @@ onMounted(() => {
                       <button type="submit" class="save-btn" :disabled="!meta.valid || !meta.dirty">
                         Kaydet
                       </button>
-                      <button type="button" @click="cancelEdit" class="cancel-btn">İptal</button>
+                      <button type="button" class="cancel-btn" @click="cancelEdit">İptal</button>
                     </div>
                   </Form>
                 </li>
@@ -422,7 +421,7 @@ onMounted(() => {
       :show="showConfirmModal"
       title="Tüm Ekipleri Sil"
       message="Bu işlem geri alınamaz. Tüm ekipleri kalıcı olarak silmek istediğinizden emin misiniz?"
-      confirmationText="SİL"
+      confirmation-text="SİL"
       @close="showConfirmModal = false"
       @confirm="clearAllData"
     />

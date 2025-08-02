@@ -70,7 +70,7 @@ const runSetup = async () => {
       </p>
     </div>
 
-    <button @click="runSetup" :disabled="isLoading" class="setup-button">
+    <button :disabled="isLoading" class="setup-button" @click="runSetup">
       <span v-if="isLoading">Kuruluyor...</span>
       <span v-else>Sistemi İlk Kez Kur / Başlangıç Verilerini Oluştur</span>
     </button>

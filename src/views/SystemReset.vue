@@ -35,7 +35,7 @@
         <div class="card">
           <h3>Günlük Verileri Sıfırla</h3>
           <p>Yalnızca 'dailyEntries' ve 'dailyBuses' koleksiyonlarındaki tüm verileri siler.</p>
-          <button @click="confirmReset('resetData')" :disabled="isLoading">
+          <button :disabled="isLoading" @click="confirmReset('resetData')">
             <span v-if="isLoading && currentReset === 'resetData'">SİLİNİYOR...</span>
             <span v-else>GÜNLÜK VERİLERİ SİL</span>
           </button>
@@ -43,7 +43,7 @@
         <div class="card">
           <h3>Ekipleri ve Verileri Sıfırla</h3>
           <p>'teams' koleksiyonunu ve tüm günlük verileri siler.</p>
-          <button @click="confirmReset('resetTeams')" :disabled="isLoading">
+          <button :disabled="isLoading" @click="confirmReset('resetTeams')">
             <span v-if="isLoading && currentReset === 'resetTeams'">SİLİNİYOR...</span>
             <span v-else>EKİPLERİ SİL</span>
           </button>
@@ -51,7 +51,7 @@
         <div class="card">
           <h3>Satış Gruplarını ve Ekipleri Sıfırla</h3>
           <p>'salesGroups', 'teams' ve tüm günlük verileri siler.</p>
-          <button @click="confirmReset('resetSalesGroups')" :disabled="isLoading">
+          <button :disabled="isLoading" @click="confirmReset('resetSalesGroups')">
             <span v-if="isLoading && currentReset === 'resetSalesGroups'">SİLİNİYOR...</span>
             <span v-else>SATIŞ GRUPLARINI SİL</span>
           </button>
@@ -63,9 +63,9 @@
             **Kullanıcılar silinmez.**
           </p>
           <button
-            @click="confirmReset('resetFacilities')"
             :disabled="isLoading"
             class="danger-button"
+            @click="confirmReset('resetFacilities')"
           >
             <span v-if="isLoading && currentReset === 'resetFacilities'">SİLİNİYOR...</span>
             <span v-else>TÜM SİSTEMİ SIFIRLA</span>

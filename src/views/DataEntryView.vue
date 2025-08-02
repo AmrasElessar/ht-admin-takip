@@ -14,10 +14,6 @@ const toast = useToast()
 const isLoading = ref(true)
 const facilities = ref([])
 
-const teams = computed(() =>
-  userStore.allTeams.filter((team) => team.facilityId === operationStore.activeFacilityId),
-)
-
 const canSwitchFacility = computed(() => {
   return (
     userStore.currentUserRole === 'kurucu' ||
@@ -70,7 +66,7 @@ watch(
       </div>
       <div v-else>
         <div class="header-controls">
-          <div class="form-group" v-if="canSwitchFacility">
+          <div v-if="canSwitchFacility" class="form-group">
             <label for="facility-select"><i class="fas fa-building"></i> Aktif Tesis:</label>
             <select id="facility-select" v-model="operationStore.activeFacilityId">
               <option v-for="facility in facilities" :key="facility.id" :value="facility.id">
@@ -78,7 +74,7 @@ watch(
               </option>
             </select>
           </div>
-          <div class="info-box" v-else>
+          <div v-else class="info-box">
             <strong><i class="fas fa-building"></i> Tesis:</strong>
             {{
               facilities.find((f) => f.id === operationStore.activeFacilityId)?.name ||
@@ -87,7 +83,7 @@ watch(
           </div>
           <div class="form-group">
             <label for="date"><i class="fas fa-calendar-alt"></i> Tarih:</label>
-            <input type="date" id="date" v-model="operationStore.selectedDate" />
+            <input id="date" v-model="operationStore.selectedDate" type="date" />
           </div>
         </div>
 

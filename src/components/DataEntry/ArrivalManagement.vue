@@ -3,15 +3,12 @@ import { ref, computed, watch, onUnmounted } from 'vue'
 import { db } from '../../firebaseConfig'
 import { collection, query, where, onSnapshot, documentId } from 'firebase/firestore'
 import { useUserStore } from '../../stores/userStore'
-import { useOperationStore } from '../../stores/operationStore' // YENİ
+import { useOperationStore } from '../../stores/operationStore'
 import { handleError } from '@/utils/errorHandler'
 import ShareModal from '../common/ShareModal.vue'
 
-// DEĞİŞİKLİK: defineProps kaldırıldı
-// const props = defineProps({ ... })
-
 const userStore = useUserStore()
-const operationStore = useOperationStore() // YENİ
+const operationStore = useOperationStore()
 
 const isLoading = ref(true)
 const dailyEntries = ref([])
@@ -26,7 +23,6 @@ const combinedData = computed(() => {
   const dataMap = new Map()
 
   userStore.allTeams
-    // DEĞİŞİKLİK: props -> operationStore
     .filter((team) => team.facilityId === operationStore.activeFacilityId)
     .forEach((team) => {
       dataMap.set(team.id, {
@@ -57,7 +53,11 @@ const combinedData = computed(() => {
   })
 
   const grouped = {}
+
+  // --- DÜZELTME BURADA ---
+  // Orijinal diziyi değiştirmemek için slice() ile bir kopyasını oluşturup sıralıyoruz.
   userStore.allSalesGroups
+    .slice()
     .sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99))
     .forEach((group) => {
       const teamsInGroup = []
@@ -74,27 +74,39 @@ const combinedData = computed(() => {
   return grouped
 })
 
+// --- DÜZELTİLMİŞ KOD BLOĞU ---
 const reportTotals = computed(() => {
   const groupTotals = {}
-  const grandTotals = { up: 0, oneleg: 0, single: 0, total: 0 }
 
+  // Önce her bir grubun kendi içindeki toplamını hesaplayalım
   for (const groupName in combinedData.value) {
-    const groupTotal = { up: 0, oneleg: 0, single: 0, total: 0 }
-    combinedData.value[groupName].forEach((team) => {
-      groupTotal.up += team.totalUp
-      groupTotal.oneleg += team.totalOneleg
-      groupTotal.single += team.totalSingle
-    })
-    groupTotal.total = groupTotal.up + groupTotal.oneleg + groupTotal.single
-    groupTotals[groupName] = groupTotal
-
-    grandTotals.up += groupTotal.up
-    grandTotals.oneleg += groupTotal.oneleg
-    grandTotals.single += groupTotal.single
+    groupTotals[groupName] = combinedData.value[groupName].reduce(
+      (acc, team) => {
+        acc.up += team.totalUp
+        acc.oneleg += team.totalOneleg
+        acc.single += team.totalSingle
+        acc.total += team.totalUp + team.totalOneleg + team.totalSingle
+        return acc
+      },
+      { up: 0, oneleg: 0, single: 0, total: 0 },
+    )
   }
-  grandTotals.total = grandTotals.up + grandTotals.oneleg + grandTotals.single
+
+  // Sonra tüm grupların toplamından genel toplamı hesaplayalım
+  const grandTotals = Object.values(groupTotals).reduce(
+    (acc, groupTotal) => {
+      acc.up += groupTotal.up
+      acc.oneleg += groupTotal.oneleg
+      acc.single += groupTotal.single
+      acc.total += groupTotal.total
+      return acc
+    },
+    { up: 0, oneleg: 0, single: 0, total: 0 },
+  )
+
   return { group: groupTotals, grand: grandTotals }
 })
+// --- DÜZELTME SONU ---
 
 const fetchData = () => {
   isLoading.value = true
@@ -102,14 +114,12 @@ const fetchData = () => {
   if (unsubGuests) unsubGuests()
 
   const teamIds = userStore.allTeams
-    // DEĞİŞİKLİK: props -> operationStore
     .filter((t) => t.facilityId === operationStore.activeFacilityId)
     .map((t) => t.id)
   if (teamIds.length === 0) {
     isLoading.value = false
     return
   }
-  // DEĞİŞİKLİK: props -> operationStore
   const docIds = teamIds.map((id) => `${operationStore.selectedDate}_${id}`)
   if (docIds.length === 0) {
     isLoading.value = false
@@ -140,7 +150,6 @@ const fetchData = () => {
 }
 
 const generateReport = () => {
-  // DEĞİŞİKLİK: props -> operationStore
   let report = `*Geliş Yönetimi Raporu - ${operationStore.selectedDate}*\n`
   report += `*Tesis: ${userStore.selectedFacility?.name}*\n\n`
 
@@ -169,7 +178,6 @@ const sendWhatsappMessage = () => {
 }
 
 watch(
-  // DEĞİŞİKLİK: props -> operationStore
   [
     () => operationStore.selectedDate,
     () => operationStore.activeFacilityId,
@@ -192,7 +200,7 @@ onUnmounted(() => {
   <div class="arrival-report">
     <div class="header-actions">
       <h3>Geliş Yönetimi Raporu</h3>
-      <button @click="generateReport" class="whatsapp-share-btn">
+      <button class="whatsapp-share-btn" @click="generateReport">
         <i class="fab fa-whatsapp"></i> WhatsApp ile Paylaş
       </button>
     </div>
@@ -238,7 +246,7 @@ onUnmounted(() => {
 
     <ShareModal
       :show="showShareModal"
-      :shareText="whatsappShareText"
+      :share-text="whatsappShareText"
       title="Geliş Yönetimi Raporunu Paylaş"
       @close="showShareModal = false"
       @share="sendWhatsappMessage"

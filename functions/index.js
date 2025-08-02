@@ -214,7 +214,6 @@ exports.getAggregatedReport = onCall(async (request) => {
 
     const dailyEntriesData = entriesSnap.docs.map((doc) => doc.data())
     const dailyDistributionsData = distributionsSnap.docs.map((doc) => doc.data())
-    const dailyPresentationsData = presentationsSnap.docs.map((doc) => doc.data())
 
     const mergedData = {}
     const createEmptyRow = (entry) => ({

@@ -85,15 +85,15 @@ const registerWithEmail = async () => {
 
       <form @submit.prevent="isRegistering ? registerWithEmail() : signInWithEmail()">
         <input
-          type="email"
           v-model="email"
+          type="email"
           placeholder="E-posta Adresi"
           required
           autocomplete="email"
         />
         <input
-          type="password"
           v-model="password"
+          type="password"
           placeholder="Şifre"
           required
           autocomplete="current-password"
@@ -105,7 +105,7 @@ const registerWithEmail = async () => {
 
       <div class="separator">veya</div>
 
-      <button @click="signInWithGoogle" class="btn-google">
+      <button class="btn-google" @click="signInWithGoogle">
         <i class="fab fa-google"></i> Google ile Giriş Yap
       </button>
 

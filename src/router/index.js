@@ -181,7 +181,8 @@ router.beforeEach(async (to, from, next) => {
   if (isLoggedIn) {
     try {
       await userStore.initializeDataListeners()
-    } catch (error) {
+    } catch {
+      // 'error' parametresi buradan kaldırıldı
       toast.error('Kullanıcı verileri yüklenemedi. Lütfen tekrar giriş yapmayı deneyin.')
       await auth.signOut()
       return next({ name: 'login' })

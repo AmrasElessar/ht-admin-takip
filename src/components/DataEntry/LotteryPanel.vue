@@ -8,14 +8,17 @@ import { useToast } from 'vue-toastification'
 import { handleError } from '@/utils/errorHandler'
 import { useInvitations } from '../../composables/useInvitations'
 import BaseModal from '../common/BaseModal.vue'
+import DOMPurify from 'dompurify'
 
 const userStore = useUserStore()
 const operationStore = useOperationStore()
 const toast = useToast()
 
-// Yeni composable'ımızı çağırarak tüm davet mantığını ve reaktif verileri alıyoruz.
-const { allInvitations, isLoading: isInvitationsLoading, listenForInvitations } = useInvitations()
+const sanitize = (html) => {
+  return DOMPurify.sanitize(html)
+}
 
+const { allInvitations, isLoading: isInvitationsLoading, listenForInvitations } = useInvitations()
 const rules = ref([])
 const completedLotteries = ref([])
 const showPoolDetails = ref(false)
@@ -48,12 +51,11 @@ const newInvitationData = reactive({
 
 const showManualAssignModal = ref(false)
 const manualAssignData = reactive({
-  targetTeam: null, // Atama yapılacak ekibin bilgilerini tutacak
-  availableForCredit: [], // Atamaya uygun, havuzdaki davetler
-  selectedInvitationId: '', // Kullanıcının seçtiği davetin ID'si
+  targetTeam: null,
+  availableForCredit: [],
+  selectedInvitationId: '',
 })
 
-// --- COMPUTED PROPERTIES ---
 const distributorTeams = computed(() =>
   userStore.allTeams
     .filter(
@@ -137,7 +139,6 @@ const groupedInvitations = computed(() => {
     return {}
   }
   const groups = {}
-  // Önce dağıtıcı takımları bir map'e alalım ki sıralama bozulmasın
   distributorTeams.value.forEach((team) => {
     groups[team.id] = {
       name: team.name,
@@ -166,7 +167,6 @@ const teamStatusSummary = computed(() => {
     })
   })
 
-  // If lottery data hasn't loaded yet, return the empty summary.
   if (!completedLotteries.value) {
     return Array.from(summaryMap.values())
   }
@@ -175,13 +175,11 @@ const teamStatusSummary = computed(() => {
 
   completedLotteries.value.forEach((pkg) => {
     if (pkg && pkg.assignments) {
-      // Safety check
       for (const teamId in pkg.assignments) {
         const teamSummary = summaryMap.get(teamId)
         if (teamSummary) {
           pkg.assignments[teamId].forEach((inv) => {
             if (inv && inv.id) {
-              // Safety check for the invitation object
               allAssignedInvitations.set(inv.id, teamId)
               if (inv.type === 'up') teamSummary.assigned.up++
               else if (inv.type === 'oneleg') teamSummary.assigned.oneleg++
@@ -198,9 +196,9 @@ const teamStatusSummary = computed(() => {
   )
 
   const flatAssignments = completedLotteries.value.flatMap((pkg) =>
-    pkg && pkg.assignments // Safety check
-      ? Object.entries(pkg.assignments).flatMap(
-          ([teamId, invs]) => (invs || []).map((inv) => ({ invId: inv.id, teamId })), // Safety check
+    pkg && pkg.assignments
+      ? Object.entries(pkg.assignments).flatMap(([teamId, invs]) =>
+          (invs || []).map((inv) => ({ invId: inv.id, teamId })),
         )
       : [],
   )
@@ -279,8 +277,6 @@ const getTooltipText = (invitation) => {
   return text
 }
 
-// --- FUNCTIONS ---
-
 const updateInvitationStatusInFirestore = async (invitationToUpdate, newStatus) => {
   const docRef = doc(
     db,
@@ -310,7 +306,6 @@ const updateInvitationStatusInFirestore = async (invitationToUpdate, newStatus) 
 const batchUpdateInvitationStatuses = async (invitationsToUpdate, newStatus) => {
   if (!invitationsToUpdate || invitationsToUpdate.length === 0) return
 
-  // Davetleri geldikleri dökümanlara göre grupla
   const updatesByDoc = invitationsToUpdate.reduce((acc, inv) => {
     const docId = `${operationStore.selectedDate}_${inv.distributorTeamId}`
     if (!acc[docId]) {
@@ -349,7 +344,7 @@ const batchUpdateInvitationStatuses = async (invitationsToUpdate, newStatus) => 
 }
 
 const handleSlotClick = async (invitation) => {
-  if (!invitation || !invitation.id) return // Boş slotlara tıklanırsa bir şey yapma
+  if (!invitation || !invitation.id) return
 
   switch (invitation.status) {
     case 'available':
@@ -493,31 +488,22 @@ const cancelLotteryPackage = async (index) => {
   )
     return
 
-  // --- YENİ EKLENEN BÖLÜM ---
-  // İptal edilecek paketteki davetleri bul
   const packageToCancel = completedLotteries.value[index]
   if (!packageToCancel) return
   const invitationsToRevert = packageToCancel.allocatedInvitations
 
-  // Bu davetlerin durumunu tekrar 'available' yap
   if (invitationsToRevert && invitationsToRevert.length > 0) {
     await batchUpdateInvitationStatuses(invitationsToRevert, 'available')
   }
-  // --- YENİ BÖLÜM SONU ---
 
-  // Paketi listeden sil
   completedLotteries.value.splice(index, 1)
 
-  // Güncellenmiş listeyi veritabanına kaydet
   await confirmAndSaveAll(false)
 
   toast.info('Çekiliş paketi iptal edildi ve davetler havuza geri eklendi.')
 }
 
-// Bu kod bloğunu, projenizdeki mevcut runLotteryForRules fonksiyonuyla tamamen değiştirin.
-
 const runLotteryForRules = async () => {
-  // Fonksiyonu async yaptık
   if (rules.value.length === 0) return toast.error('Çekiliş yapmak için önce kural eklemelisiniz.')
 
   const lotteryBatch = {
@@ -609,7 +595,6 @@ const runLotteryForRules = async () => {
     lotteryBatch.assignments[targetTeamId].push(invitation)
   })
 
-  // Animasyon için verileri hazırla ve göster
   const animationQueue = []
   const assignmentsByTeam = finalAssignments.reduce((acc, curr) => {
     if (!acc[curr.targetTeamId]) acc[curr.targetTeamId] = []
@@ -646,8 +631,6 @@ const runLotteryForRules = async () => {
     processNextAssignment()
   }, 1000)
 
-  // --- YENİ EKLENEN KRİTİK ADIMLAR ---
-  // 1. Çekilişte kullanılan davetlerin durumunu 'assigned' olarak veritabanında GÜNCELLE
   await batchUpdateInvitationStatuses(lotteryBatch.allocatedInvitations, 'assigned')
 
   const packageDescription = rules.value
@@ -655,11 +638,9 @@ const runLotteryForRules = async () => {
     .join(', ')
   const finalPackage = { ...lotteryBatch, description: packageDescription }
 
-  // 2. Çekiliş paketini geçici state'e ekle
   completedLotteries.value.push(finalPackage)
   rules.value = []
 
-  // 3. Çekiliş biter bitmez, sonucu (kullanıcıya bildirim göstermeden) veritabanına kaydet.
   await confirmAndSaveAll(false)
 }
 
@@ -701,14 +682,10 @@ const confirmAndSaveAll = async (showToast = true) => {
       { merge: true },
     )
 
-    // --- KRİTİK BÖLÜM BURASI ---
-    // Bu blok, fonksiyonun sadece manuel olarak çağrıldığında çalışır.
     if (showToast) {
       toast.success('Tüm çekilişler başarıyla kaydedildi/onaylandı!')
-      // Animasyon penceresini sadece bu durumda kapatıyoruz.
       showAnimationModal.value = false
     }
-    // --- KRİTİK BÖLÜM SONU ---
   } catch (error) {
     handleError(error, 'Çekiliş sonuçları kaydedilirken hata oluştu.')
   } finally {
@@ -736,7 +713,7 @@ const deleteLimitFromRule = (ruleIndex, limitIndex) => {
 const resetNewRuleForm = () => {
   Object.assign(newRule, {
     sourceDistributorIds: [],
-    types: [], // Bu satırın 'types: []' olduğundan emin olun
+    types: [],
     quantity: null,
     isAll: false,
     method: 'equal',
@@ -760,7 +737,6 @@ watch(
 )
 
 const handleAddInvitation = async () => {
-  // --- Validasyon ---
   if (!newInvitationData.distributorTeamId || !newInvitationData.type || !newInvitationData.slot) {
     return toast.error('Lütfen tüm alanları doldurun.')
   }
@@ -768,7 +744,6 @@ const handleAddInvitation = async () => {
     return toast.error('Slot numarası 1 ile 40 arasında olmalıdır.')
   }
 
-  // Bu slotun dolu olup olmadığını kontrol et
   const isSlotTaken = allInvitations.value.some(
     (inv) =>
       inv.distributorTeamId === newInvitationData.distributorTeamId &&
@@ -778,7 +753,6 @@ const handleAddInvitation = async () => {
     return toast.error('Seçilen ekip için bu slot zaten dolu.')
   }
 
-  // --- Firestore Güncelleme Mantığı ---
   const docRef = doc(
     db,
     'dailyEntries',
@@ -803,20 +777,17 @@ const handleAddInvitation = async () => {
 
     toast.success('Yeni davet başarıyla havuza eklendi!')
     showAddModal.value = false
-    // Formu temizle
     Object.assign(newInvitationData, { distributorTeamId: '', type: '', slot: null })
   } catch (error) {
     handleError(error, 'Yeni davet eklenirken bir hata oluştu.')
   }
 }
 const openManualAssignModal = (team) => {
-  // Ekranda gösterilecek alacak bilgilerini hazırla
   const creditTypes = []
   if (team.credit.up > 0) creditTypes.push('up')
   if (team.credit.oneleg > 0) creditTypes.push('oneleg')
   if (team.credit.single > 0) creditTypes.push('single')
 
-  // Alacağa uygun, havuzdaki davetleri bul
   manualAssignData.availableForCredit = availablePool.value.filter((inv) =>
     creditTypes.includes(inv.type),
   )
@@ -827,9 +798,8 @@ const openManualAssignModal = (team) => {
     )
   }
 
-  // Modal için verileri ayarla ve modalı göster
   manualAssignData.targetTeam = team
-  manualAssignData.selectedInvitationId = '' // Her açılışta seçimi sıfırla
+  manualAssignData.selectedInvitationId = ''
   showManualAssignModal.value = true
 }
 
@@ -845,8 +815,6 @@ const assignManualInvitation = async () => {
 
   if (!invitationToAssign || !targetTeam) return
 
-  // --- YENİ MANTIK BAŞLANGICI ---
-  // Bu atamanın, hangi eski iptal kaydını karşılayacağını buluyoruz.
   const flatAssignments = completedLotteries.value.flatMap((pkg) =>
     pkg.assignments
       ? Object.entries(pkg.assignments).flatMap(([teamId, invs]) =>
@@ -869,12 +837,9 @@ const assignManualInvitation = async () => {
       'Bu atamayı karşılayacak bir hak ediş bulunamadı. Sistemde bir tutarsızlık olabilir.',
     )
   }
-  // --- YENİ MANTIK SONU ---
 
-  // 1. Seçilen yeni davetin durumunu 'assigned' yap.
   await updateInvitationStatusInFirestore(invitationToAssign, 'assigned')
 
-  // 2. Bu yeni atamayı `lotteryAssignments` koleksiyonuna ekle.
   const docRef = doc(
     db,
     'lotteryAssignments',
@@ -897,7 +862,6 @@ const assignManualInvitation = async () => {
 
     await setDoc(docRef, { assignments }, { merge: true })
 
-    // 3. Hak edişi yaratan ESKİ iptal kaydının durumunu 'credit_used' olarak güncelle.
     await updateInvitationStatusInFirestore(creditToResolve, 'credit_used')
 
     toast.success(
@@ -913,7 +877,6 @@ onUnmounted(() => {
   if (unsubAssignments) unsubAssignments()
 })
 </script>
-
 <template>
   <div class="lottery-panel">
     <h3>Çekiliş Paneli</h3>
@@ -952,7 +915,7 @@ onUnmounted(() => {
       <div class="card live-pool-grid">
         <h4 class="card-title-with-button">
           <span>Canlı Davet Havuzu</span>
-          <button @click="showAddModal = true" class="btn-add-manual">+ Manuel Davet Ekle</button>
+          <button class="btn-add-manual" @click="showAddModal = true">+ Manuel Davet Ekle</button>
         </h4>
         <p>
           Tüm davetlerin anlık durumunu buradan takip edebilirsiniz. Durumunu değiştirmek için bir
@@ -974,8 +937,8 @@ onUnmounted(() => {
               <div v-for="teamData in groupedInvitations" :key="teamData.id" class="team-row">
                 <div v-for="i in 40" :key="i" class="slot-cell-wrapper">
                   <div
-                    class="slot-cell"
                     :class="`status-${(teamData.invitations.find((inv) => inv.slot === i) || {}).status || 'empty'}`"
+                    class="slot-cell"
                     :title="getTooltipText(teamData.invitations.find((inv) => inv.slot === i))"
                     @click="handleSlotClick(teamData.invitations.find((inv) => inv.slot === i))"
                   >
@@ -993,7 +956,7 @@ onUnmounted(() => {
       </div>
 
       <div class="card team-status-panel">
-        <h4 @click="isTeamStatusVisible = !isTeamStatusVisible" class="collapsible-header">
+        <h4 class="collapsible-header" @click="isTeamStatusVisible = !isTeamStatusVisible">
           <span>Ekip Atama Durumları</span>
           <i class="fas fa-chevron-down" :class="{ 'is-open': isTeamStatusVisible }"></i>
         </h4>
@@ -1044,7 +1007,7 @@ onUnmounted(() => {
       <div class="card rule-builder-card">
         <div class="rule-builder">
           <h4>Yeni Dağıtım Kuralı Ekle</h4>
-          <div class="pool-display wizard-pool" v-if="newRule.sourceDistributorIds.length > 0">
+          <div v-if="newRule.sourceDistributorIds.length > 0" class="pool-display wizard-pool">
             <strong>Seçili Kaynak Havuzu:</strong>
             <span
               >UP: <strong>{{ wizardRulePool.up }}</strong></span
@@ -1065,9 +1028,9 @@ onUnmounted(() => {
               <div class="step-content source-selection">
                 <label v-for="team in distributorTeams" :key="team.id"
                   ><input
+                    v-model="newRule.sourceDistributorIds"
                     type="checkbox"
                     :value="team.id"
-                    v-model="newRule.sourceDistributorIds"
                   />{{ team.name }}</label
                 >
               </div>
@@ -1082,17 +1045,17 @@ onUnmounted(() => {
               </div>
               <div class="type-selection">
                 <label
-                  ><input type="checkbox" value="up" v-model="newRule.types" /> UP ({{
+                  ><input v-model="newRule.types" type="checkbox" value="up" /> UP ({{
                     wizardRulePool.up
                   }})</label
                 >
                 <label
-                  ><input type="checkbox" value="oneleg" v-model="newRule.types" /> Oneleg ({{
+                  ><input v-model="newRule.types" type="checkbox" value="oneleg" /> Oneleg ({{
                     wizardRulePool.oneleg
                   }})</label
                 >
                 <label
-                  ><input type="checkbox" value="single" v-model="newRule.types" /> Single ({{
+                  ><input v-model="newRule.types" type="checkbox" value="single" /> Single ({{
                     wizardRulePool.single
                   }})</label
                 >
@@ -1110,14 +1073,14 @@ onUnmounted(() => {
                 <div class="form-group-inline">
                   <label>Adet:</label>
                   <input
+                    v-model.number="newRule.quantity"
                     type="number"
                     min="1"
-                    v-model.number="newRule.quantity"
                     :disabled="newRule.isAll"
                     placeholder="Sayı"
                   />
                   <label class="checkbox-label"
-                    ><input type="checkbox" v-model="newRule.isAll" /> Tümü</label
+                    ><input v-model="newRule.isAll" type="checkbox" /> Tümü</label
                   >
                 </div>
                 <div class="form-group-inline">
@@ -1129,9 +1092,9 @@ onUnmounted(() => {
                   <Transition name="fade">
                     <input
                       v-if="newRule.method === 'sequential'"
+                      v-model.number="newRule.sequentialAmount"
                       type="number"
                       min="1"
-                      v-model.number="newRule.sequentialAmount"
                       class="sequential-input"
                     />
                   </Transition>
@@ -1150,10 +1113,10 @@ onUnmounted(() => {
               <div class="step-content">
                 <div class="target-type-selector">
                   <label
-                    ><input type="radio" value="group" v-model="newRule.targetType" /> Ekip
+                    ><input v-model="newRule.targetType" type="radio" value="group" /> Ekip
                     Grubu</label
                   ><label
-                    ><input type="radio" value="custom" v-model="newRule.targetType" /> Özel Ekip
+                    ><input v-model="newRule.targetType" type="radio" value="custom" /> Özel Ekip
                     Seçimi</label
                   >
                 </div>
@@ -1171,7 +1134,7 @@ onUnmounted(() => {
                     </select>
                   </div>
                   <div v-else class="target-selection">
-                    <select multiple v-model="newRule.customTeamIds">
+                    <select v-model="newRule.customTeamIds" multiple>
                       <option v-for="team in closingTeams" :key="team.id" :value="team.id">
                         {{ team.name }}
                       </option>
@@ -1181,7 +1144,6 @@ onUnmounted(() => {
               </div>
             </div>
             <button
-              @click="addRule"
               class="btn-add-rule"
               title="Bu Kuralı Ekle"
               :disabled="
@@ -1191,6 +1153,7 @@ onUnmounted(() => {
                 (newRule.targetType === 'group' && !newRule.targetGroupId) ||
                 (newRule.targetType === 'custom' && newRule.customTeamIds.length === 0)
               "
+              @click="addRule"
             >
               +
             </button>
@@ -1204,10 +1167,10 @@ onUnmounted(() => {
           <div class="rule-main">
             <span v-html="rule.description"></span>
             <div class="rule-actions">
-              <button @click="addingLimitToRuleIndex = index" class="btn-add-limit">
+              <button class="btn-add-limit" @click="addingLimitToRuleIndex = index">
                 + Limit Ekle
               </button>
-              <button @click="deleteRule(index)" class="delete-btn">Sil</button>
+              <button class="delete-btn" @click="deleteRule(index)">Sil</button>
             </div>
           </div>
           <div v-if="addingLimitToRuleIndex === index" class="limit-form">
@@ -1218,13 +1181,13 @@ onUnmounted(() => {
               </option>
             </select>
             <input
+              v-model.number="newLimit.amount"
               type="number"
               min="1"
-              v-model.number="newLimit.amount"
               placeholder="Maks. Adet"
             />
             <button @click="addLimitToRule(index)">Limiti Ekle</button>
-            <button @click="addingLimitToRuleIndex = null" class="btn-cancel">İptal</button>
+            <button class="btn-cancel" @click="addingLimitToRuleIndex = null">İptal</button>
           </div>
           <ul v-if="rule.limits && rule.limits.length > 0" class="limits-list">
             <li v-for="(limit, limitIndex) in rule.limits" :key="limit.teamId">
@@ -1233,13 +1196,13 @@ onUnmounted(() => {
                 ><strong>{{ closingTeams.find((t) => t.id === limit.teamId)?.name }}:</strong> En
                 fazla <strong>{{ limit.amount }}</strong> adet alabilir.</span
               >
-              <button @click="deleteLimitFromRule(index, limitIndex)" class="delete-btn-small">
+              <button class="delete-btn-small" @click="deleteLimitFromRule(index, limitIndex)">
                 x
               </button>
             </li>
           </ul>
         </div>
-        <button @click="runLotteryForRules" class="btn-run-lottery">
+        <button class="btn-run-lottery" @click="runLotteryForRules">
           <i class="fas fa-play"></i> Kurallarla Çekilişi Başlat
         </button>
       </div>
@@ -1254,9 +1217,9 @@ onUnmounted(() => {
             <summary>
               <span
                 ><strong>Çekiliş Paketi #{{ index + 1 }}:</strong>
-                <span v-html="lotto.description"></span
+                <span v-html="sanitize(lotto.description)"></span
               ></span>
-              <button @click.prevent="cancelLotteryPackage(index)" class="cancel-lotto-btn">
+              <button class="cancel-lotto-btn" @click.prevent="cancelLotteryPackage(index)">
                 Bu Çekilişi İptal Et
               </button>
             </summary>
@@ -1273,7 +1236,7 @@ onUnmounted(() => {
       </div>
 
       <div v-if="completedLotteries.length > 0" class="card final-actions">
-        <button @click="confirmAndSaveAll" :disabled="isSaving">
+        <button :disabled="isSaving" @click="confirmAndSaveAll">
           <i class="fas fa-check-double"></i>
           {{ isSaving ? 'Kaydediliyor...' : 'Tüm Çekilişleri Onayla ve Veritabanına Aktar' }}
         </button>
@@ -1312,7 +1275,7 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
-        <button @click="showAnimationModal = false" class="close-animation-btn">
+        <button class="close-animation-btn" @click="showAnimationModal = false">
           Animasyonu Kapat
         </button>
       </div>
@@ -1322,7 +1285,7 @@ onUnmounted(() => {
     <template #header>
       <h3>Canlı Havuza Manuel Davet Ekle</h3>
     </template>
-    <form @submit.prevent="handleAddInvitation" class="manual-add-form">
+    <form class="manual-add-form" @submit.prevent="handleAddInvitation">
       <div class="form-group">
         <label>Daveti Yapan Ekip</label>
         <select v-model="newInvitationData.distributorTeamId" required>
@@ -1344,18 +1307,18 @@ onUnmounted(() => {
       <div class="form-group">
         <label>Slot Numarası</label>
         <input
+          v-model.number="newInvitationData.slot"
           type="number"
           min="1"
           max="40"
-          v-model.number="newInvitationData.slot"
           placeholder="1-40 arası bir sayı"
           required
         />
       </div>
     </form>
     <template #actions>
-      <button @click="showAddModal = false" class="btn-cancel">İptal</button>
-      <button @click="handleAddInvitation" class="btn-confirm">Ekle</button>
+      <button class="btn-cancel" @click="showAddModal = false">İptal</button>
+      <button class="btn-confirm" @click="handleAddInvitation">Ekle</button>
     </template>
   </BaseModal>
 
@@ -1393,8 +1356,8 @@ onUnmounted(() => {
     </div>
 
     <template #actions>
-      <button @click="showManualAssignModal = false" class="btn-cancel">İptal</button>
-      <button @click="assignManualInvitation" class="btn-confirm">Atamayı Yap</button>
+      <button class="btn-cancel" @click="showManualAssignModal = false">İptal</button>
+      <button class="btn-confirm" @click="assignManualInvitation">Atamayı Yap</button>
     </template>
   </BaseModal>
 </template>
@@ -1838,7 +1801,6 @@ select {
   opacity: 0;
 }
 
-/* --- YENİ EKLENEN GRID STİLLERİ --- */
 .live-pool-grid {
   margin-top: 0;
 }
@@ -1948,11 +1910,11 @@ select {
   cursor: default;
 }
 .slot-cell.status-credit_used {
-  background-color: #7f8c8d; /* İptal ile aynı renk */
+  background-color: #7f8c8d;
   color: white;
   cursor: not-allowed;
   text-decoration: line-through;
-  opacity: 0.6; /* Biraz daha soluk */
+  opacity: 0.6;
 }
 .card-title-with-button {
   display: flex;
@@ -2054,7 +2016,7 @@ select {
 .wizard-step .type-selection {
   display: flex;
   flex-direction: column;
-  gap: 8px; /* Checkbox'lar arası dikey boşluk */
+  gap: 8px;
 }
 
 .collapsible-header {

@@ -89,7 +89,7 @@ watch(
 </script>
 
 <template>
-  <BaseModal :show="show" @close="$emit('close')" :is-x-large="true">
+  <BaseModal :show="show" :is-x-large="true" @close="$emit('close')">
     <template #header>
       <h3>40'lık Listeden Hızlı Veri Girişi</h3>
     </template>
@@ -108,9 +108,9 @@ watch(
             <div class="header-row">
               <div v-for="i in totalSlots" :key="i" class="slot-column-header">
                 <input
-                  type="checkbox"
                   :id="`arrival-${i}`"
                   v-model="listData[distributorTeams[0].id].arrivalTypes[i]"
+                  type="checkbox"
                   title="Kendi Aracıyla Geldi"
                 />
                 <label :for="`arrival-${i}`">{{ i }}</label>
@@ -144,10 +144,10 @@ watch(
     </div>
 
     <template #actions>
-      <button @click="clearAll" class="btn-clear">Temizle</button>
+      <button class="btn-clear" @click="clearAll">Temizle</button>
       <div class="right-buttons">
-        <button @click="$emit('close')" class="btn-cancel">İptal Et</button>
-        <button @click="saveAndTransfer" class="btn-confirm">Kaydet ve Aktar</button>
+        <button class="btn-cancel" @click="$emit('close')">İptal Et</button>
+        <button class="btn-confirm" @click="saveAndTransfer">Kaydet ve Aktar</button>
       </div>
     </template>
   </BaseModal>

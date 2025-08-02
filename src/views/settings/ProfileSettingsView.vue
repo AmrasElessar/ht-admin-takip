@@ -90,15 +90,15 @@ watch(selectedBaseThemeId, (newThemeId) => {
     <div v-if="isLoading">Yükleniyor...</div>
     <div v-else class="card">
       <h3>Kişisel Bilgiler</h3>
-      <Form @submit="saveProfile" class="profile-form" v-slot="{ meta }">
+      <Form v-slot="{ meta }" class="profile-form" @submit="saveProfile">
         <div class="form-grid">
           <div class="form-group">
             <label for="firstName">Ad</label>
             <Field
               id="firstName"
+              v-model="profileData.firstName"
               name="firstName"
               type="text"
-              v-model="profileData.firstName"
               :rules="isRequired"
             />
             <ErrorMessage name="firstName" class="error-message" />
@@ -107,20 +107,20 @@ watch(selectedBaseThemeId, (newThemeId) => {
             <label for="lastName">Soyad</label>
             <Field
               id="lastName"
+              v-model="profileData.lastName"
               name="lastName"
               type="text"
-              v-model="profileData.lastName"
               :rules="isRequired"
             />
             <ErrorMessage name="lastName" class="error-message" />
           </div>
           <div class="form-group">
             <label for="username">Kullanıcı Adı</label>
-            <Field id="username" name="username" type="text" v-model="profileData.username" />
+            <Field id="username" v-model="profileData.username" name="username" type="text" />
           </div>
           <div class="form-group">
             <label for="gender">Cinsiyet</label>
-            <Field id="gender" name="gender" as="select" v-model="profileData.gender">
+            <Field id="gender" v-model="profileData.gender" name="gender" as="select">
               <option value="">Belirtilmemiş</option>
               <option value="male">Erkek</option>
               <option value="female">Kadın</option>

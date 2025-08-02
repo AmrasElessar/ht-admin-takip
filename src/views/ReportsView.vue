@@ -149,7 +149,6 @@ const generateWhatsappReport = () => {
   let groupContent = ''
   let generalInviteTotal = 0
   let generalDistributedTotal = 0
-  let generalPresentedTotal = 0
   let generalTableCount = 0
 
   const groupedReportData = reportData.value.reduce((acc, row) => {
@@ -187,7 +186,6 @@ const generateWhatsappReport = () => {
 
     generalInviteTotal += groupData.totalInvited
     generalDistributedTotal += groupData.totalDistributed
-    generalPresentedTotal += groupData.totalPresented
     generalTableCount += groupData.totalTableCount
   }
 
@@ -225,16 +223,16 @@ const sendWhatsappMessage = () => {
       <h1>Detaylı Raporlar</h1>
       <div class="header-actions">
         <button
-          @click="exportToCSV"
           class="export-btn"
           :disabled="isLoading || reportData.length === 0"
+          @click="exportToCSV"
         >
           <i class="fas fa-file-csv"></i> CSV Olarak Dışa Aktar
         </button>
         <button
-          @click="openShareModal"
           class="whatsapp-share-btn"
           :disabled="isLoading || reportData.length === 0"
+          @click="openShareModal"
         >
           <i class="fab fa-whatsapp"></i> WhatsApp ile Paylaş
         </button>
@@ -244,11 +242,11 @@ const sendWhatsappMessage = () => {
     <div class="filter-bar">
       <div class="form-group">
         <label for="start-date">Başlangıç Tarihi</label>
-        <input type="date" id="start-date" v-model="startDate" />
+        <input id="start-date" v-model="startDate" type="date" />
       </div>
       <div class="form-group">
         <label for="end-date">Bitiş Tarihi</label>
-        <input type="date" id="end-date" v-model="endDate" />
+        <input id="end-date" v-model="endDate" type="date" />
       </div>
       <div class="form-group">
         <label for="facility-filter">Tesis</label>
@@ -276,10 +274,10 @@ const sendWhatsappMessage = () => {
 
     <p>Seçilen tarih aralığındaki tüm operasyonların ekip bazında detaylı dökümü.</p>
 
-    <div class="chart-container card" v-if="!isLoading && reportData.length > 0">
+    <div v-if="!isLoading && reportData.length > 0" class="chart-container card">
       <h3>Operasyon Hunisi (Funnel) Özeti</h3>
       <div class="chart-wrapper">
-        <FunnelChart :chartData="chartData" />
+        <FunnelChart :chart-data="chartData" />
       </div>
     </div>
 
@@ -395,7 +393,7 @@ const sendWhatsappMessage = () => {
 
     <ShareModal
       :show="showShareModal"
-      :shareText="whatsappShareText"
+      :share-text="whatsappShareText"
       title="Raporu WhatsApp ile Paylaş"
       @close="showShareModal = false"
       @share="sendWhatsappMessage"

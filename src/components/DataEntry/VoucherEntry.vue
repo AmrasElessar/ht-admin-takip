@@ -4,7 +4,6 @@ import { db } from '../../firebaseConfig'
 import { collection, doc, setDoc, getDocs, query, where, documentId } from 'firebase/firestore'
 import { useUserStore } from '../../stores/userStore'
 import { useOperationStore } from '../../stores/operationStore' // YENİ
-import { useToast } from 'vue-toastification'
 import ShareModal from '../common/ShareModal.vue'
 import { handleError } from '@/utils/errorHandler'
 
@@ -13,7 +12,6 @@ import { handleError } from '@/utils/errorHandler'
 
 const userStore = useUserStore()
 const operationStore = useOperationStore() // YENİ
-const toast = useToast()
 let debounceTimer = null
 
 const isLoading = ref(true)
@@ -227,9 +225,9 @@ onUnmounted(() => {
     <div class="header-actions">
       <h3>Fiş Kayıtları (Kapatıcı Gruplar)</h3>
       <button
-        @click="openShareModal"
         class="whatsapp-share-btn"
         :disabled="isLoading || totals.grand.total === 0"
+        @click="openShareModal"
       >
         <i class="fab fa-whatsapp"></i> WhatsApp ile Paylaş
       </button>
@@ -257,15 +255,15 @@ onUnmounted(() => {
           <div v-for="team in teams" :key="team.id" class="grid-row">
             <div class="team-name">{{ team.name }}</div>
             <input
+              v-model.number="dailyVoucherData[team.id].guestCount"
               type="number"
               min="0"
-              v-model.number="dailyVoucherData[team.id].guestCount"
               @input="saveDataForTeam(team.id)"
             />
             <input
+              v-model.number="dailyVoucherData[team.id].staffCount"
               type="number"
               min="0"
-              v-model.number="dailyVoucherData[team.id].staffCount"
               @input="saveDataForTeam(team.id)"
             />
             <div class="total-col">
@@ -294,7 +292,7 @@ onUnmounted(() => {
 
     <ShareModal
       :show="showShareModal"
-      :shareText="whatsappShareText"
+      :share-text="whatsappShareText"
       title="Fiş Raporunu WhatsApp ile Paylaş"
       @close="showShareModal = false"
       @share="sendWhatsappMessage"

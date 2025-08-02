@@ -78,10 +78,10 @@ watch(
       <Form
         v-for="user in userStore.allUsers"
         :key="user.id"
-        @submit="updateUser(user)"
-        :initial-values="user"
         v-slot="{ meta }"
+        :initial-values="user"
         class="user-card"
+        @submit="updateUser(user)"
       >
         <div class="user-info">
           <img
@@ -101,14 +101,14 @@ watch(
         <div class="user-controls">
           <div class="form-group">
             <label>Durum</label>
-            <Field name="disabled" as="select" v-model="user.disabled">
+            <Field v-model="user.disabled" name="disabled" as="select">
               <option :value="false">Aktif</option>
               <option :value="true">Engelli</option>
             </Field>
           </div>
           <div class="form-group">
             <label>Rol</label>
-            <Field name="role" as="select" v-model="user.role">
+            <Field v-model="user.role" name="role" as="select">
               <option value="yok">Rol Yok</option>
               <option value="kullanici">Kullanıcı</option>
               <option value="superadmin">Super Admin</option>
@@ -117,17 +117,17 @@ watch(
           </div>
 
           <div
-            class="form-group-full"
             v-if="['kurucu', 'superadmin', 'kullanici'].includes(user.role)"
+            class="form-group-full"
           >
             <label>Atanacak Tesisler</label>
             <div class="checkbox-container">
               <label v-for="facility in facilities" :key="facility.id" class="checkbox-label">
                 <Field
+                  v-model="user.assignedFacilityIds"
                   name="assignedFacilityIds"
                   type="checkbox"
                   :value="facility.id"
-                  v-model="user.assignedFacilityIds"
                 />
                 {{ facility.name }}
               </label>

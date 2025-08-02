@@ -297,25 +297,25 @@ onUnmounted(() => {
             <td>{{ row.guestSingle }}</td>
             <td class="cancel-col">
               <input
-                type="number"
-                min="0"
                 v-model.number="row.cancelledUp"
+                type="number"
+                min="0"
                 @input="saveCancellationData(row.teamId)"
               />
             </td>
             <td class="cancel-col">
               <input
-                type="number"
-                min="0"
                 v-model.number="row.cancelledOneleg"
+                type="number"
+                min="0"
                 @input="saveCancellationData(row.teamId)"
               />
             </td>
             <td class="cancel-col">
               <input
+                v-model.number="row.cancelledSingle"
                 type="number"
                 min="0"
-                v-model.number="row.cancelledSingle"
                 @input="saveCancellationData(row.teamId)"
               />
             </td>

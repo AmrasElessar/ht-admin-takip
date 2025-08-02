@@ -229,30 +229,30 @@ onUnmounted(() => {
           </div>
           <input
             v-if="presentationData[team.id]"
-            type="number"
-            min="0"
             v-model.number="presentationData[team.id].tableCount"
+            type="number"
+            min="0"
             @input="savePresentationData(team.id)"
           />
           <input
             v-if="presentationData[team.id]"
-            type="number"
-            min="0"
             v-model.number="presentationData[team.id].up"
+            type="number"
+            min="0"
             @input="savePresentationData(team.id)"
           />
           <input
             v-if="presentationData[team.id]"
-            type="number"
-            min="0"
             v-model.number="presentationData[team.id].oneleg"
+            type="number"
+            min="0"
             @input="savePresentationData(team.id)"
           />
           <input
             v-if="presentationData[team.id]"
+            v-model.number="presentationData[team.id].single"
             type="number"
             min="0"
-            v-model.number="presentationData[team.id].single"
             @input="savePresentationData(team.id)"
           />
           <div
@@ -266,7 +266,7 @@ onUnmounted(() => {
       <div class="close-operations-section">
         <h3>Günlük Operasyonları Kapat</h3>
         <p>Bu işlem, seçilen tarih için tüm günlük operasyon verilerini sıfırlayacaktır.</p>
-        <button @click="closeDailyOperations" class="btn-close-day">
+        <button class="btn-close-day" @click="closeDailyOperations">
           <i class="fas fa-calendar-times"></i> Turu Kapat ve Verileri Sıfırla
         </button>
       </div>

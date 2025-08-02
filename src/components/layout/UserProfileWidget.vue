@@ -51,10 +51,10 @@ const onStatusChange = (event) => {
         <div class="status-container">
           <span class="status-dot" :style="{ backgroundColor: currentStatusObject.color }"></span>
           <select
-            @change="onStatusChange"
-            @click.stop
             :value="userStatus.availability"
             class="status-select"
+            @change="onStatusChange"
+            @click.stop
           >
             <option v-for="status in statuses" :key="status.value" :value="status.value">
               {{ status.text }}

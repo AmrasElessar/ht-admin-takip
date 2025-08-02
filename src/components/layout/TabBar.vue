@@ -35,7 +35,7 @@ const handleCloseTab = (tab) => {
       @click="goToTab(tab.path)"
     >
       <span>{{ tab.displayName }}</span>
-      <button @click.stop="handleCloseTab(tab)" class="close-btn" v-if="tab.path !== '/'">×</button>
+      <button v-if="tab.path !== '/'" class="close-btn" @click.stop="handleCloseTab(tab)">×</button>
     </div>
   </div>
 </template>

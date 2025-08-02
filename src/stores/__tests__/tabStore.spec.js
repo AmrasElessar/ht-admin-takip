@@ -48,8 +48,6 @@ describe('Tab Store', () => {
   // TEST 4: openTab yeni bir alt sekme ekler ve onu aktif yapar
   it('openTab yeni bir alt sekme ekler ve onu aktif yapar', () => {
     const tabStore = useTabStore()
-    // Ana sekme olarak varsayacağımız bir yol
-    const mainRoute = { path: '/settings', name: 'Settings', meta: { displayName: 'Ayarlar' } }
     // Alt sekme
     const subRoute = {
       path: '/settings/profile',

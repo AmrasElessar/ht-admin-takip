@@ -18,8 +18,6 @@ import papa from 'papaparse'
 import { useToast } from 'vue-toastification'
 import ConfirmModal from '../../components/common/ConfirmModal.vue'
 
-const newFacilityName = ref('')
-const newFacilityCity = ref('')
 const facilities = ref([])
 const editingFacility = ref(null)
 const facilitiesCollectionRef = collection(db, 'facilities')
@@ -199,25 +197,25 @@ onMounted(fetchFacilities)
       <h3>Toplu Veri İşlemleri</h3>
       <p>Yeni verileri toplu ekleyin veya mevcut verilerinizi yedekleyin.</p>
       <div class="button-group">
-        <button @click="downloadTemplate" class="btn-secondary">
+        <button class="btn-secondary" @click="downloadTemplate">
           <i class="fas fa-file-alt"></i> Boş Şablon İndir
         </button>
-        <button @click="triggerFileUpload" class="btn-success">
+        <button class="btn-success" @click="triggerFileUpload">
           <i class="fas fa-file-import"></i> CSV'den İçe Aktar
         </button>
-        <button @click="exportData" class="btn-info">
+        <button class="btn-info" @click="exportData">
           <i class="fas fa-file-export"></i> Tümünü Dışa Aktar (Yedekle)
         </button>
-        <button @click="confirmClearAllData" class="btn-danger">
+        <button class="btn-danger" @click="confirmClearAllData">
           <i class="fas fa-trash-alt"></i> Tüm Tesisleri Sil
         </button>
       </div>
       <input
-        type="file"
         ref="fileInput"
-        @change="handleFileUpload"
+        type="file"
         style="display: none"
         accept=".csv"
+        @change="handleFileUpload"
       />
     </div>
 
@@ -225,20 +223,20 @@ onMounted(fetchFacilities)
       <h3>Tesis Ekle / Düzenle</h3>
       <Form
         v-if="editingFacility"
-        @submit="updateFacility"
-        class="add-form"
         v-slot="{ meta }"
+        class="add-form"
         :initial-values="editingFacility"
+        @submit="updateFacility"
       >
-        <Field name="name" type="text" v-model="editingFacility.name" :rules="isRequired" />
+        <Field v-model="editingFacility.name" name="name" type="text" :rules="isRequired" />
         <ErrorMessage name="name" class="error-message" />
-        <Field name="city" type="text" v-model="editingFacility.city" :rules="isRequired" />
+        <Field v-model="editingFacility.city" name="city" type="text" :rules="isRequired" />
         <ErrorMessage name="city" class="error-message" />
         <button type="submit" :disabled="!meta.valid">Güncelle</button>
-        <button type="button" @click="editingFacility = null" class="btn-cancel">İptal</button>
+        <button type="button" class="btn-cancel" @click="editingFacility = null">İptal</button>
       </Form>
 
-      <Form v-else @submit="addFacility" class="add-form" v-slot="{ meta }">
+      <Form v-else v-slot="{ meta }" class="add-form" @submit="addFacility">
         <Field
           name="newFacilityName"
           type="text"
@@ -259,8 +257,8 @@ onMounted(fetchFacilities)
             ><strong>{{ facility.name }}</strong> ({{ facility.city }})</span
           >
           <div class="actions">
-            <button @click="startEditFacility(facility)" class="edit-btn">Düzenle</button>
-            <button @click="deleteFacility(facility.id)" class="delete-btn">Sil</button>
+            <button class="edit-btn" @click="startEditFacility(facility)">Düzenle</button>
+            <button class="delete-btn" @click="deleteFacility(facility.id)">Sil</button>
           </div>
         </li>
       </ul>
@@ -270,7 +268,7 @@ onMounted(fetchFacilities)
       :show="showConfirmModal"
       title="Tüm Tesisleri Sil"
       message="Bu işlem geri alınamaz. Tüm tesis verilerini kalıcı olarak silmek istediğinizden emin misiniz?"
-      confirmationText="SİL"
+      confirmation-text="SİL"
       @close="showConfirmModal = false"
       @confirm="clearAllData"
     />

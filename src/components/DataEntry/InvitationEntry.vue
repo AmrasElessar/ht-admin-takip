@@ -210,7 +210,7 @@ onUnmounted(() => {
   <div class="invitation-entry">
     <div class="header-actions">
       <h3>Davet Girişi (Dağıtıcı Gruplar)</h3>
-      <button @click="openInvitationModal" class="btn-primary">
+      <button class="btn-primary" @click="openInvitationModal">
         <i class="fas fa-th"></i> 40'lık Listeden Hızlı Giriş Yap
       </button>
     </div>
@@ -232,21 +232,21 @@ onUnmounted(() => {
         <div v-for="team in distributorTeams" :key="team.id" class="grid-row">
           <div class="team-name">{{ team.name }}</div>
           <input
-            type="number"
-            min="0"
             v-model.number="dailyInvitationsData[team.id].up"
+            type="number"
+            min="0"
             @input="saveDataForTeam(team.id)"
           />
           <input
-            type="number"
-            min="0"
             v-model.number="dailyInvitationsData[team.id].oneleg"
+            type="number"
+            min="0"
             @input="saveDataForTeam(team.id)"
           />
           <input
+            v-model.number="dailyInvitationsData[team.id].single"
             type="number"
             min="0"
-            v-model.number="dailyInvitationsData[team.id].single"
             @input="saveDataForTeam(team.id)"
           />
           <div class="total-col">
@@ -264,7 +264,7 @@ onUnmounted(() => {
       </div>
 
       <div class="card-footer">
-        <button @click="saveAndTransferToLottery" class="btn-transfer" :disabled="!isDataEntered">
+        <button class="btn-transfer" :disabled="!isDataEntered" @click="saveAndTransferToLottery">
           <i class="fas fa-rocket"></i> Kaydet ve Dağıtıma Aktar
         </button>
       </div>
@@ -273,8 +273,8 @@ onUnmounted(() => {
     <InvitationListModal
       v-if="showListModal"
       :show="showListModal"
-      :distributorTeams="distributorTeams"
-      :initialData="dailyInvitationsData"
+      :distributor-teams="distributorTeams"
+      :initial-data="dailyInvitationsData"
       @close="showListModal = false"
       @save-and-transfer="handleTotalsUpdate"
     />

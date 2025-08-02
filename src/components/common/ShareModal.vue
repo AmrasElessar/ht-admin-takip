@@ -7,7 +7,12 @@ defineProps({
     type: String,
     default: 'Paylaş',
   },
-  shareText: String,
+  // --- DÜZELTME BURADA ---
+  shareText: {
+    type: String,
+    default: '', // Varsayılan değer olarak boş bir metin atandı.
+  },
+  // -------------------------
 })
 
 const emit = defineEmits(['close', 'share'])
@@ -25,8 +30,8 @@ const emit = defineEmits(['close', 'share'])
     <textarea readonly class="share-textarea" :value="shareText"></textarea>
 
     <template #actions>
-      <button @click="emit('close')" class="btn-cancel">Kapat</button>
-      <button @click="emit('share')" class="btn-share">
+      <button class="btn-cancel" @click="emit('close')">Kapat</button>
+      <button class="btn-share" @click="emit('share')">
         <i class="fas fa-share-alt"></i> Paylaş
       </button>
     </template>

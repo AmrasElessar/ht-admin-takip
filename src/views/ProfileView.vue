@@ -36,7 +36,7 @@ const saveProfile = () => {
           {{ facility.name }} ({{ facility.city }})
         </option>
       </select>
-      <button @click="saveProfile" class="save-btn">Kaydet</button>
+      <button class="save-btn" @click="saveProfile">Kaydet</button>
       <p v-if="successMessage" class="message success">{{ successMessage }}</p>
     </div>
   </div>

@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+echo "Lint kontrolü çalıştırılıyor..."
+npm run lint
+LINT_RESULT=$?
+if [ $LINT_RESULT -ne 0 ]; then
+  echo "Lint kontrolü başarısız oldu. Commit işlemi iptal edildi."
+  exit 1
+fi
+
+echo "Testler çalıştırılıyor..."
+npm run test

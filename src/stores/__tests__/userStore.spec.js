@@ -1,7 +1,7 @@
 // src/stores/__tests__/userStore.spec.js
 
 import { setActivePinia, createPinia } from 'pinia'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { useUserStore } from '../userStore'
 
 // localStorage gibi dış bağımlılıkları taklit (mock) ediyoruz

@@ -18,7 +18,7 @@ defineEmits(['close'])
   <Transition name="modal-fade">
     <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal-content" :class="{ 'x-large': isXLarge }">
-        <button @click="$emit('close')" class="close-button">&times;</button>
+        <button class="close-button" @click="$emit('close')">&times;</button>
 
         <header class="modal-header">
           <slot name="header">

@@ -21,7 +21,6 @@ const newBus = reactive({ plate: '', driverName: '', startPoint: '', endPoint: '
 const showShareModal = ref(false)
 const whatsappShareText = ref('')
 const openBusIds = ref([])
-let unsubscribe = null
 
 // Form verilerini geçici kaydetmek için composable'ı başlat
 const { loadState, clearState } = useFormPersistence('new-bus-form', newBus)
@@ -186,13 +185,13 @@ onUnmounted(() => {
     <div class="header">
       <h3>Günlük Otobüs Yönetimi</h3>
       <div>
-        <button @click="openAddBusModal" class="btn-primary">
+        <button class="btn-primary" @click="openAddBusModal">
           <i class="fas fa-plus"></i> Yeni Otobüs Ekle
         </button>
         <button
-          @click="openShareModal"
           class="whatsapp-share-btn"
           :disabled="dailyBuses.length === 0"
+          @click="openShareModal"
         >
           <i class="fab fa-whatsapp"></i> WhatsApp ile Paylaş
         </button>
@@ -214,7 +213,7 @@ onUnmounted(() => {
             <strong>{{ totalPassengersOnBus(bus) }}</strong> / {{ bus.capacity || '∞' }}
           </div>
           <div class="actions">
-            <button @click.stop="deleteBus(bus.id)" class="delete-btn" title="Otobüsü Sil">
+            <button class="delete-btn" title="Otobüsü Sil" @click.stop="deleteBus(bus.id)">
               <i class="fas fa-trash"></i>
             </button>
             <i
@@ -223,7 +222,7 @@ onUnmounted(() => {
             ></i>
           </div>
         </div>
-        <div class="accordion-content" v-if="openBusIds.includes(bus.id)">
+        <div v-if="openBusIds.includes(bus.id)" class="accordion-content">
           <p v-if="isCapacityExceeded(bus)" class="error-message">
             <i class="fas fa-exclamation-triangle"></i> Uyarı: Otobüs kapasitesi aşıldı!
           </p>
@@ -231,11 +230,11 @@ onUnmounted(() => {
             <div v-for="team in teams" :key="team.id" class="passenger-team-row">
               <label>{{ team.name }}</label>
               <input
+                v-model.number="bus.passengers[team.id]"
                 type="number"
                 min="0"
-                v-model.number="bus.passengers[team.id]"
-                @input="saveBusData"
                 placeholder="0"
+                @input="saveBusData"
               />
             </div>
           </div>
@@ -257,18 +256,18 @@ onUnmounted(() => {
           <label>Varış Noktası</label><input v-model="newBus.endPoint" required />
         </div>
         <div class="form-group">
-          <label>Kapasite</label><input type="number" min="1" v-model.number="newBus.capacity" />
+          <label>Kapasite</label><input v-model.number="newBus.capacity" type="number" min="1" />
         </div>
       </form>
       <template #actions>
-        <button type="button" @click="cancelAddBus" class="btn-cancel">İptal</button>
-        <button @click="addBus" class="btn-confirm">Ekle</button>
+        <button type="button" class="btn-cancel" @click="cancelAddBus">İptal</button>
+        <button class="btn-confirm" @click="addBus">Ekle</button>
       </template>
     </BaseModal>
 
     <ShareModal
       :show="showShareModal"
-      :shareText="whatsappShareText"
+      :share-text="whatsappShareText"
       title="Otobüs Raporunu WhatsApp ile Paylaş"
       @close="showShareModal = false"
       @share="sendWhatsappMessage"

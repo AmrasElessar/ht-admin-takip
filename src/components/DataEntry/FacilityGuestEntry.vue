@@ -4,7 +4,6 @@ import { db } from '../../firebaseConfig'
 import { collection, doc, setDoc, getDocs, query, where, documentId } from 'firebase/firestore'
 import { useUserStore } from '../../stores/userStore'
 import { useOperationStore } from '../../stores/operationStore' // YENİ
-import { useToast } from 'vue-toastification'
 import { handleError } from '@/utils/errorHandler'
 
 // DEĞİŞİKLİK: defineProps kaldırıldı
@@ -12,7 +11,6 @@ import { handleError } from '@/utils/errorHandler'
 
 const userStore = useUserStore()
 const operationStore = useOperationStore() // YENİ
-const toast = useToast()
 let debounceTimer = null
 
 const isLoading = ref(true)
@@ -205,21 +203,21 @@ onUnmounted(() => {
           <div v-for="team in teams" :key="team.id" class="grid-row">
             <div class="team-name">{{ team.name }}</div>
             <input
-              type="number"
-              min="0"
               v-model.number="dailyGuestData[team.id].up"
+              type="number"
+              min="0"
               @input="saveDataForTeam(team.id)"
             />
             <input
-              type="number"
-              min="0"
               v-model.number="dailyGuestData[team.id].oneleg"
+              type="number"
+              min="0"
               @input="saveDataForTeam(team.id)"
             />
             <input
+              v-model.number="dailyGuestData[team.id].single"
               type="number"
               min="0"
-              v-model.number="dailyGuestData[team.id].single"
               @input="saveDataForTeam(team.id)"
             />
             <div class="total-col">

@@ -1,4 +1,5 @@
 <script setup>
+/* eslint-disable no-unused-vars */
 import { ref, onMounted } from 'vue'
 import { db } from '../../firebaseConfig'
 import {
@@ -16,7 +17,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import papa from 'papaparse'
 import { useToast } from 'vue-toastification'
-import ConfirmModal from '../../components/common/ConfirmModal.vue'
+// Kullanılmadığı için ConfirmModal importu kaldırıldı.
 
 const salesGroups = ref([])
 const editingGroup = ref(null)
@@ -53,7 +54,7 @@ const addSalesGroup = async (values, { resetForm }) => {
     toast.success('Grup başarıyla eklendi!')
     resetForm()
     fetchSalesGroups()
-  } catch (e) {
+  } catch {
     toast.error('Grup eklenemedi!')
   }
 }
@@ -64,7 +65,7 @@ const deleteSalesGroup = async (id) => {
     await deleteDoc(doc(db, 'salesGroups', id))
     toast.info('Grup silindi.')
     fetchSalesGroups()
-  } catch (e) {
+  } catch {
     toast.error('Grup silinemedi!')
   }
 }
@@ -85,7 +86,7 @@ const updateSalesGroup = async () => {
     toast.success('Grup güncellendi!')
     editingGroup.value = null
     fetchSalesGroups()
-  } catch (e) {
+  } catch {
     toast.error('Grup güncellenemedi!')
   }
 }
@@ -156,7 +157,7 @@ const handleFileUpload = (event) => {
         console.error('İçe aktarma hatası:', error)
       }
     },
-    error: (err) => {
+    error: () => {
       toast.error('CSV dosyası okunurken bir hata oluştu.')
     },
   })
@@ -186,6 +187,7 @@ const clearAllData = async () => {
 
 onMounted(fetchSalesGroups)
 </script>
+
 <template>
   <div>
     <h2>Satış Grubu Yönetimi</h2>
@@ -193,48 +195,48 @@ onMounted(fetchSalesGroups)
     <div class="card">
       <Form
         v-if="editingGroup"
-        @submit="updateSalesGroup"
+        v-slot="{ meta }"
         :initial-values="editingGroup"
         :validation-schema="editGroupSchema"
         class="add-form"
-        v-slot="{ meta }"
+        @submit="updateSalesGroup"
       >
         <Field
+          v-model="editingGroup.name"
           name="name"
           type="text"
-          v-model="editingGroup.name"
           class="form-input"
           placeholder="Grup Adı"
         />
         <ErrorMessage name="name" class="error-message" />
 
         <Field
+          v-model.number="editingGroup.sortOrder"
           name="sortOrder"
           type="number"
-          v-model.number="editingGroup.sortOrder"
           class="order-input"
         />
         <ErrorMessage name="sortOrder" class="error-message" />
 
         <div class="checkbox-wrapper">
           <Field
+            v-model="editingGroup.isDistributor"
             name="isDistributor"
             type="checkbox"
-            v-model="editingGroup.isDistributor"
             :value="true"
           />
           <label>Dağıtıcı Grup mu?</label>
         </div>
         <button type="submit" :disabled="!meta.valid">Güncelle</button>
-        <button type="button" @click="editingGroup = null" class="btn-cancel">İptal</button>
+        <button type="button" class="btn-cancel" @click="editingGroup = null">İptal</button>
       </Form>
 
       <Form
         v-else
-        @submit="addSalesGroup"
+        v-slot="{ meta }"
         :validation-schema="addGroupSchema"
         class="add-form"
-        v-slot="{ meta }"
+        @submit="addSalesGroup"
       >
         <Field name="newGroupName" type="text" placeholder="Yeni grup adı" class="form-input" />
         <ErrorMessage name="newGroupName" class="error-message" />
@@ -267,8 +269,8 @@ onMounted(fetchSalesGroups)
             ></i>
           </div>
           <div class="actions">
-            <button @click="startEditGroup(group)" class="edit-btn">Düzenle</button>
-            <button @click="deleteSalesGroup(group.id)" class="delete-btn">Sil</button>
+            <button class="edit-btn" @click="startEditGroup(group)">Düzenle</button>
+            <button class="delete-btn" @click="deleteSalesGroup(group.id)">Sil</button>
           </div>
         </li>
       </ul>
@@ -387,5 +389,27 @@ li {
   width: 100%;
   margin-top: -5px;
   margin-bottom: 5px;
+}
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  align-self: center;
+}
+.distributor-icon {
+  color: var(--color-accent);
+  margin-left: 10px;
+}
+.group-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sort-order {
+  background-color: var(--bg-tabbar);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
 }
 </style>

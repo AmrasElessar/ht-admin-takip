@@ -1,57 +1,35 @@
-import globals from 'globals'
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
-import * as parserVue from 'vue-eslint-parser'
 import prettierConfig from 'eslint-config-prettier'
+import globals from 'globals'
 
 export default [
-  // Global ayarlar ve Vue dosyaları için yapılandırma
+  // 1. Temel ESLint kuralları
+  js.configs.recommended,
+
+  // 2. Vue 3 için önerilen kurallar (DOĞRU İSİM ve SPREAD OPERATÖRÜ İLE)
+  ...pluginVue.configs['flat/recommended'],
+
+  // 3. Prettier ile çakışmaları önleyen kural seti (her zaman en sonda olmalı)
+  prettierConfig,
+
+  // 4. Kendi özel ayarlarımız
   {
-    files: ['**/*.{js,mjs,cjs,vue}'],
+    files: ['**/*.{js,vue}'],
     languageOptions: {
       globals: {
         ...globals.browser,
+        ...globals.node,
       },
-    },
-  },
-
-  // Node.js ortamı için özel yapılandırma (functions klasörü)
-  {
-    files: ['functions/**/*.js'],
-    languageOptions: {
-      globals: {
-        ...globals.node, // 'require', 'module', 'exports' gibi Node.js global'lerini tanımlar
-      },
-      sourceType: 'commonjs', // 'require' ve 'module.exports' kullanımını belirtir
-    },
-  },
-
-  // Vue dosyaları için özel yapılandırma
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      parser: parserVue,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-      },
-    },
-    plugins: {
-      vue: pluginVue,
     },
     rules: {
-      ...pluginVue.configs['vue3-essential'].rules,
+      // Proje özelinde ezmek istediğiniz kuralları buraya ekleyebilirsiniz.
+      'vue/multi-word-component-names': 'off', // Sayfa (View) bileşenlerinde tek kelimeye izin ver
     },
   },
 
-  // Genel ESLint kuralları
-  js.configs.recommended,
-
-  // Prettier ile çakışmaları önleyen yapılandırma
-  prettierConfig,
-
-  // Göz ardı edilecek dosyalar
+  // 5. Göz ardı edilecek dosyalar
   {
-    ignores: ['dist', 'node_modules', '.vscode', 'functions/node_modules'],
+    ignores: ['dist/', 'node_modules/', '.vscode/', 'functions/node_modules/'],
   },
 ]

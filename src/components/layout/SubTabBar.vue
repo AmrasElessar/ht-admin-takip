@@ -28,7 +28,7 @@ const goToTab = (path) => {
       @click="goToTab(tab.path)"
     >
       <span>{{ tab.displayName }}</span>
-      <button @click.stop="handleCloseTab(tab)" class="close-btn">×</button>
+      <button class="close-btn" @click.stop="handleCloseTab(tab)">×</button>
     </div>
   </div>
 </template>
