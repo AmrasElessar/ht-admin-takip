@@ -1,30 +1,26 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { db } from '../../firebaseConfig'
-import {
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  deleteDoc,
-  updateDoc,
-  query,
-  orderBy,
-  writeBatch,
-} from 'firebase/firestore'
+import { addDoc, updateDoc, doc, collection, writeBatch } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import papa from 'papaparse'
 import { useToast } from 'vue-toastification'
 import ConfirmModal from '../../components/common/ConfirmModal.vue'
+import { useSettingsCRUD } from '../../composables/useSettingsCRUD'
 
-const facilities = ref([])
-const editingFacility = ref(null)
-const facilitiesCollectionRef = collection(db, 'facilities')
 const toast = useToast()
-
 const fileInput = ref(null)
 const showConfirmModal = ref(false)
+
+const {
+  items: facilities,
+  editingItem: editingFacility,
+  fetchItems: fetchFacilities,
+  deleteItem: deleteFacility,
+  startEditItem: startEditFacility,
+  cancelEdit: cancelEditFacility,
+} = useSettingsCRUD('facilities', { orderByField: 'name' })
 
 const isRequired = (value) => {
   if (value && value.trim()) {
@@ -33,15 +29,9 @@ const isRequired = (value) => {
   return 'Bu alan zorunludur.'
 }
 
-const fetchFacilities = async () => {
-  const q = query(facilitiesCollectionRef, orderBy('name'))
-  const querySnapshot = await getDocs(q)
-  facilities.value = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-}
-
 const addFacility = async (values, { resetForm }) => {
   try {
-    await addDoc(facilitiesCollectionRef, {
+    await addDoc(collection(db, 'facilities'), {
       name: values.newFacilityName,
       city: values.newFacilityCity,
       isActive: true,
@@ -55,22 +45,6 @@ const addFacility = async (values, { resetForm }) => {
   }
 }
 
-const deleteFacility = async (id) => {
-  if (!confirm('Bu tesisi silmek istediğinizden emin misiniz?')) return
-  try {
-    await deleteDoc(doc(db, 'facilities', id))
-    toast.info('Tesis silindi.')
-    fetchFacilities()
-  } catch (error) {
-    toast.error('Tesis silinirken bir hata oluştu.')
-    console.error(error)
-  }
-}
-
-const startEditFacility = (facility) => {
-  editingFacility.value = { ...facility }
-}
-
 const updateFacility = async () => {
   if (!editingFacility.value) return
   try {
@@ -80,15 +54,13 @@ const updateFacility = async () => {
       city: editingFacility.value.city,
     })
     toast.success('Tesis bilgileri güncellendi!')
-    editingFacility.value = null
+    cancelEditFacility()
     fetchFacilities()
   } catch (error) {
     toast.error('Tesis güncellenirken bir hata oluştu.')
     console.error(error)
   }
 }
-
-// --- YENİ CSV Fonksiyonları ---
 
 const downloadTemplate = () => {
   const csv = papa.unparse({
@@ -233,7 +205,7 @@ onMounted(fetchFacilities)
         <Field v-model="editingFacility.city" name="city" type="text" :rules="isRequired" />
         <ErrorMessage name="city" class="error-message" />
         <button type="submit" :disabled="!meta.valid">Güncelle</button>
-        <button type="button" class="btn-cancel" @click="editingFacility = null">İptal</button>
+        <button type="button" class="btn-cancel" @click="cancelEditFacility">İptal</button>
       </Form>
 
       <Form v-else v-slot="{ meta }" class="add-form" @submit="addFacility">
@@ -274,117 +246,3 @@ onMounted(fetchFacilities)
     />
   </div>
 </template>
-
-<style scoped>
-.card {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px var(--shadow-color);
-  margin-bottom: 20px;
-}
-.data-actions-card p {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-top: 0;
-}
-.button-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.button-group button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 15px;
-  font-weight: bold;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  color: white;
-}
-.btn-secondary {
-  background-color: #7f8c8d;
-}
-.btn-success {
-  background-color: #27ae60;
-}
-.btn-info {
-  background-color: var(--color-info);
-}
-.btn-danger {
-  background-color: var(--color-danger);
-}
-.add-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
-  align-items: flex-start;
-}
-.add-form input {
-  flex-grow: 1;
-  padding: 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  min-width: 200px;
-}
-.add-form button {
-  padding: 8px 15px;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  background-color: var(--color-accent);
-  align-self: center;
-}
-.add-form button:disabled {
-  background-color: #bdc3c7;
-  cursor: not-allowed;
-}
-.btn-cancel {
-  background-color: #95a5a6;
-}
-.item-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid var(--border-color);
-}
-.actions {
-  display: flex;
-  gap: 10px;
-}
-.edit-btn,
-.delete-btn {
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 12px;
-}
-.edit-btn {
-  background-color: var(--color-info);
-}
-.delete-btn {
-  background-color: var(--color-danger);
-}
-.error-message {
-  color: var(--color-danger);
-  font-size: 12px;
-  width: 100%;
-  margin-top: -5px;
-  margin-bottom: 5px;
-}
-</style>
