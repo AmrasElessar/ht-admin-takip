@@ -1,62 +1,58 @@
 <script setup>
-import { ref, onMounted, computed, reactive } from 'vue'
+import { ref, onMounted, computed } from 'vue' // 'reactive' kaldırıldı
 import { db } from '../../firebaseConfig'
-import {
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  deleteDoc,
-  updateDoc,
-  query,
-  orderBy,
-  writeBatch,
-} from 'firebase/firestore'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import { Form, Field, ErrorMessage } from 'vee-validate'
-import papa from 'papaparse'
-import { useToast } from 'vue-toastification'
+import { useSettingsCRUD } from '../../composables/useSettingsCRUD'
 import ConfirmModal from '../../components/common/ConfirmModal.vue'
 
-// Gerekli ref'ler ve reaktif değişkenler
 const facilities = ref([])
 const salesGroups = ref([])
-const teams = ref([])
-const editingTeamId = ref(null)
-const editingTeamData = reactive({ id: '', name: '', facilityId: '', salesGroupId: '' })
-const toast = useToast()
 const fileInput = ref(null)
 const showConfirmModal = ref(false)
 const openFacilityIds = ref([])
 const openGroupIds = ref([])
 
-// Firestore koleksiyon referansları
-const facilitiesCollectionRef = collection(db, 'facilities')
-const salesGroupsCollectionRef = collection(db, 'salesGroups')
-const teamsCollectionRef = collection(db, 'teams')
+// Merkezi CRUD mantığını 'teams' koleksiyonu için çağırıyoruz
+const {
+  items: teams,
+  editingItem: editingTeam,
+  fetchItems: fetchTeams,
+  deleteItem: deleteTeam,
+  startEditItem: startEdit,
+  cancelEdit,
+  addDoc,
+  updateDoc,
+  doc,
+  writeBatch,
+  papa,
+  toast,
+  downloadTemplate,
+  exportData,
+} = useSettingsCRUD('teams', {
+  orderByField: 'name',
+  csvFields: ['name', 'facilityName', 'salesGroupName'],
+  singularName: 'Ekip',
+})
 
 // Validasyon kuralı
 const isRequired = (value) => (value && String(value).trim() ? true : 'Bu alan zorunludur.')
 
 // --- Veri Çekme Fonksiyonları ---
 const fetchFacilities = async () => {
-  const q = query(facilitiesCollectionRef, orderBy('name'))
+  const q = query(collection(db, 'facilities'), orderBy('name'))
   const querySnapshot = await getDocs(q)
   facilities.value = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 }
 
 const fetchSalesGroups = async () => {
-  const q = query(salesGroupsCollectionRef, orderBy('sortOrder'))
+  const q = query(collection(db, 'salesGroups'), orderBy('sortOrder'))
   const querySnapshot = await getDocs(q)
   salesGroups.value = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 }
 
-const fetchTeams = async () => {
-  const q = query(teamsCollectionRef, orderBy('name'))
-  const querySnapshot = await getDocs(q)
-  teams.value = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-}
-
+// Ekipleri Tesis ve Gruba göre gruplayan computed property
 const groupedAndSortedTeams = computed(() => {
   if (!teams.value.length) return []
 
@@ -101,12 +97,12 @@ const groupedAndSortedTeams = computed(() => {
   return result.filter((f) => f.groups.length > 0)
 })
 
-// --- CRUD ve CSV Fonksiyonları ---
+// --- Bileşene Özel Fonksiyonlar ---
 const addTeam = async (values, { resetForm }) => {
   try {
     const facility = facilities.value.find((f) => f.id === values.selectedFacility)
     const salesGroup = salesGroups.value.find((g) => g.id === values.selectedSalesGroup)
-    await addDoc(teamsCollectionRef, {
+    await addDoc(collection(db, 'teams'), {
       name: values.newTeamName,
       facilityId: facility.id,
       facilityName: facility.name,
@@ -116,82 +112,32 @@ const addTeam = async (values, { resetForm }) => {
     toast.success('Ekip başarıyla eklendi!')
     resetForm({ values: { newTeamName: '', selectedFacility: '', selectedSalesGroup: '' } })
     fetchTeams()
-  } catch (error) {
+  } catch (e) {
     toast.error('Ekip eklenemedi!')
-    console.error(error)
+    console.error(e)
   }
-}
-
-const deleteTeam = async (id) => {
-  if (!confirm('Bu ekibi silmek istediğinizden emin misiniz?')) return
-  try {
-    await deleteDoc(doc(db, 'teams', id))
-    toast.info('Ekip silindi.')
-    fetchTeams()
-  } catch {
-    toast.error('Ekip silinemedi!')
-  }
-}
-
-const startEdit = (team) => {
-  editingTeamId.value = team.id
-  Object.assign(editingTeamData, team)
-}
-
-const cancelEdit = () => {
-  editingTeamId.value = null
 }
 
 const saveEdit = async () => {
-  if (!editingTeamId.value) return
+  if (!editingTeam.value) return
   try {
-    const teamDocRef = doc(db, 'teams', editingTeamId.value)
-    const facility = facilities.value.find((f) => f.id === editingTeamData.facilityId)
-    const salesGroup = salesGroups.value.find((g) => g.id === editingTeamData.salesGroupId)
+    const teamDocRef = doc(db, 'teams', editingTeam.value.id)
+    const facility = facilities.value.find((f) => f.id === editingTeam.value.facilityId)
+    const salesGroup = salesGroups.value.find((g) => g.id === editingTeam.value.salesGroupId)
     await updateDoc(teamDocRef, {
-      name: editingTeamData.name,
-      facilityId: editingTeamData.facilityId,
+      name: editingTeam.value.name,
+      facilityId: editingTeam.value.facilityId,
       facilityName: facility.name,
-      salesGroupId: editingTeamData.salesGroupId,
+      salesGroupId: editingTeam.value.salesGroupId,
       salesGroupName: salesGroup.name,
     })
     toast.success('Ekip başarıyla güncellendi!')
     cancelEdit()
     fetchTeams()
-  } catch (error) {
+  } catch (e) {
     toast.error('Ekip güncellenemedi!')
-    console.error(error)
+    console.error(e)
   }
-}
-
-const downloadTemplate = () => {
-  const csv = papa.unparse({ fields: ['name', 'facilityName', 'salesGroupName'] })
-  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = 'ekip_sablon.csv'
-  link.click()
-  URL.revokeObjectURL(link.href)
-}
-
-const exportData = () => {
-  if (teams.value.length === 0) {
-    toast.warning('Dışa aktarılacak veri bulunmuyor.')
-    return
-  }
-  const dataToExport = teams.value.map((t) => ({
-    name: t.name,
-    facilityName: t.facilityName || '',
-    salesGroupName: t.salesGroupName || '',
-  }))
-  const csv = papa.unparse(dataToExport)
-  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `ekip_yedek_${new Date().toISOString().slice(0, 10)}.csv`
-  link.click()
-  URL.revokeObjectURL(link.href)
-  toast.success('Tüm ekipler başarıyla dışa aktarıldı.')
 }
 
 const triggerFileUpload = () => {
@@ -362,7 +308,7 @@ onMounted(() => {
               </div>
               <ul v-if="openGroupIds.includes(group.id)" class="team-list">
                 <li v-for="team in group.teams" :key="team.id">
-                  <div v-if="editingTeamId !== team.id" class="team-display">
+                  <div v-if="editingTeam?.id !== team.id" class="team-display">
                     <span>{{ team.name }}</span>
                     <div class="actions">
                       <button class="edit-btn" @click="startEdit(team)">Düzenle</button>
@@ -373,17 +319,12 @@ onMounted(() => {
                     v-else
                     v-slot="{ meta }"
                     class="team-edit-form"
-                    :initial-values="editingTeamData"
+                    :initial-values="editingTeam"
                     @submit="saveEdit"
                   >
+                    <Field v-model="editingTeam.name" name="name" type="text" :rules="isRequired" />
                     <Field
-                      v-model="editingTeamData.name"
-                      name="name"
-                      type="text"
-                      :rules="isRequired"
-                    />
-                    <Field
-                      v-model="editingTeamData.facilityId"
+                      v-model="editingTeam.facilityId"
                       name="facilityId"
                       as="select"
                       :rules="isRequired"
@@ -393,7 +334,7 @@ onMounted(() => {
                       </option>
                     </Field>
                     <Field
-                      v-model="editingTeamData.salesGroupId"
+                      v-model="editingTeam.salesGroupId"
                       name="salesGroupId"
                       as="select"
                       :rules="isRequired"
@@ -403,7 +344,7 @@ onMounted(() => {
                       </option>
                     </Field>
                     <div class="actions">
-                      <button type="submit" class="save-btn" :disabled="!meta.valid || !meta.dirty">
+                      <button class="save-btn" type="submit" :disabled="!meta.valid || !meta.dirty">
                         Kaydet
                       </button>
                       <button type="button" class="cancel-btn" @click="cancelEdit">İptal</button>

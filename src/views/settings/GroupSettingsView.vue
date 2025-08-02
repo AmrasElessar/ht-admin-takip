@@ -1,31 +1,38 @@
 <script setup>
-/* eslint-disable no-unused-vars */
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { db } from '../../firebaseConfig'
-import {
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  deleteDoc,
-  updateDoc,
-  query,
-  orderBy,
-  writeBatch,
-} from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import { Form, Field, ErrorMessage } from 'vee-validate'
-import papa from 'papaparse'
-import { useToast } from 'vue-toastification'
-// Kullanılmadığı için ConfirmModal importu kaldırıldı.
+import { useSettingsCRUD } from '../../composables/useSettingsCRUD'
+import ConfirmModal from '../../components/common/ConfirmModal.vue'
 
-const salesGroups = ref([])
-const editingGroup = ref(null)
-const salesGroupsCollectionRef = collection(db, 'salesGroups')
-const toast = useToast()
 const fileInput = ref(null)
 const showConfirmModal = ref(false)
 
+// Merkezi CRUD mantığını 'salesGroups' koleksiyonu için çağırıyoruz
+const {
+  items: salesGroups,
+  editingItem: editingGroup,
+  fetchItems: fetchSalesGroups,
+  deleteItem: deleteSalesGroup,
+  startEditItem: startEditGroup,
+  cancelEdit,
+  addDoc,
+  updateDoc,
+  doc,
+  collection,
+  writeBatch,
+  papa,
+  toast,
+  downloadTemplate,
+  exportData,
+} = useSettingsCRUD('salesGroups', {
+  orderByField: 'sortOrder',
+  csvFields: ['name', 'sortOrder', 'isDistributor'],
+  singularName: 'Grup',
+})
+
+// Validasyon şemaları
 const addGroupSchema = {
   newGroupName: (value) => (value && value.trim() ? true : 'Grup adı zorunludur.'),
   newGroupOrder: (value) =>
@@ -38,15 +45,10 @@ const editGroupSchema = {
     value !== null && value !== undefined && !isNaN(value) ? true : 'Sıra zorunludur.',
 }
 
-const fetchSalesGroups = async () => {
-  const q = query(salesGroupsCollectionRef, orderBy('sortOrder'))
-  const querySnapshot = await getDocs(q)
-  salesGroups.value = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-}
-
+// Bileşene özel fonksiyonlar
 const addSalesGroup = async (values, { resetForm }) => {
   try {
-    await addDoc(salesGroupsCollectionRef, {
+    await addDoc(collection(db, 'salesGroups'), {
       name: values.newGroupName,
       sortOrder: values.newGroupOrder,
       isDistributor: values.newGroupIsDistributor || false,
@@ -59,21 +61,6 @@ const addSalesGroup = async (values, { resetForm }) => {
   }
 }
 
-const deleteSalesGroup = async (id) => {
-  if (!confirm('Bu grubu silmek istediğinizden emin misiniz?')) return
-  try {
-    await deleteDoc(doc(db, 'salesGroups', id))
-    toast.info('Grup silindi.')
-    fetchSalesGroups()
-  } catch {
-    toast.error('Grup silinemedi!')
-  }
-}
-
-const startEditGroup = (group) => {
-  editingGroup.value = { ...group }
-}
-
 const updateSalesGroup = async () => {
   if (!editingGroup.value) return
   try {
@@ -84,46 +71,11 @@ const updateSalesGroup = async () => {
       isDistributor: editingGroup.value.isDistributor || false,
     })
     toast.success('Grup güncellendi!')
-    editingGroup.value = null
+    cancelEdit()
     fetchSalesGroups()
   } catch {
     toast.error('Grup güncellenemedi!')
   }
-}
-
-// --- CSV Fonksiyonları ---
-
-const downloadTemplate = () => {
-  const csv = papa.unparse({
-    fields: ['name', 'sortOrder', 'isDistributor'],
-    data: [],
-  })
-  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = 'grup_sablon.csv'
-  link.click()
-  URL.revokeObjectURL(link.href)
-}
-
-const exportData = () => {
-  if (salesGroups.value.length === 0) {
-    toast.warning('Dışa aktarılacak veri bulunmuyor.')
-    return
-  }
-  const dataToExport = salesGroups.value.map((g) => ({
-    name: g.name,
-    sortOrder: g.sortOrder,
-    isDistributor: g.isDistributor || false,
-  }))
-  const csv = papa.unparse(dataToExport)
-  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `grup_yedek_${new Date().toISOString().slice(0, 10)}.csv`
-  link.click()
-  URL.revokeObjectURL(link.href)
-  toast.success('Tüm gruplar başarıyla dışa aktarıldı.')
 }
 
 const triggerFileUpload = () => {
@@ -192,13 +144,38 @@ onMounted(fetchSalesGroups)
   <div>
     <h2>Satış Grubu Yönetimi</h2>
     <p>Satış yapılarını ve raporlardaki sıralamalarını buradan yönetin.</p>
+    <div class="card data-actions-card">
+      <h3>Toplu Veri İşlemleri</h3>
+      <div class="button-group">
+        <button class="btn-secondary" @click="downloadTemplate">
+          <i class="fas fa-file-alt"></i> Boş Şablon İndir
+        </button>
+        <button class="btn-success" @click="triggerFileUpload">
+          <i class="fas fa-file-import"></i> CSV'den İçe Aktar
+        </button>
+        <button class="btn-info" @click="exportData">
+          <i class="fas fa-file-export"></i> Tümünü Dışa Aktar
+        </button>
+        <button class="btn-danger" @click="confirmClearAllData">
+          <i class="fas fa-trash-alt"></i> Tüm Grupları Sil
+        </button>
+      </div>
+      <input
+        ref="fileInput"
+        type="file"
+        style="display: none"
+        accept=".csv"
+        @change="handleFileUpload"
+      />
+    </div>
+
     <div class="card">
       <Form
         v-if="editingGroup"
         v-slot="{ meta }"
+        class="add-form"
         :initial-values="editingGroup"
         :validation-schema="editGroupSchema"
-        class="add-form"
         @submit="updateSalesGroup"
       >
         <Field
@@ -228,14 +205,14 @@ onMounted(fetchSalesGroups)
           <label>Dağıtıcı Grup mu?</label>
         </div>
         <button type="submit" :disabled="!meta.valid">Güncelle</button>
-        <button type="button" class="btn-cancel" @click="editingGroup = null">İptal</button>
+        <button type="button" class="btn-cancel" @click="cancelEdit">İptal</button>
       </Form>
 
       <Form
         v-else
         v-slot="{ meta }"
-        :validation-schema="addGroupSchema"
         class="add-form"
+        :validation-schema="addGroupSchema"
         @submit="addSalesGroup"
       >
         <Field name="newGroupName" type="text" placeholder="Yeni grup adı" class="form-input" />
@@ -275,6 +252,14 @@ onMounted(fetchSalesGroups)
         </li>
       </ul>
     </div>
+    <ConfirmModal
+      :show="showConfirmModal"
+      title="Tüm Grupları Sil"
+      message="Bu işlem geri alınamaz. Tüm Satış Grubu verilerini kalıcı olarak silmek istediğinizden emin misiniz?"
+      confirmation-text="SİL"
+      @close="showConfirmModal = false"
+      @confirm="clearAllData"
+    />
   </div>
 </template>
 
@@ -327,7 +312,7 @@ onMounted(fetchSalesGroups)
   margin-bottom: 20px;
   align-items: flex-start;
 }
-.add-form input {
+.add-form .form-input {
   flex-grow: 1;
   padding: 8px;
   border: 1px solid var(--border-color);
@@ -335,6 +320,14 @@ onMounted(fetchSalesGroups)
   background-color: var(--bg-primary);
   color: var(--text-primary);
   min-width: 200px;
+}
+.add-form .order-input {
+  width: 70px;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 .add-form button {
   padding: 8px 15px;
@@ -395,6 +388,7 @@ li {
   align-items: center;
   gap: 5px;
   align-self: center;
+  height: 38px;
 }
 .distributor-icon {
   color: var(--color-accent);
@@ -411,5 +405,6 @@ li {
   border-radius: 4px;
   font-size: 12px;
   font-weight: bold;
+  color: var(--text-secondary);
 }
 </style>
