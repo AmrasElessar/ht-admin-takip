@@ -1,35 +1,38 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 import { useLotteryStore } from '../../stores/lotteryStore'
 import { useUserStore } from '../../stores/userStore'
-import { useOperationStore } from '../../stores/operationStore'
 
 const lotteryStore = useLotteryStore()
 const userStore = useUserStore()
-const operationStore = useOperationStore()
 
-const distributorTeams = computed(() =>
-  userStore.allTeams
-    .filter(
-      (team) =>
-        team.facilityId === operationStore.activeFacilityId &&
-        userStore.allSalesGroups.find((g) => g.id === team.salesGroupId)?.isDistributor,
-    )
-    .sort((a, b) => a.name.localeCompare(b.name)),
-)
+const currentSource = reactive({
+  pool: 'tour',
+  type: 'up',
+  quantity: 1,
+})
 
-const closingTeams = computed(() =>
-  userStore.allTeams
-    .filter(
-      (team) =>
-        team.facilityId === operationStore.activeFacilityId &&
-        !userStore.allSalesGroups.find((g) => g.id === team.salesGroupId)?.isDistributor,
-    )
-    .sort((a, b) => a.name.localeCompare(b.name)),
-)
+const availableInPool = computed(() => {
+  if (!currentSource.pool || !currentSource.type) return 0
+  const poolData =
+    currentSource.pool === 'tour'
+      ? lotteryStore.remainingPool_tour
+      : lotteryStore.remainingPool_privateVehicle
+  return poolData[currentSource.type] || 0
+})
+
+const isSourceAddable = computed(() => {
+  return currentSource.quantity > 0 && currentSource.quantity <= availableInPool.value
+})
+
+const handleAddSource = () => {
+  if (!isSourceAddable.value) return
+  lotteryStore.addSourceToRule({ ...currentSource })
+  currentSource.quantity = 1
+}
 
 const availableSalesGroups = computed(() =>
-  userStore.allSalesGroups
+  (userStore.allSalesGroups || [])
     .filter((g) => !g.isDistributor)
     .sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99)),
 )
@@ -39,22 +42,21 @@ const groupsWithAllOption = computed(() => [
   ...availableSalesGroups.value,
 ])
 
-const wizardRulePool = computed(() => {
-  const pool = { up: 0, oneleg: 0, single: 0 }
-  if (lotteryStore.newRule.sourceDistributorIds.length === 0) {
-    return pool
+// YENİ: Kuraldaki hedeflenen ekipleri hesaplayan computed property
+const targetTeamsForCurrentRule = computed(() => {
+  const rule = lotteryStore.newRule
+  if (!rule.targetType) return []
+
+  const closingTeams = userStore.closingTeams // Merkezi store'dan alıyoruz
+
+  if (rule.targetType === 'group' && rule.targetGroupId) {
+    if (rule.targetGroupId === 'all') return closingTeams
+    return closingTeams.filter((t) => t.salesGroupId === rule.targetGroupId)
   }
-
-  const ruleSpecificPool = lotteryStore.availablePool.filter((inv) =>
-    lotteryStore.newRule.sourceDistributorIds.includes(inv.distributorTeamId),
-  )
-
-  return ruleSpecificPool.reduce((acc, inv) => {
-    if (inv.type === 'up') acc.up++
-    else if (inv.type === 'oneleg') acc.oneleg++
-    else if (inv.type === 'single') acc.single++
-    return acc
-  }, pool)
+  if (rule.targetType === 'custom' && rule.customTeamIds.length > 0) {
+    return closingTeams.filter((t) => rule.customTeamIds.includes(t.id))
+  }
+  return []
 })
 </script>
 
@@ -62,155 +64,141 @@ const wizardRulePool = computed(() => {
   <div class="card rule-builder-card">
     <div class="rule-builder">
       <h4>Yeni Dağıtım Kuralı Ekle</h4>
-      <div
-        v-if="lotteryStore.newRule.sourceDistributorIds.length > 0"
-        class="pool-display wizard-pool"
-      >
-        <strong>Seçili Kaynak Havuzu:</strong>
-        <span
-          >UP: <strong>{{ wizardRulePool.up }}</strong></span
-        >
-        <span
-          >Oneleg: <strong>{{ wizardRulePool.oneleg }}</strong></span
-        >
-        <span
-          >Single: <strong>{{ wizardRulePool.single }}</strong></span
-        >
-      </div>
-      <div class="wizard-container">
-        <div class="wizard-step">
-          <div class="step-header">
-            <span class="step-number">A</span><i class="fas fa-truck-loading"></i
-            ><span>Kaynak Seçimi</span>
-          </div>
-          <div class="step-content source-selection">
-            <label v-for="team in distributorTeams" :key="team.id"
-              ><input
-                v-model="lotteryStore.newRule.sourceDistributorIds"
-                type="checkbox"
-                :value="team.id"
-              />{{ team.name }}</label
-            >
-          </div>
-        </div>
-        <div
-          class="wizard-step"
-          :class="{ 'is-disabled': lotteryStore.newRule.sourceDistributorIds.length === 0 }"
-        >
-          <div class="step-header">
-            <span class="step-number">B</span><i class="fas fa-box-open"></i
-            ><span>Ne Dağıtılacak?</span>
-          </div>
-          <div class="type-selection">
-            <label
-              ><input v-model="lotteryStore.newRule.types" type="checkbox" value="up" /> UP ({{
-                wizardRulePool.up
-              }})</label
-            >
-            <label
-              ><input v-model="lotteryStore.newRule.types" type="checkbox" value="oneleg" /> Oneleg
-              ({{ wizardRulePool.oneleg }})</label
-            >
-            <label
-              ><input v-model="lotteryStore.newRule.types" type="checkbox" value="single" /> Single
-              ({{ wizardRulePool.single }})</label
-            >
-          </div>
-        </div>
-        <div
-          class="wizard-step"
-          :class="{
-            'is-disabled': !lotteryStore.newRule.types || lotteryStore.newRule.types.length === 0,
-          }"
-        >
-          <div class="step-header">
-            <span class="step-number">C</span><i class="fas fa-calculator"></i
-            ><span>Nasıl Dağıtılacak?</span>
-          </div>
-          <div class="step-content">
-            <div class="form-group-inline">
-              <label>Adet:</label>
-              <input
-                v-model.number="lotteryStore.newRule.quantity"
-                type="number"
-                min="1"
-                :disabled="lotteryStore.newRule.isAll"
-                placeholder="Sayı"
-              />
-              <label class="checkbox-label"
-                ><input v-model="lotteryStore.newRule.isAll" type="checkbox" /> Tümü</label
-              >
-            </div>
-            <div class="form-group-inline">
-              <label>Yöntem:</label>
-              <select v-model="lotteryStore.newRule.method">
-                <option value="equal">Eşit Dağıt</option>
-                <option value="sequential">Sıralı Dağıt</option>
-              </select>
-              <Transition name="fade">
-                <input
-                  v-if="lotteryStore.newRule.method === 'sequential'"
-                  v-model.number="lotteryStore.newRule.sequentialAmount"
-                  type="number"
-                  min="1"
-                  class="sequential-input"
-                />
-              </Transition>
-              <span v-if="lotteryStore.newRule.method === 'sequential'">'er</span>
-            </div>
-          </div>
-        </div>
-        <div
-          class="wizard-step"
-          :class="{ 'is-disabled': !lotteryStore.newRule.quantity && !lotteryStore.newRule.isAll }"
-        >
-          <div class="step-header">
-            <span class="step-number">D</span><i class="fas fa-users-cog"></i
-            ><span>Kimlere Dağıtılacak?</span>
-          </div>
-          <div class="step-content">
-            <div class="target-type-selector">
+
+      <div class="builder-layout">
+        <div class="builder-section">
+          <h5>1. Kurala Kaynak Ekle</h5>
+          <div class="form-group">
+            <label>Havuz:</label>
+            <div class="radio-group">
+              <label><input v-model="currentSource.pool" type="radio" value="tour" /> Tur</label>
               <label
-                ><input v-model="lotteryStore.newRule.targetType" type="radio" value="group" /> Ekip
-                Grubu</label
-              ><label
-                ><input v-model="lotteryStore.newRule.targetType" type="radio" value="custom" />
-                Özel Ekip Seçimi</label
+                ><input v-model="currentSource.pool" type="radio" value="privateVehicle" />
+                KA</label
               >
             </div>
-            <Transition name="fade" mode="out-in">
-              <div v-if="lotteryStore.newRule.targetType === 'group'" class="target-selection">
-                <select v-model="lotteryStore.newRule.targetGroupId">
-                  <option disabled value="">Bir grup seçin...</option>
-                  <option v-for="group in groupsWithAllOption" :key="group.id" :value="group.id">
-                    {{ group.name }}
-                  </option>
-                </select>
-              </div>
-              <div v-else class="target-selection">
-                <select v-model="lotteryStore.newRule.customTeamIds" multiple>
-                  <option v-for="team in closingTeams" :key="team.id" :value="team.id">
-                    {{ team.name }}
-                  </option>
-                </select>
-              </div>
-            </Transition>
+          </div>
+          <div class="form-group">
+            <label>Tip:</label>
+            <div class="radio-group">
+              <label><input v-model="currentSource.type" type="radio" value="up" /> UP</label>
+              <label
+                ><input v-model="currentSource.type" type="radio" value="oneleg" /> Oneleg</label
+              >
+              <label
+                ><input v-model="currentSource.type" type="radio" value="single" /> Single</label
+              >
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="quantity">Adet (Mevcut: {{ availableInPool }})</label>
+            <input
+              v-model.number="currentSource.quantity"
+              type="number"
+              min="1"
+              :max="availableInPool"
+            />
+          </div>
+          <button class="btn-add-source" :disabled="!isSourceAddable" @click="handleAddSource">
+            <i class="fas fa-plus"></i> Kaynak Ekle
+          </button>
+        </div>
+
+        <div class="builder-section">
+          <h5>2. Oluşturulan Kural</h5>
+          <div v-if="lotteryStore.newRule.sources.length === 0" class="empty-rule">
+            Henüz kaynak eklenmedi.
+          </div>
+          <div v-else class="sources-list">
+            <div
+              v-for="source in lotteryStore.newRule.sources"
+              :key="source.id"
+              class="source-item"
+            >
+              <span>
+                {{ source.quantity }} {{ source.type.toUpperCase() }} ({{
+                  source.pool === 'tour' ? 'Tur' : 'KA'
+                }}
+                Havuzu)
+              </span>
+              <button @click="lotteryStore.removeSourceFromRule(source.id)">&times;</button>
+            </div>
           </div>
         </div>
+
+        <div
+          class="builder-section"
+          :class="{ disabled: lotteryStore.newRule.sources.length === 0 }"
+        >
+          <h5>3. Dağıtım Hedefi ve Limitler</h5>
+          <div class="form-group">
+            <label>Yöntem:</label>
+            <select v-model="lotteryStore.newRule.method">
+              <option value="equal">Eşit Dağıt</option>
+              <option value="sequential">Sıralı Dağıt</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Hedef Tipi:</label>
+            <div class="radio-group">
+              <label
+                ><input v-model="lotteryStore.newRule.targetType" type="radio" value="group" />
+                Grup</label
+              >
+              <label
+                ><input v-model="lotteryStore.newRule.targetType" type="radio" value="custom" />
+                Özel Ekip</label
+              >
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Hedef Seçimi:</label>
+            <select
+              v-if="lotteryStore.newRule.targetType === 'group'"
+              v-model="lotteryStore.newRule.targetGroupId"
+            >
+              <option disabled value="">Bir grup seçin...</option>
+              <option v-for="group in groupsWithAllOption" :key="group.id" :value="group.id">
+                {{ group.name }}
+              </option>
+            </select>
+            <select v-else v-model="lotteryStore.newRule.customTeamIds" multiple>
+              <option v-for="team in userStore.closingTeams" :key="team.id" :value="team.id">
+                {{ team.name }}
+              </option>
+            </select>
+          </div>
+
+          <div
+            v-if="targetTeamsForCurrentRule.length > 0 && lotteryStore.newRule.method === 'equal'"
+            class="team-limits-section"
+          >
+            <label>Ekip Limitleri (Boş bırakırsanız limitsiz)</label>
+            <div v-for="team in targetTeamsForCurrentRule" :key="team.id" class="limit-input-group">
+              <span>{{ team.name }}</span>
+              <input
+                type="number"
+                min="0"
+                placeholder="Limit Yok"
+                :value="lotteryStore.newRule.teamLimits[team.id]"
+                @input="
+                  lotteryStore.newRule.teamLimits[team.id] = $event.target.value
+                    ? Number($event.target.value)
+                    : undefined
+                "
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="final-action">
         <button
           class="btn-add-rule"
-          title="Bu Kuralı Ekle"
-          :disabled="
-            lotteryStore.newRule.sourceDistributorIds.length === 0 ||
-            lotteryStore.newRule.types.length === 0 ||
-            (!lotteryStore.newRule.quantity && !lotteryStore.newRule.isAll) ||
-            (lotteryStore.newRule.targetType === 'group' && !lotteryStore.newRule.targetGroupId) ||
-            (lotteryStore.newRule.targetType === 'custom' &&
-              lotteryStore.newRule.customTeamIds.length === 0)
-          "
-          @click="lotteryStore.addRule"
+          :disabled="!lotteryStore.isRuleValid"
+          @click="lotteryStore.addRule()"
         >
-          +
+          <i class="fas fa-magic"></i> Kuralı Listeye Ekle
         </button>
       </div>
     </div>
@@ -225,112 +213,150 @@ const wizardRulePool = computed(() => {
   box-shadow: 0 2px 4px var(--shadow-color);
   margin-top: 20px;
 }
-.rule-builder {
-  position: relative;
-}
-.wizard-container {
+.builder-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
   align-items: flex-start;
-  padding-bottom: 20px;
 }
-.wizard-step {
+.builder-section {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   padding: 15px;
   border-radius: 8px;
-  transition: all 0.3s ease;
-  min-height: 200px;
+  min-height: 250px;
   display: flex;
   flex-direction: column;
 }
-.wizard-step.is-disabled {
-  opacity: 0.4;
+.builder-section.disabled {
+  opacity: 0.5;
   pointer-events: none;
 }
-.step-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: var(--text-primary);
-  padding-bottom: 10px;
+.builder-section h5 {
+  margin-top: 0;
   border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
 }
-.step-number {
-  background-color: var(--color-accent);
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.form-group {
+  margin-bottom: 15px;
+}
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 5px;
   font-size: 14px;
-  flex-shrink: 0;
 }
-.step-header i {
-  color: var(--color-accent);
-  font-size: 16px;
-}
-.step-content {
+.radio-group {
   display: flex;
-  flex-direction: column;
   gap: 15px;
-  flex-grow: 1;
 }
-.source-selection {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 150px;
-  overflow-y: auto;
-}
-.form-group-inline {
+.radio-group label {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
+  font-weight: normal;
 }
-select[multiple] {
-  height: 120px;
-}
-input,
+input[type='number'],
 select {
+  width: 100%;
   padding: 8px;
   border-radius: 4px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
   color: var(--text-primary);
+  box-sizing: border-box;
 }
-.btn-add-rule {
-  position: absolute;
-  bottom: -10px;
-  right: -10px;
-  background-color: var(--color-success);
+select[multiple] {
+  height: 120px;
+}
+.btn-add-source {
+  background-color: var(--color-info);
   color: white;
   border: none;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  font-size: 28px;
+  border-radius: 4px;
+  padding: 10px;
   cursor: pointer;
+  width: 100%;
+  margin-top: auto;
+}
+.btn-add-source:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+.empty-rule {
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 20px;
+  flex-grow: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+.sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.source-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--bg-secondary);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.source-item button {
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+.final-action {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+}
+.btn-add-rule {
+  background-color: var(--color-success);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .btn-add-rule:disabled {
   background-color: #bdc3c7;
   cursor: not-allowed;
 }
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
+.team-limits-section {
+  margin-top: 15px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 10px;
 }
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+.limit-input-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+.limit-input-group span {
+  flex-grow: 1;
+}
+.limit-input-group input {
+  width: 100px;
+  text-align: center;
+  flex-shrink: 0;
 }
 </style>

@@ -2,27 +2,18 @@
 import { ref, computed } from 'vue'
 import { useLotteryStore } from '../../stores/lotteryStore'
 import { useUserStore } from '../../stores/userStore'
-import { useOperationStore } from '../../stores/operationStore'
+import { useToast } from 'vue-toastification'
 
 const lotteryStore = useLotteryStore()
 const userStore = useUserStore()
-const operationStore = useOperationStore()
+const toast = useToast()
 
 const isTeamStatusVisible = ref(true)
 
-const closingTeams = computed(() =>
-  userStore.allTeams
-    .filter(
-      (team) =>
-        team.facilityId === operationStore.activeFacilityId &&
-        !userStore.allSalesGroups.find((g) => g.id === team.salesGroupId)?.isDistributor,
-    )
-    .sort((a, b) => a.name.localeCompare(b.name)),
-)
-
 const teamStatusSummary = computed(() => {
   const summaryMap = new Map()
-  closingTeams.value.forEach((team) => {
+  // DEĞİŞİKLİK: Kapatıcı ekipler listesi artık doğrudan ve güvenli bir şekilde userStore'dan alınıyor.
+  userStore.closingTeams.forEach((team) => {
     summaryMap.set(team.id, {
       teamId: team.id,
       teamName: team.name,
@@ -36,16 +27,15 @@ const teamStatusSummary = computed(() => {
     return Array.from(summaryMap.values())
   }
 
+  // Atanan davetleri hesapla
   lotteryStore.completedLotteries.forEach((pkg) => {
     if (pkg && pkg.assignments) {
       for (const teamId in pkg.assignments) {
         const teamSummary = summaryMap.get(teamId)
-        if (teamSummary) {
+        if (teamSummary && Array.isArray(pkg.assignments[teamId])) {
           pkg.assignments[teamId].forEach((inv) => {
-            if (inv && inv.id) {
-              if (inv.type === 'up') teamSummary.assigned.up++
-              else if (inv.type === 'oneleg') teamSummary.assigned.oneleg++
-              else if (inv.type === 'single') teamSummary.assigned.single++
+            if (inv && inv.type && teamSummary.assigned[inv.type] !== undefined) {
+              teamSummary.assigned[inv.type]++
             }
           })
         }
@@ -53,26 +43,31 @@ const teamStatusSummary = computed(() => {
     }
   })
 
-  const cancelledPostInvitations = lotteryStore.allInvitations.filter(
-    (inv) => inv.status === 'cancelled_post',
+  const allInvitations = [
+    ...(lotteryStore.tourInvitations || []),
+    ...(lotteryStore.privateVehicleInvitations || []),
+  ]
+
+  const cancelledPostInvitations = allInvitations.filter(
+    (inv) => inv && inv.status === 'cancelled_post',
   )
 
   const flatAssignments = lotteryStore.completedLotteries.flatMap((pkg) =>
     pkg && pkg.assignments
       ? Object.entries(pkg.assignments).flatMap(([teamId, invs]) =>
-          (invs || []).map((inv) => ({ invId: inv.id, teamId })),
+          Array.isArray(invs) ? invs.map((inv) => ({ invId: inv.id, teamId })) : [],
         )
       : [],
   )
 
   cancelledPostInvitations.forEach((cancelledInv) => {
-    const assignment = flatAssignments.find((a) => a.invId === cancelledInv.id)
-    if (assignment) {
-      const teamSummary = summaryMap.get(assignment.teamId)
-      if (teamSummary) {
-        if (cancelledInv.type === 'up') teamSummary.cancelled.up++
-        else if (cancelledInv.type === 'oneleg') teamSummary.cancelled.oneleg++
-        else if (cancelledInv.type === 'single') teamSummary.cancelled.single++
+    if (cancelledInv && cancelledInv.type) {
+      const assignment = flatAssignments.find((a) => a.invId === cancelledInv.id)
+      if (assignment && assignment.teamId) {
+        const teamSummary = summaryMap.get(assignment.teamId)
+        if (teamSummary && teamSummary.cancelled[cancelledInv.type] !== undefined) {
+          teamSummary.cancelled[cancelledInv.type]++
+        }
       }
     }
   })
@@ -89,10 +84,9 @@ const teamStatusSummary = computed(() => {
   return Array.from(summaryMap.values())
 })
 
-// Manuel atama modalını açma fonksiyonu (şimdilik boş, ana bileşenden taşınacak)
 const openManualAssignModal = (team) => {
   console.log('Manuel atama açılıyor:', team)
-  // Bu mantık daha sonra lotteryStore'a taşınacak
+  toast.info('Manuel hak ediş atama özelliği yakında eklenecek.')
 }
 </script>
 

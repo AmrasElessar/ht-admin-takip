@@ -35,6 +35,12 @@ const routes = [
         meta: { parent: 'Veri Girişi', displayName: 'Davet Girişi' },
       },
       {
+        path: 'davet-takip',
+        name: 'InvitationRecordView',
+        component: () => import('../views/InvitationRecordView.vue'),
+        meta: { displayName: 'Davet Takip', parent: 'Veri Girişi' },
+      },
+      {
         path: 'gelis-yonetimi',
         name: 'data-entry-arrival',
         component: () => import('../components/DataEntry/ArrivalManagement.vue'),

@@ -1,17 +1,15 @@
 <script setup>
-import { onMounted } from 'vue'
 import { useLotteryStore } from '../../stores/lotteryStore'
 import LotteryPoolSummary from './LotteryPoolSummary.vue'
 import InvitationPoolGrid from './InvitationPoolGrid.vue'
 import LotteryTeamStatus from './LotteryTeamStatus.vue'
 import LotteryRuleBuilder from './LotteryRuleBuilder.vue'
-import LotteryResults from './LotteryResults.vue' // YENİ: Son bileşeni import et
+import LotteryResults from './LotteryResults.vue'
+import LotteryAnimation from './LotteryAnimation.vue' // YENİ: Animasyon bileşeni import edildi
 
+// Store'u çağırmak, reaktif yapının çalışması için yeterlidir.
+// onMounted içindeki listenForAssignments artık store içinde otomatik yönetiliyor.
 const lotteryStore = useLotteryStore()
-
-onMounted(() => {
-  lotteryStore.listenForAssignments()
-})
 </script>
 
 <template>
@@ -27,6 +25,8 @@ onMounted(() => {
       <LotteryRuleBuilder />
       <LotteryResults />
     </div>
+
+    <LotteryAnimation />
   </div>
 </template>
 

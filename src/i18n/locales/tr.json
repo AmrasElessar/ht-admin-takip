@@ -1,0 +1,416 @@
+{
+  "app": {
+    "name": "HT Admin Takip",
+    "title": "Operasyon Yönetim Sistemi",
+    "loading": "Yükleniyor...",
+    "saving": "Kaydediliyor...",
+    "error": "Hata oluştu",
+    "success": "Başarılı",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "add": "Ekle",
+    "close": "Kapat",
+    "confirm": "Onayla",
+    "back": "Geri",
+    "next": "İleri",
+    "previous": "Önceki",
+    "search": "Ara",
+    "filter": "Filtrele",
+    "export": "Dışa Aktar",
+    "import": "İçe Aktar",
+    "refresh": "Yenile",
+    "clear": "Temizle",
+    "select": "Seç",
+    "selectAll": "Tümünü Seç",
+    "none": "Hiçbiri",
+    "all": "Tümü",
+    "yes": "Evet",
+    "no": "Hayır"
+  },
+
+  "navigation": {
+    "home": "Ana Sayfa",
+    "dataEntry": "Veri Girişi",
+    "reports": "Raporlar",
+    "settings": "Ayarlar",
+    "profile": "Profil",
+    "logout": "Çıkış"
+  },
+
+  "auth": {
+    "login": "Giriş Yap",
+    "register": "Kaydol",
+    "logout": "Çıkış Yap",
+    "email": "E-posta",
+    "password": "Şifre",
+    "confirmPassword": "Şifre Tekrarı",
+    "forgotPassword": "Şifremi Unuttum",
+    "rememberMe": "Beni Hatırla",
+    "loginWithGoogle": "Google ile Giriş Yap",
+    "alreadyHaveAccount": "Zaten hesabın var mı?",
+    "dontHaveAccount": "Hesabın yok mu?",
+    "welcomeBack": "Tekrar Hoş Geldin",
+    "createAccount": "Hesap Oluştur",
+    "loginRequired": "Giriş yapmanız gerekiyor",
+    "unauthorized": "Bu işlemi yapmaya yetkiniz yok"
+  },
+
+  "dataEntry": {
+    "title": "Veri Girişi",
+    "facilityGuest": "Tesise Gelen",
+    "invitation": "Davet Girişi",
+    "arrival": "Geliş Yönetimi",
+    "lottery": "Çekiliş Paneli",
+    "distribution": "Dağıtım Paneli",
+    "presentation": "Masa Sayımı",
+    "bus": "Otobüs",
+    "voucher": "Fiş Girişi",
+    "selectedDate": "Seçili Tarih",
+    "activeFacility": "Aktif Tesis",
+    "noFacilityAssigned": "Bu kullanıcıya atanmış bir tesis bulunmuyor",
+    "operationCenter": "Operasyon Merkezi"
+  },
+
+  "invitation": {
+    "title": "Davet Yönetimi",
+    "pool": "Havuz",
+    "tourPool": "Tur Havuzu",
+    "privateVehiclePool": "Kendi Araçlı Havuz",
+    "type": {
+      "up": "UP",
+      "oneleg": "Tek Ayak",
+      "single": "Single"
+    },
+    "status": {
+      "available": "Müsait",
+      "assigned": "Atanmış",
+      "reserved": "Rezerve",
+      "expired": "Süresi Dolmuş"
+    },
+    "totalInvitations": "Toplam Davet",
+    "availableSlots": "Müsait Slot",
+    "maxSlots": "Maksimum Slot Sayısı"
+  },
+
+  "lottery": {
+    "title": "Çekiliş Sistemi",
+    "rules": "Kurallar",
+    "addRule": "Kural Ekle",
+    "removeRule": "Kuralı Sil",
+    "runLottery": "Çekilişi Başlat",
+    "completedLotteries": "Tamamlanan Çekilişler",
+    "animationRunning": "Çekiliş devam ediyor...",
+    "distribution": {
+      "equal": "Eşit Dağıtım",
+      "weighted": "Ağırlıklı Dağıtım",
+      "custom": "Özel Dağıtım"
+    },
+    "targetType": {
+      "group": "Grup",
+      "custom": "Özel Ekipler",
+      "all": "Tüm Ekipler"
+    },
+    "noRules": "Çekiliş için kural eklemelisiniz",
+    "ruleInvalid": "Kural geçerli değil",
+    "ruleAdded": "Kural başarıyla eklendi",
+    "ruleDeleted": "Kural silindi",
+    "lotteryCompleted": "{count} kural adilce dağıtıldı",
+    "noSuitableTeam": "Hedefte uygun ekip bulunamadı"
+  },
+
+  "users": {
+    "title": "Kullanıcı Yönetimi",
+    "role": "Rol",
+    "status": "Durum",
+    "facilities": "Tesisler",
+    "teams": "Ekipler",
+    "assignedFacilities": "Atanmış Tesisler",
+    "roles": {
+      "kurucu": "Kurucu",
+      "superadmin": "Süper Admin",
+      "kullanici": "Kullanıcı",
+      "yok": "Rol Yok"
+    },
+    "status": {
+      "active": "Aktif",
+      "disabled": "Engelli"
+    },
+    "userUpdated": "Kullanıcı başarıyla güncellendi",
+    "noUsers": "Henüz hiç kullanıcı bulunamadı"
+  },
+
+  "facilities": {
+    "title": "Tesis Yönetimi",
+    "name": "Tesis Adı",
+    "city": "Şehir",
+    "isActive": "Aktif",
+    "addFacility": "Tesis Ekle",
+    "editFacility": "Tesisi Düzenle",
+    "deleteFacility": "Tesisi Sil",
+    "facilityAdded": "Tesis başarıyla eklendi",
+    "facilityUpdated": "Tesis bilgileri güncellendi",
+    "facilityDeleted": "Tesis silindi",
+    "deleteConfirm": "Bu tesisi silmek istediğinizden emin misiniz?",
+    "selectFacility": "Bir tesis seçin"
+  },
+
+  "teams": {
+    "title": "Ekip Yönetimi",
+    "name": "Ekip Adı",
+    "facility": "Tesis",
+    "salesGroup": "Satış Grubu",
+    "addTeam": "Ekip Ekle",
+    "editTeam": "Ekibi Düzenle",
+    "deleteTeam": "Ekibi Sil",
+    "teamAdded": "Ekip başarıyla eklendi",
+    "teamUpdated": "Ekip başarıyla güncellendi",
+    "teamDeleted": "Ekip silindi",
+    "noTeams": "Henüz ekip bulunamadı",
+    "selectFacility": "Tesis Seçin",
+    "selectSalesGroup": "Satış Grubu Seçin"
+  },
+
+  "salesGroups": {
+    "title": "Satış Grubu Yönetimi",
+    "name": "Grup Adı",
+    "sortOrder": "Sıra",
+    "isDistributor": "Dağıtıcı Grup mu?",
+    "addGroup": "Grup Ekle",
+    "editGroup": "Grubu Düzenle",
+    "deleteGroup": "Grubu Sil",
+    "groupAdded": "Grup başarıyla eklendi",
+    "groupUpdated": "Grup güncellendi",
+    "groupDeleted": "Grup silindi"
+  },
+
+  "reports": {
+    "title": "Detaylı Raporlar",
+    "startDate": "Başlangıç Tarihi",
+    "endDate": "Bitiş Tarihi",
+    "facility": "Tesis",
+    "salesGroup": "Satış Grubu",
+    "team": "Ekip",
+    "allFacilities": "Tüm Tesisler",
+    "allGroups": "Tüm Gruplar",
+    "exportCSV": "CSV Olarak Dışa Aktar",
+    "shareWhatsApp": "WhatsApp ile Paylaş",
+    "noData": "Seçilen filtrelere uygun kayıt bulunamadı",
+    "operationFunnel": "Operasyon Hunisi (Funnel) Özeti",
+    "invited": "Davet",
+    "distributed": "Dağıtılan",
+    "presented": "Masaya Oturan",
+    "tableCount": "Masa Sayısı"
+  },
+
+  "dashboard": {
+    "title": "Ana Sayfa / Dashboard",
+    "generalAnalysis": "Genel operasyon hunisi (funnel) analizi",
+    "totalInvited": "Toplam Davet",
+    "totalDistributed": "Toplam Dağıtılan",
+    "totalPresented": "Toplam Masaya Oturan",
+    "totalTables": "Toplam Masa",
+    "invitationToDistribution": "Davet ➔ Dağıtım Verimi",
+    "distributionToPresentation": "Dağıtım ➔ Masa Verimi",
+    "leaderboard": "Liderlik Tablosu (En Çok Davet Yapanlar)",
+    "invitedFamilies": "Tüm ekiplerin davet ettiği aile sayısı",
+    "distributedFamilies": "Davet havuzundan ekiplere atanan aile sayısı",
+    "presentedFamilies": "Dağıtım sonrası sunuma katılan aile sayısı",
+    "totalTablesCount": "Sunum yapılan toplam masa sayısı",
+    "invitationEfficiency": "Davet edilenlerin ne kadarının dağıtıma geçtiği",
+    "presentationEfficiency": "Dağıtılanların ne kadarının masaya oturduğu",
+    "noReportData": "Rapor verisi bulunamadı veya bir hata oluştu"
+  },
+
+  "settings": {
+    "title": "Ayarlar",
+    "profile": "Profilim",
+    "users": "Kullanıcı Yönetimi",
+    "facilities": "Tesis Yönetimi",
+    "groups": "Grup Yönetimi",
+    "teams": "Ekip Yönetimi",
+    "announcement": "Duyuru Yönetimi",
+    "whatsapp": "WhatsApp Şablonu",
+    "reset": "Sistemi Sıfırla"
+  },
+
+  "profile": {
+    "title": "Profilim",
+    "personalInfo": "Kişisel Bilgiler",
+    "firstName": "Ad",
+    "lastName": "Soyad",
+    "username": "Kullanıcı Adı",
+    "gender": "Cinsiyet",
+    "male": "Erkek",
+    "female": "Kadın",
+    "notSpecified": "Belirtilmemiş",
+    "themeSelection": "Tema Seçimi",
+    "appTheme": "Uygulama Teması (Açık Mod)",
+    "updateInfo": "Bilgileri Güncelle",
+    "profileUpdated": "Profil bilgileriniz başarıyla güncellendi"
+  },
+
+  "announcement": {
+    "title": "Duyuru Yönetimi",
+    "description": "Uygulamanın en üstünde kayan yazıda görünecek metni ve ayarlarını buradan düzenleyin",
+    "status": "Duyuru Durumu",
+    "off": "Kapalı",
+    "on": "Açık",
+    "text": "Duyuru Metni",
+    "textPlaceholder": "Duyuru metnini buraya yazın...",
+    "speed": "Kaydırma Hızı ({speed} saniye)",
+    "speedDescription": "Düşük saniye daha hızlı, yüksek saniye daha yavaş kaydırır (1-25 saniye)",
+    "saveSettings": "Tüm Ayarları Kaydet",
+    "settingsUpdated": "Duyuru ayarları başarıyla güncellendi",
+    "loadingSettings": "Ayarlar yükleniyor..."
+  },
+
+  "whatsapp": {
+    "title": "WhatsApp Paylaşım Şablonları",
+    "description": "Her rapor türü için kullanılacak paylaşım metninin formatını buradan düzenleyin",
+    "templates": {
+      "invitationReport": "Davet Raporu",
+      "facilityArrivalReport": "Tesise Gelen Aile Raporu",
+      "presentationReport": "Tanıtım Katılım Raporu",
+      "busReport": "Otobüs Raporu",
+      "arrival": "Ekip Gelen (Eski)",
+      "voucher": "Fiş (Eski)"
+    },
+    "variables": "Kullanılabilir Değişkenler",
+    "variablesDescription": "Değişkenler, seçtiğiniz şablona göre farklılık gösterir",
+    "saveAllTemplates": "Tüm Şablonları Kaydet",
+    "templatesUpdated": "Tüm WhatsApp şablonları başarıyla kaydedildi",
+    "loadingTemplates": "Şablonlar yükleniyor..."
+  },
+
+  "systemReset": {
+    "title": "Sistemi Sıfırla",
+    "dangerZone": "Tehlikeli Alan",
+    "warning": "Bu sayfadaki işlemler veritabanından kalıcı olarak veri siler ve bu işlemler geri alınamaz. Lütfen ne yaptığınızdan emin olun.",
+    "selectData": "Sıfırlanacak Verileri Seçin",
+    "dailyData": "Günlük Sayım Verileri (Davet, Gelen, Fiş, Otobüs, İptaller, Sunumlar, Tesis Misafirleri)",
+    "invitationRecords": "Davet Kayıtları",
+    "presentationRecords": "Tanıtım Katılım Kayıtları",
+    "teams": "Ekipler",
+    "salesGroups": "Satış Grupları (Yarı Kritik)",
+    "facilities": "Tesisler (Kritik)",
+    "resetSelected": "Seçilenleri Sıfırla",
+    "resetting": "Sıfırlanıyor...",
+    "confirmReset": "Sıfırlama Onayı",
+    "confirmMessage": "Seçili tüm veriler kalıcı olarak silinecektir. Bu işlem geri alınamaz.",
+    "confirmText": "ONAYLIYORUM",
+    "resetCompleted": "Sıfırlama işlemi tamamlandı",
+    "redirecting": "Ana sayfaya yönlendiriliyorsunuz..."
+  },
+
+  "csvOperations": {
+    "downloadTemplate": "Boş Şablon İndir",
+    "importFromCSV": "CSV'den İçe Aktar",
+    "exportAll": "Tümünü Dışa Aktar (Yedekle)",
+    "deleteAll": "Tümünü Sil",
+    "bulkOperations": "Toplu Veri İşlemleri",
+    "importSuccess": "{count} adet kayıt başarıyla içe aktarıldı",
+    "exportSuccess": "Tüm kayıtlar başarıyla dışa aktarıldı",
+    "noDataToExport": "Dışa aktarılacak veri bulunmuyor",
+    "deleteAllConfirm": "Bu işlem geri alınamaz. Tüm verileri kalıcı olarak silmek istediğinizden emin misiniz?",
+    "deleteAllSuccess": "Tüm veriler başarıyla silindi"
+  },
+
+  "validation": {
+    "required": "Bu alan zorunludur",
+    "email": "Geçerli bir e-posta adresi girin",
+    "password": "Şifre en az {min} karakter olmalıdır",
+    "passwordMatch": "Şifreler eşleşmiyor",
+    "phone": "Geçerli bir telefon numarası girin",
+    "number": "Geçerli bir sayı girin",
+    "positiveNumber": "Pozitif bir sayı girin",
+    "maxLength": "Maksimum {max} karakter girebilirsiniz",
+    "minLength": "En az {min} karakter girmelisiniz",
+    "fileSize": "Dosya boyutu {max} MB'dan küçük olmalıdır",
+    "fileType": "Geçersiz dosya türü"
+  },
+
+  "errors": {
+    "generic": "Beklenmedik bir hata oluştu",
+    "network": "Ağ bağlantısı hatası. Lütfen tekrar deneyin",
+    "authentication": "Giriş yapmanız gerekiyor",
+    "authorization": "Bu işlemi yapmaya yetkiniz yok",
+    "notFound": "Aradığınız kayıt bulunamadı",
+    "validation": "Lütfen tüm alanları doğru şekilde doldurun",
+    "serverError": "Sunucu hatası oluştu",
+    "timeout": "İşlem zaman aşımına uğradı",
+    "offline": "İnternet bağlantınızı kontrol edin"
+  },
+
+  "success": {
+    "saved": "Başarıyla kaydedildi",
+    "updated": "Başarıyla güncellendi",
+    "deleted": "Başarıyla silindi",
+    "added": "Başarıyla eklendi",
+    "imported": "Başarıyla içe aktarıldı",
+    "exported": "Başarıyla dışa aktarıldı",
+    "sent": "Başarıyla gönderildi",
+    "completed": "İşlem tamamlandı"
+  },
+
+  "pagination": {
+    "previous": "Önceki",
+    "next": "Sonraki",
+    "page": "Sayfa",
+    "of": "/",
+    "showing": "Gösterilen",
+    "to": "-",
+    "total": "toplam {total} kayıttan",
+    "itemsPerPage": "Sayfa başına kayıt"
+  },
+
+  "date": {
+    "today": "Bugün",
+    "yesterday": "Dün",
+    "tomorrow": "Yarın",
+    "thisWeek": "Bu Hafta",
+    "thisMonth": "Bu Ay",
+    "thisYear": "Bu Yıl",
+    "lastWeek": "Geçen Hafta",
+    "lastMonth": "Geçen Ay",
+    "lastYear": "Geçen Yıl",
+    "custom": "Özel Tarih Aralığı"
+  },
+
+  "theme": {
+    "light": "Açık Tema",
+    "dark": "Koyu Tema",
+    "themes": {
+      "light": "Kurumsal Mavi (Varsayılan)",
+      "coralSteel": "Mercan & Çelik Mavisi",
+      "creamTerracotta": "Krem & Terracotta",
+      "charcoalTeal": "Modern Kömür & Turkuaz"
+    }
+  },
+
+  "form": {
+    "saveAsDraft": "Taslak Olarak Kaydet",
+    "loadDraft": "Kaydedilmemiş bir form taslağınız var. Geri yüklensin mi?",
+    "draftLoaded": "Kaydedilmiş form verileri geri yüklendi",
+    "unsavedChanges": "Kaydedilmemiş değişiklikleriniz var. Sayfadan ayrılmak istediğinizden emin misiniz?",
+    "autoSave": "Otomatik kayıt",
+    "lastSaved": "Son kaydedilme: {time}"
+  },
+
+  "modal": {
+    "close": "Kapat",
+    "confirm": "Onayla",
+    "cancel": "İptal"
+  },
+
+  "loading": {
+    "dataLoading": "Veriler yükleniyor...",
+    "saving": "Kaydediliyor...",
+    "processing": "İşleniyor...",
+    "uploading": "Yükleniyor...",
+    "downloading": "İndiriliyor...",
+    "deleting": "Siliniyor...",
+    "pleaseWait": "Lütfen bekleyin..."
+  }
+}

@@ -246,3 +246,117 @@ onMounted(fetchFacilities)
     />
   </div>
 </template>
+
+<style scoped>
+.card {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px var(--shadow-color);
+  margin-bottom: 20px;
+}
+.data-actions-card p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 0;
+}
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.button-group button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: white;
+}
+.btn-secondary {
+  background-color: #7f8c8d;
+}
+.btn-success {
+  background-color: #27ae60;
+}
+.btn-info {
+  background-color: var(--color-info);
+}
+.btn-danger {
+  background-color: var(--color-danger);
+}
+.add-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+.add-form input {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-width: 200px;
+}
+.add-form button {
+  padding: 8px 15px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: var(--color-accent);
+  align-self: center;
+}
+.add-form button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+.btn-cancel {
+  background-color: #95a5a6;
+}
+.item-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+.actions {
+  display: flex;
+  gap: 10px;
+}
+.edit-btn,
+.delete-btn {
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.edit-btn {
+  background-color: var(--color-info);
+}
+.delete-btn {
+  background-color: var(--color-danger);
+}
+.error-message {
+  color: var(--color-danger);
+  font-size: 12px;
+  width: 100%;
+  margin-top: -5px;
+  margin-bottom: 5px;
+}
+</style>

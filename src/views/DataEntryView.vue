@@ -90,6 +90,8 @@ watch(
         <div class="sub-nav">
           <RouterLink to="/veri-girisi/tesise-gelen" active-class="active">Tesise Gelen</RouterLink>
           <RouterLink to="/veri-girisi/davet" active-class="active">Davet Girişi</RouterLink>
+          <RouterLink to="/veri-girisi/davet-takip" active-class="active">Davet Takip</RouterLink>
+
           <RouterLink to="/veri-girisi/gelis-yonetimi" active-class="active"
             >Geliş Yönetimi</RouterLink
           >

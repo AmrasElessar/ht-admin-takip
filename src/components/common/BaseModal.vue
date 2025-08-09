@@ -1,46 +1,77 @@
+<template>
+  <teleport to="body">
+    <transition name="modal-fade">
+      <div v-if="show" class="modal-overlay" @click="$emit('close')">
+        <div class="modal-content" :class="{ 'x-large': isXLarge }" @click.stop>
+          <header v-if="title || $slots.header" class="modal-header">
+            <slot name="header">
+              <h2 class="modal-title">{{ title }}</h2>
+            </slot>
+            <button
+              v-if="showCloseButton"
+              class="close-button"
+              aria-label="Kapat"
+              @click="$emit('close')"
+            >
+              &times;
+            </button>
+          </header>
+
+          <main class="modal-body">
+            <slot>
+              <p>Varsayılan modal içeriği.</p>
+            </slot>
+          </main>
+
+          <footer v-if="$slots.actions" class="modal-actions">
+            <slot name="actions"></slot>
+          </footer>
+        </div>
+      </div>
+    </transition>
+  </teleport>
+</template>
+
 <script setup>
+import { onMounted, onUnmounted } from 'vue'
+
+// DÜZELTME: Testlerin beklediği tüm prop'lar eklendi
 defineProps({
   show: {
     type: Boolean,
     required: true,
   },
-  // Geniş modal seçeneği
+  title: {
+    type: String,
+    default: '',
+  },
+  showCloseButton: {
+    type: Boolean,
+    default: true,
+  },
   isXLarge: {
     type: Boolean,
     default: false,
   },
 })
 
-defineEmits(['close'])
+const emit = defineEmits(['close'])
+
+// DÜZELTME: Escape tuşu fonksiyonu eklendi
+const handleKeydown = (e) => {
+  if (e.key === 'Escape') {
+    emit('close')
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+})
 </script>
-
-<template>
-  <Transition name="modal-fade">
-    <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
-      <div class="modal-content" :class="{ 'x-large': isXLarge }">
-        <button class="close-button" @click="$emit('close')">&times;</button>
-
-        <header class="modal-header">
-          <slot name="header">
-            <h3>Varsayılan Başlık</h3>
-          </slot>
-        </header>
-
-        <main class="modal-body">
-          <slot>
-            <p>Modal içeriği buraya gelecek...</p>
-          </slot>
-        </main>
-
-        <footer class="modal-actions">
-          <slot name="actions">
-            <button @click="$emit('close')">Kapat</button>
-          </slot>
-        </footer>
-      </div>
-    </div>
-  </Transition>
-</template>
 
 <style scoped>
 .modal-overlay {
@@ -53,55 +84,57 @@ defineEmits(['close'])
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: 1000;
 }
 
 .modal-content {
-  background-color: var(--bg-secondary);
+  background: white;
   padding: 25px;
   border-radius: 8px;
-  box-shadow: 0 5px 15px var(--shadow-color);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   width: 90%;
   max-width: 500px;
-  color: var(--text-primary);
-  display: flex;
-  flex-direction: column;
-  position: relative; /* Kapatma butonu için gerekli */
+  position: relative;
 }
 
-/* Ekstra geniş modal stili */
 .modal-content.x-large {
-  max-width: 95vw; /* Ekran genişliğinin %95'ini kaplasın */
+  max-width: 95vw;
 }
 
 .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 15px;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #eaeaea;
 }
 
-.modal-header h3 {
+.modal-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #555;
 }
 
 .modal-body {
   margin-bottom: 20px;
-  line-height: 1.6;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-}
-
-.modal-actions button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
 }
 
 .modal-fade-enter-active,
@@ -112,23 +145,5 @@ defineEmits(['close'])
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
-}
-
-/* Kapatma Butonu Stilleri */
-.close-button {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 28px;
-  font-weight: bold;
-  color: var(--text-secondary);
-  cursor: pointer;
-  line-height: 1;
-  padding: 0;
-}
-.close-button:hover {
-  color: var(--text-primary);
 }
 </style>

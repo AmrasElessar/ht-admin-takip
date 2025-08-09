@@ -4,6 +4,7 @@ import App from './App.vue'
 import router from './router'
 import { auth } from './firebaseConfig'
 import { onAuthStateChanged } from 'firebase/auth'
+import i18n from './i18n' // i18n import edildi
 
 // Diğer importlar (CSS, Toast vb.)
 import './assets/main.css'
@@ -22,6 +23,7 @@ onAuthStateChanged(auth, () => {
 
     app.use(createPinia())
     app.use(router)
+    app.use(i18n) // i18n eklendi
 
     app.use(Toast, {
       position: POSITION.BOTTOM_RIGHT,
@@ -39,5 +41,9 @@ onAuthStateChanged(auth, () => {
     })
 
     app.mount('#app')
+  }
+
+  if (import.meta.env.DEV) {
+    import('./utils/browserTestRunner.js')
   }
 })

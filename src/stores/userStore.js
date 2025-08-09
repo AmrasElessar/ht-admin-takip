@@ -12,7 +12,7 @@ import {
   update,
 } from 'firebase/database'
 import { handleError } from '@/utils/errorHandler'
-import { useOperationStore } from './operationStore' // --- ADIM 0.2 DEĞİŞİKLİĞİ ---
+import { useOperationStore } from './operationStore'
 
 export const useUserStore = defineStore('user', () => {
   const currentUserProfile = ref(null)
@@ -29,8 +29,6 @@ export const useUserStore = defineStore('user', () => {
     announcement: {},
   })
 
-  // --- ADIM 0.2 DEĞİŞİKLİĞİ ---
-  // Diğer store'a erişim için instance oluşturuyoruz.
   const operationStore = useOperationStore()
 
   let unsubscribeUserProfile = null
@@ -221,40 +219,6 @@ export const useUserStore = defineStore('user', () => {
 
   const onlineUserCount = computed(() => Object.keys(onlineUsers.value).length)
 
-  // --- ADIM 0.2 DEĞİŞİKLİĞİ ---
-  // Bu getter'ı merkezi olarak buraya taşıdık.
-  const groupedClosingTeams = computed(() => {
-    if (
-      !allSalesGroups.value.length ||
-      !allTeams.value.length ||
-      !operationStore.activeFacilityId
-    ) {
-      return {}
-    }
-
-    const groups = {}
-    const nonDistributorGroups = allSalesGroups.value
-      .filter((g) => !g.isDistributor)
-      .sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99))
-
-    const closingTeamsInFacility = allTeams.value.filter(
-      (team) =>
-        team.facilityId === operationStore.activeFacilityId &&
-        nonDistributorGroups.map((g) => g.id).includes(team.salesGroupId),
-    )
-
-    nonDistributorGroups.forEach((group) => {
-      const teamsInGroup = closingTeamsInFacility
-        .filter((t) => t.salesGroupId === group.id)
-        .sort((a, b) => a.name.localeCompare(b.name))
-      if (teamsInGroup.length > 0) {
-        groups[group.name] = teamsInGroup
-      }
-    })
-    return groups
-  })
-  // --- DEĞİŞİKLİK SONU ---
-
   function listenAllUsers() {
     if (unsubscribeAllUsers) unsubscribeAllUsers()
     const q = query(collection(db, 'users'), orderBy('displayName', 'asc'), orderBy('email', 'asc'))
@@ -292,6 +256,44 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  // YENİ: Kapatıcı Ekipleri Merkezi Olarak Hesapla
+  const closingTeams = computed(() => {
+    // Veriler henüz yüklenmediyse boş bir dizi döndürerek hatayı engelle
+    if (
+      !allTeams.value.length ||
+      !allSalesGroups.value.length ||
+      !operationStore.activeFacilityId
+    ) {
+      return []
+    }
+    const nonDistributorGroupIds = allSalesGroups.value
+      .filter((g) => !g.isDistributor)
+      .map((g) => g.id)
+
+    return allTeams.value.filter(
+      (team) =>
+        team.facilityId === operationStore.activeFacilityId &&
+        nonDistributorGroupIds.includes(team.salesGroupId),
+    )
+  })
+
+  // YENİ: Dağıtıcı Ekipleri Merkezi Olarak Hesapla
+  const distributorTeams = computed(() => {
+    // Veriler henüz yüklenmediyse boş bir dizi döndürerek hatayı engelle
+    if (
+      !allTeams.value.length ||
+      !allSalesGroups.value.length ||
+      !operationStore.activeFacilityId
+    ) {
+      return []
+    }
+    return allTeams.value.filter(
+      (team) =>
+        team.facilityId === operationStore.activeFacilityId &&
+        allSalesGroups.value.find((g) => g.id === team.salesGroupId)?.isDistributor,
+    )
+  })
+
   return {
     currentUserProfile,
     currentUserRole,
@@ -312,6 +314,7 @@ export const useUserStore = defineStore('user', () => {
     systemSettings,
     updateUserAvailability,
     updateUserStatusMessage,
-    groupedClosingTeams, // --- ADIM 0.2 DEĞİŞİKLİĞİ ---
+    closingTeams,
+    distributorTeams,
   }
 })

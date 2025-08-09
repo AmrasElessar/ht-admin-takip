@@ -89,7 +89,27 @@ const fetchAllData = () => {
   unsubLottery = onSnapshot(
     lotteryDocRef,
     (docSnap) => {
-      lotteryAssignments = docSnap.exists() ? docSnap.data().assignments || {} : {}
+      const allAssignments = {}
+      if (docSnap.exists()) {
+        const data = docSnap.data()
+        // Veritabanındaki 'lotteryPackages' listesini kontrol et
+        if (data.lotteryPackages && Array.isArray(data.lotteryPackages)) {
+          // Her bir çekiliş paketinin içindeki atamaları döngüye al
+          data.lotteryPackages.forEach((pkg) => {
+            if (pkg.assignments) {
+              // Her bir ekibin atamalarını ana 'allAssignments' listesine ekle
+              for (const teamId in pkg.assignments) {
+                if (!allAssignments[teamId]) {
+                  allAssignments[teamId] = []
+                }
+                allAssignments[teamId].push(...pkg.assignments[teamId])
+              }
+            }
+          })
+        }
+      }
+      // Tüm çekilişlerden birleştirilmiş yeni listeyi ata
+      lotteryAssignments = allAssignments
       processData()
     },
     (error) => handleError(error, 'Çekiliş sonuçları dinlenirken hata oluştu.'),

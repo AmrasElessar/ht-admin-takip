@@ -89,11 +89,37 @@ const assignedFacilities = computed(() => {
   top: 95px;
   left: 255px;
   width: 300px;
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-secondary); /* Bu değişkenin tanımı önemli */
   border-radius: 8px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   border: 1px solid var(--border-color);
   z-index: 1001;
+}
+
+/* Koyu temalar için özel stil */
+:global([data-theme*='dark']) .profile-card {
+  background-color: var(--bg-secondary-dark, #2c2f33);
+  color: var(--text-primary-dark, #fff); /* Yazı rengi */
+  border-color: var(--border-color-dark, #4f545c);
+}
+
+/* Diğer temalar için benzer şekilde stiller ekleyebilirsiniz */
+:global([data-theme='theme-coral-steel']) .profile-card {
+  background-color: var(--theme-coral-steel-bg, #f4f7f6);
+  color: var(--theme-coral-steel-text, #333);
+  border-color: var(--theme-coral-steel-border, #d2dce1);
+}
+
+:global([data-theme='theme-cream-terracotta']) .profile-card {
+  background-color: var(--theme-cream-terracotta-bg, #fbf7f4);
+  color: var(--theme-cream-terracotta-text, #333);
+  border-color: var(--theme-cream-terracotta-border, #e0d7cf);
+}
+
+:global([data-theme='theme-charcoal-teal']) .profile-card {
+  background-color: var(--theme-charcoal-teal-bg, #2d333b);
+  color: var(--theme-charcoal-teal-text, #e2e8f0);
+  border-color: var(--theme-charcoal-teal-border, #4a5568);
 }
 .card-header {
   display: flex;
