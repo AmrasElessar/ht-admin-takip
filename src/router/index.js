@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { auth } from '../firebaseConfig'
 import { useUserStore } from '../stores/userStore'
 import { useToast } from 'vue-toastification'
+import LotteryPanelView from '../views/LotteryPanelView.vue'
 
 const routes = [
   {

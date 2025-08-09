@@ -1,7 +1,8 @@
 // DOSYA: src/composables/useInvitationRecords.js
 
 import { ref, watch, reactive, computed } from 'vue'
-import { db } from '@/firebaseConfig'
+import { db, functions } from '@/firebaseConfig'
+import { httpsCallable } from 'firebase/functions'
 import { collection, query, where, onSnapshot, doc, updateDoc, orderBy } from 'firebase/firestore'
 import { useOperationStore } from '@/stores/operationStore'
 import { handleError } from '@/utils/errorHandler'
@@ -19,6 +20,15 @@ export function useInvitationRecords() {
     facilityId: operationStore.activeFacilityId,
   })
 
+  // --- YENİ EKLENEN BÖLÜM ---
+  // Ham 'records' listesini havuz tipine göre iki ayrı reaktif listeye böler.
+  const tourInvitations = computed(() => records.value.filter((rec) => rec.poolType === 'tour'))
+
+  const privateVehicleInvitations = computed(() =>
+    records.value.filter((rec) => rec.poolType === 'privateVehicle'),
+  )
+  // --- YENİ EKLENEN BÖLÜM SONU ---
+
   // Veriyi havuz tipine ve dağıtıcı ekip adına göre gruplayan hesaplanmış değer
   const groupedRecords = computed(() => {
     const grouped = {
@@ -27,16 +37,13 @@ export function useInvitationRecords() {
     }
 
     for (const record of records.value) {
-      // poolType 'tour' veya 'privateVehicle' değilse atla
       const pool = grouped[record.poolType]
       if (!pool) continue
 
-      // Eğer bu ekip için daha önce bir grup oluşturulmadıysa, oluştur
       if (!pool[record.distributorTeamName]) {
         pool[record.distributorTeamName] = []
       }
 
-      // Kaydı doğru grubun içine ekle
       pool[record.distributorTeamName].push(record)
     }
     return grouped
@@ -98,7 +105,24 @@ export function useInvitationRecords() {
       const docRef = doc(db, 'invitationRecords', recordId)
       await updateDoc(docRef, data)
     } catch (error) {
-      handleError(error, 'Satış detayı kaydedilirken bir hata oluştu.')
+      handleError(error, 'Kayıt güncellenirken bir hata oluştu.')
+    }
+  }
+
+  // Belirli bir ekibin kayıtlarını temizleyen fonksiyon
+  const clearTeamRecords = async (teamId, poolType) => {
+    try {
+      const clearFunction = httpsCallable(functions, 'clearTeamInvitationRecords')
+      const result = await clearFunction({
+        date: filters.date,
+        facilityId: filters.facilityId,
+        teamId,
+        poolType,
+      })
+      return result.data
+    } catch (error) {
+      handleError(error, 'Kayıtlar silinirken bir hata oluştu.')
+      throw error
     }
   }
 
@@ -121,11 +145,16 @@ export function useInvitationRecords() {
 
   // Dışarıya açılan reaktif veriler ve fonksiyonlar
   return {
-    records, // Düz listeyi export ve diğer işlemler için dışarıya açıyoruz
+    records,
     groupedRecords,
     isLoading,
     filters,
     updateRecordField,
     updateFullRecord,
+    clearTeamRecords,
+
+    // YENİ EKLENENLER
+    tourInvitations,
+    privateVehicleInvitations,
   }
 }
