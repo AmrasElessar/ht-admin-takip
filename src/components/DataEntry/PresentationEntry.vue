@@ -16,6 +16,7 @@ import { useOperationStore } from '../../stores/operationStore' // ÖNEMLİ
 import { useToast } from 'vue-toastification'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import { handleError } from '@/utils/errorHandler'
+import { auth } from '../../firebaseConfig'
 
 // defineProps satırı bu sürümde kaldırılmıştır.
 const userStore = useUserStore()
@@ -29,106 +30,97 @@ const isLoading = ref(true)
 let unsubLottery = null
 let unsubGuests = null
 
-const closingTeams = computed(() => {
-  const nonDistributorGroupIds = userStore.allSalesGroups
-    .filter((g) => !g.isDistributor)
-    .map((g) => g.id)
-  return userStore.allTeams
-    .filter(
-      (team) =>
-        team.facilityId === operationStore.activeFacilityId && // props.activeFacilityId yerine
-        nonDistributorGroupIds.includes(team.salesGroupId),
-    )
-    .sort((a, b) => a.name.localeCompare(b.name))
-})
-
+const closingTeams = computed(() => userStore.closingTeams)
 const fetchAllData = () => {
-  isLoading.value = true
-  if (unsubLottery) unsubLottery()
-  if (unsubGuests) unsubGuests()
+  if (!auth.currentUser) {
+    isLoading.value = true
+    if (unsubLottery) unsubLottery()
+    if (unsubGuests) unsubGuests()
 
-  const lotteryDocRef = doc(
-    db,
-    'lotteryAssignments',
-    `${operationStore.selectedDate}_${operationStore.activeFacilityId}`, // props yerine
-  )
-  const teamIds = closingTeams.value.map((t) => t.id)
-  if (teamIds.length === 0) {
-    combinedDistributionData.value = {}
-    isLoading.value = false
+    const lotteryDocRef = doc(
+      db,
+      'lotteryAssignments',
+      `${operationStore.selectedDate}_${operationStore.activeFacilityId}`, // props yerine
+    )
+    const teamIds = closingTeams.value.map((t) => t.id)
+    if (teamIds.length === 0) {
+      combinedDistributionData.value = {}
+      isLoading.value = false
+      return
+    }
+    const guestDocIds = teamIds.map((id) => `${operationStore.selectedDate}_${id}`) // props yerine
+    const guestsQuery = query(
+      collection(db, 'facilityGuests'),
+      where(documentId(), 'in', guestDocIds),
+    )
+
+    let lotteryAssignments = {}
+    let facilityGuests = {}
+
+    const processData = () => {
+      const result = {}
+      closingTeams.value.forEach((team) => {
+        const lotto = lotteryAssignments[team.id] || []
+        const guest = facilityGuests[team.id] || { up: 0, oneleg: 0, single: 0 }
+
+        const lottoUp = lotto.filter((i) => i.type === 'up').length
+        const lottoOs = lotto.filter((i) => i.type === 'os' || i.type === 'oneleg').length
+
+        result[team.id] = {
+          totalUp: lottoUp + (guest.up || 0),
+          totalOneleg: lottoOs + (guest.oneleg || 0),
+          totalSingle: guest.single || 0,
+        }
+      })
+      combinedDistributionData.value = result
+      isLoading.value = false
+    }
+
+    unsubLottery = onSnapshot(
+      lotteryDocRef,
+      (docSnap) => {
+        const allAssignments = {}
+        if (docSnap.exists()) {
+          const data = docSnap.data()
+          // Veritabanındaki 'lotteryPackages' listesini kontrol et
+          if (data.lotteryPackages && Array.isArray(data.lotteryPackages)) {
+            // Her bir çekiliş paketinin içindeki atamaları döngüye al
+            data.lotteryPackages.forEach((pkg) => {
+              if (pkg.assignments) {
+                // Her bir ekibin atamalarını ana 'allAssignments' listesine ekle
+                for (const teamId in pkg.assignments) {
+                  if (!allAssignments[teamId]) {
+                    allAssignments[teamId] = []
+                  }
+                  allAssignments[teamId].push(...pkg.assignments[teamId])
+                }
+              }
+            })
+          }
+        }
+        // Tüm çekilişlerden birleştirilmiş yeni listeyi ata
+        lotteryAssignments = allAssignments
+        processData()
+      },
+      (error) => handleError(error, 'Çekiliş sonuçları dinlenirken hata oluştu.'),
+    )
+
+    unsubGuests = onSnapshot(
+      guestsQuery,
+      (snapshot) => {
+        const newGuests = {}
+        snapshot.forEach((doc) => {
+          newGuests[doc.data().teamId] = doc.data()
+        })
+        facilityGuests = newGuests
+        processData()
+      },
+      (error) => handleError(error, 'Tesise gelen misafir verileri dinlenirken hata oluştu.'),
+    )
+
+    loadPresentationData()
     return
   }
-  const guestDocIds = teamIds.map((id) => `${operationStore.selectedDate}_${id}`) // props yerine
-  const guestsQuery = query(
-    collection(db, 'facilityGuests'),
-    where(documentId(), 'in', guestDocIds),
-  )
-
-  let lotteryAssignments = {}
-  let facilityGuests = {}
-
-  const processData = () => {
-    const result = {}
-    closingTeams.value.forEach((team) => {
-      const lotto = lotteryAssignments[team.id] || []
-      const guest = facilityGuests[team.id] || { up: 0, oneleg: 0, single: 0 }
-
-      const lottoUp = lotto.filter((i) => i.type === 'up').length
-      const lottoOs = lotto.filter((i) => i.type === 'os' || i.type === 'oneleg').length
-
-      result[team.id] = {
-        totalUp: lottoUp + (guest.up || 0),
-        totalOneleg: lottoOs + (guest.oneleg || 0),
-        totalSingle: guest.single || 0,
-      }
-    })
-    combinedDistributionData.value = result
-    isLoading.value = false
-  }
-
-  unsubLottery = onSnapshot(
-    lotteryDocRef,
-    (docSnap) => {
-      const allAssignments = {}
-      if (docSnap.exists()) {
-        const data = docSnap.data()
-        // Veritabanındaki 'lotteryPackages' listesini kontrol et
-        if (data.lotteryPackages && Array.isArray(data.lotteryPackages)) {
-          // Her bir çekiliş paketinin içindeki atamaları döngüye al
-          data.lotteryPackages.forEach((pkg) => {
-            if (pkg.assignments) {
-              // Her bir ekibin atamalarını ana 'allAssignments' listesine ekle
-              for (const teamId in pkg.assignments) {
-                if (!allAssignments[teamId]) {
-                  allAssignments[teamId] = []
-                }
-                allAssignments[teamId].push(...pkg.assignments[teamId])
-              }
-            }
-          })
-        }
-      }
-      // Tüm çekilişlerden birleştirilmiş yeni listeyi ata
-      lotteryAssignments = allAssignments
-      processData()
-    },
-    (error) => handleError(error, 'Çekiliş sonuçları dinlenirken hata oluştu.'),
-  )
-
-  unsubGuests = onSnapshot(
-    guestsQuery,
-    (snapshot) => {
-      const newGuests = {}
-      snapshot.forEach((doc) => {
-        newGuests[doc.data().teamId] = doc.data()
-      })
-      facilityGuests = newGuests
-      processData()
-    },
-    (error) => handleError(error, 'Tesise gelen misafir verileri dinlenirken hata oluştu.'),
-  )
-
-  loadPresentationData()
 }
 
 const loadPresentationData = async () => {

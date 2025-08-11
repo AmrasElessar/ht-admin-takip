@@ -43,15 +43,17 @@ export const useUserStore = defineStore('user', () => {
   const initializeDataListeners = () => {
     if (!auth.currentUser) return Promise.resolve()
     if (initialDataLoadPromise) return initialDataLoadPromise
+
     initialDataLoadPromise = new Promise((resolve, reject) => {
       const uid = auth.currentUser.uid
-      const createListenerPromise = (firestoreQuery, dataSetter) => {
+      const createListenerPromise = (firestoreQuery, dataSetter, unsubSetter) => {
         return new Promise((listenerResolve, listenerReject) => {
           const unsubscribe = onSnapshot(
             firestoreQuery,
             (snapshot) => {
               dataSetter(snapshot)
-              listenerResolve(unsubscribe)
+              unsubSetter(unsubscribe) // Unsubscribe fonksiyonunu dışarıdaki değişkene ata
+              listenerResolve() // Değişkeni geri döndürmeye gerek yok
             },
             (error) => {
               listenerReject(error)
@@ -63,7 +65,8 @@ export const useUserStore = defineStore('user', () => {
       const profileRef = doc(db, 'users', uid)
       const profileSetter = (docSnap) => {
         if (docSnap.exists()) {
-          currentUserProfile.value = { id: docSnap.id, ...docSnap.data() }
+          const profileData = { id: docSnap.id, ...docSnap.data() }
+          currentUserProfile.value = profileData
           currentUserRole.value = currentUserProfile.value.role || 'yok'
         } else {
           currentUserProfile.value = null
@@ -75,26 +78,52 @@ export const useUserStore = defineStore('user', () => {
       const groupsSetter = (snapshot) => {
         allSalesGroups.value = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
       }
+
       const teamsQuery = query(collection(db, 'teams'), orderBy('name'))
       const teamsSetter = (snapshot) => {
         allTeams.value = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
       }
+
       const facilitiesQuery = query(collection(db, 'facilities'), orderBy('name'))
       const facilitiesSetter = (snapshot) => {
         allFacilities.value = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
       }
 
       Promise.all([
-        createListenerPromise(profileRef, profileSetter),
-        createListenerPromise(groupsQuery, groupsSetter),
-        createListenerPromise(teamsQuery, teamsSetter),
-        createListenerPromise(facilitiesQuery, facilitiesSetter),
+        createListenerPromise(profileRef, profileSetter, (unsub) => {
+          unsubscribeUserProfile = unsub
+        }),
+        createListenerPromise(groupsQuery, groupsSetter, (unsub) => {
+          unsubscribeAllSalesGroups = unsub
+        }),
+        createListenerPromise(teamsQuery, teamsSetter, (unsub) => {
+          unsubscribeAllTeams = unsub
+        }),
+        createListenerPromise(facilitiesQuery, facilitiesSetter, (unsub) => {
+          unsubscribeAllFacilities = unsub
+        }),
       ])
-        .then(([unsubProfile, unsubGroups, unsubTeams, unsubFacilities]) => {
-          unsubscribeUserProfile = unsubProfile
-          unsubscribeAllSalesGroups = unsubGroups
-          unsubscribeAllTeams = unsubTeams
-          unsubscribeAllFacilities = unsubFacilities
+        .then(() => {
+          // DÖNEN DEĞİŞKENLERİ KULLANMAYA GEREK KALMADI
+          // Tesis ve tarih ayarlarını merkezi olarak yükle
+          const storedFacility = localStorage.getItem('userFacility')
+          if (storedFacility) {
+            const facility = JSON.parse(storedFacility)
+            setSelectedFacility(facility)
+            operationStore.setActiveFacilityId(facility.id)
+          } else if (currentUserProfile.value?.assignedFacilityIds?.length > 0) {
+            const firstFacilityId = currentUserProfile.value.assignedFacilityIds[0]
+            const facilityToSet = allFacilities.value.find((f) => f.id === firstFacilityId)
+            if (facilityToSet) {
+              setSelectedFacility(facilityToSet)
+              operationStore.setActiveFacilityId(firstFacilityId)
+            }
+          } else if (allFacilities.value.length > 0) {
+            const firstFacility = allFacilities.value[0]
+            setSelectedFacility(firstFacility)
+            operationStore.setActiveFacilityId(firstFacility.id)
+          }
+
           initPresenceSystem(auth.currentUser)
           listenAllUsers()
           listenSystemSettings()
@@ -152,6 +181,9 @@ export const useUserStore = defineStore('user', () => {
 
   function initPresenceSystem(user) {
     if (!user) return
+
+    auth.currentUser.getIdToken(true)
+
     const userStatusRef = dbRef(realtimeDB, `/status/${user.uid}`)
     const connectedUsersRef = dbRef(realtimeDB, '/status')
 
@@ -173,6 +205,8 @@ export const useUserStore = defineStore('user', () => {
       displayName: user.displayName || user.email,
       last_changed: serverTimestamp(),
       currentTab: window.location.pathname,
+    }).catch((error) => {
+      handleError(error, 'Kullanıcı durumu "online" olarak ayarlanamadı!')
     })
 
     onDisconnect(userStatusRef).set({
@@ -256,9 +290,7 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  // YENİ: Kapatıcı Ekipleri Merkezi Olarak Hesapla
   const closingTeams = computed(() => {
-    // Veriler henüz yüklenmediyse boş bir dizi döndürerek hatayı engelle
     if (
       !allTeams.value.length ||
       !allSalesGroups.value.length ||
@@ -277,9 +309,7 @@ export const useUserStore = defineStore('user', () => {
     )
   })
 
-  // YENİ: Dağıtıcı Ekipleri Merkezi Olarak Hesapla
   const distributorTeams = computed(() => {
-    // Veriler henüz yüklenmediyse boş bir dizi döndürerek hatayı engelle
     if (
       !allTeams.value.length ||
       !allSalesGroups.value.length ||

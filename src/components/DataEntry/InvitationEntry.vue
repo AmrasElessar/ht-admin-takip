@@ -1,261 +1,225 @@
 <script setup>
-import { ref, reactive, computed, watch, onUnmounted } from 'vue'
-import { db, functions } from '../../firebaseConfig'
-import {
-  doc,
-  setDoc,
-  getDocs,
-  collection,
-  query,
-  where,
-  documentId,
-  writeBatch,
-} from 'firebase/firestore'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useUserStore } from '@/stores/userStore'
+import { useOperationStore } from '@/stores/operationStore'
+import { doc, getDoc, writeBatch } from 'firebase/firestore'
+import { db, functions } from '@/firebaseConfig'
 import { httpsCallable } from 'firebase/functions'
-import { useUserStore } from '../../stores/userStore'
-import { useOperationStore } from '../../stores/operationStore'
 import { useToast } from 'vue-toastification'
 import { handleError } from '@/utils/errorHandler'
-import { useRouter } from 'vue-router'
-
-// Gerekli tüm bileşenleri ve composable'ları import ediyoruz
-import InvitationListModal from './InvitationListModal.vue'
 import InvitationGrid from './InvitationGrid.vue'
+import InvitationListModal from './InvitationListModal.vue'
 import { useInvitationRecords } from '@/composables/useInvitationRecords'
 
-const router = useRouter()
 const userStore = useUserStore()
 const operationStore = useOperationStore()
 const toast = useToast()
-let debounceTimer = null
+const { records: invitationRecords } = useInvitationRecords()
 
 const isLoading = ref(true)
 const showListModal = ref(false)
-
-// Manuel giriş tabloları için state'leri geri getiriyoruz
 const dailyInvitationsData_tour = reactive({})
 const dailyInvitationsData_privateVehicle = reactive({})
 
-// Detaylı kayıtları (invitationRecords) modal'a göndermek için çekiyoruz
-const { records: invitationRecords } = useInvitationRecords()
+const distributorTeams = computed(() => userStore.distributorTeams)
 
-const distributorTeams = computed(() => {
-  if (!userStore.allTeams.length || !userStore.allSalesGroups.length) return []
-  return userStore.allTeams
-    .filter(
-      (team) =>
-        team.facilityId === operationStore.activeFacilityId &&
-        userStore.allSalesGroups.find((g) => g.id === team.salesGroupId)?.isDistributor,
-    )
-    .sort((a, b) => a.name.localeCompare(b.name))
-})
-
-// Manuel giriş yapılıp yapılmadığını kontrol eden computed
-const isDataEntered = computed(() => {
-  const checkData = (data) =>
-    Object.values(data).some((d) => (d.up || 0) > 0 || (d.oneleg || 0) > 0 || (d.single || 0) > 0)
-  return checkData(dailyInvitationsData_tour) || checkData(dailyInvitationsData_privateVehicle)
-})
-
-const openInvitationModal = () => {
-  if (distributorTeams.value.length === 0) {
-    toast.error('Önce "Dağıtıcı Grup" olarak atanmış bir ekip bulunmalıdır.')
-    return
-  }
-  showListModal.value = true
-}
-
-// Manuel giriş tablolarını doldurmak için verileri çeken fonksiyon
-const initializeDataObjects = (teams) => {
-  ;[dailyInvitationsData_tour, dailyInvitationsData_privateVehicle].forEach((dataObj) => {
-    Object.keys(dataObj).forEach((key) => delete dataObj[key])
-    teams.forEach((team) => {
-      dataObj[team.id] = { up: 0, oneleg: 0, single: 0, invitationList: [], arrivalTypes: {} }
-    })
+const initializeDataObjects = () => {
+  if (!distributorTeams.value) return
+  Object.keys(dailyInvitationsData_tour).forEach((key) => delete dailyInvitationsData_tour[key])
+  Object.keys(dailyInvitationsData_privateVehicle).forEach(
+    (key) => delete dailyInvitationsData_privateVehicle[key],
+  )
+  distributorTeams.value.forEach((team) => {
+    dailyInvitationsData_tour[team.id] = { up: 0, oneleg: 0, single: 0 }
+    dailyInvitationsData_privateVehicle[team.id] = { up: 0, oneleg: 0, single: 0 }
   })
 }
 
 const loadDailyInvitationsData = async () => {
-  isLoading.value = true
-  initializeDataObjects(distributorTeams.value)
-
-  if (
-    !operationStore.activeFacilityId ||
-    !operationStore.selectedDate ||
-    distributorTeams.value.length === 0
-  ) {
+  if (!distributorTeams.value || distributorTeams.value.length === 0) {
     isLoading.value = false
     return
   }
+  isLoading.value = true
+  initializeDataObjects()
 
   try {
-    const docIds = distributorTeams.value.map((t) => `${operationStore.selectedDate}_${t.id}`)
-    const q = query(collection(db, 'dailyEntries'), where(documentId(), 'in', docIds))
-    const snapshot = await getDocs(q)
+    for (const team of distributorTeams.value) {
+      const docId = `${operationStore.selectedDate}_${team.id}`
+      const docRef = doc(db, 'dailyEntries', docId)
+      const docSnap = await getDoc(docRef)
 
-    snapshot.forEach((doc) => {
-      const data = doc.data()
-      const teamId = data.teamId
-      if (dailyInvitationsData_tour[teamId] && data.invitations_tour) {
-        Object.assign(dailyInvitationsData_tour[teamId], data.invitations_tour)
+      if (docSnap.exists()) {
+        const data = docSnap.data()
+        if (data.invitations_tour) {
+          Object.assign(dailyInvitationsData_tour[team.id], data.invitations_tour)
+        } else if (data.invitations) {
+          Object.assign(dailyInvitationsData_tour[team.id], data.invitations)
+        }
+        if (data.invitations_privateVehicle) {
+          Object.assign(
+            dailyInvitationsData_privateVehicle[team.id],
+            data.invitations_privateVehicle,
+          )
+        }
       }
-      if (dailyInvitationsData_privateVehicle[teamId] && data.invitations_privateVehicle) {
-        Object.assign(dailyInvitationsData_privateVehicle[teamId], data.invitations_privateVehicle)
-      }
-    })
+    }
   } catch (error) {
-    handleError(error, 'Davet verileri yüklenemedi.')
+    handleError(error, 'Günlük davet verileri yüklenirken bir hata oluştu.')
   } finally {
     isLoading.value = false
   }
 }
 
-// Manuel grid'deki her değişiklikte veriyi 1 saniye sonra otomatik kaydet
-const updatePoolData = ({ teamId, poolType, dataType, value }) => {
-  const dataObject =
+onMounted(loadDailyInvitationsData)
+watch(
+  () => [operationStore.selectedDate, operationStore.activeFacilityId, distributorTeams.value],
+  loadDailyInvitationsData,
+  { deep: true },
+)
+
+const handleGridDataChange = (payload) => {
+  const { teamId, poolType, dataType, value } = payload
+  const targetObject =
     poolType === 'tour' ? dailyInvitationsData_tour : dailyInvitationsData_privateVehicle
-  if (dataObject[teamId]) {
-    dataObject[teamId][dataType] = value
+  if (targetObject[teamId]) {
+    targetObject[teamId][dataType] = value
   }
-  saveDataForTeam({ teamId })
 }
 
-const saveDataForTeam = ({ teamId }) => {
-  clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(async () => {
-    const team = distributorTeams.value.find((t) => t.id === teamId)
-    if (!team) return
-    const docRef = doc(db, 'dailyEntries', `${operationStore.selectedDate}_${team.id}`)
-    try {
-      await setDoc(
+// ### NİHAİ VE DÜZELTİLMİŞ FONKSİYON ###
+const saveAndTransferData = async (poolType) => {
+  console.log('[CLIENT] 🪵 1. Kaydetme işlemi başlatıldı. Havuz Tipi:', poolType)
+  isLoading.value = true
+  const toastId = toast.info('Veriler işleniyor...', { timeout: false })
+
+  try {
+    const summaryData =
+      poolType === 'tour' ? dailyInvitationsData_tour : dailyInvitationsData_privateVehicle
+
+    const structuredSummary = []
+    for (const teamId in summaryData) {
+      const team = distributorTeams.value.find((t) => t.id === teamId)
+      if (team) {
+        const counts = summaryData[teamId]
+        // Sadece içinde veri olanları gönder
+        if (Object.values(counts).some((c) => c > 0)) {
+          structuredSummary.push({
+            teamId: team.id,
+            teamName: team.name,
+            counts: counts,
+          })
+        }
+      }
+    }
+
+    console.log('[CLIENT] 🪵 2. Sunucuya gönderilecek yapısal veri:', structuredSummary)
+
+    if (structuredSummary.length === 0) {
+      toast.update(toastId, {
+        content: 'Gönderilecek veri bulunmuyor. Lütfen en az bir giriş yapın.',
+        options: { type: 'warning', timeout: 4000 },
+      })
+      isLoading.value = false
+      return
+    }
+
+    // Özet veriyi `dailyEntries`'e kaydet
+    const batch = writeBatch(db)
+    const collectionName = poolType === 'tour' ? 'invitations_tour' : 'invitations_privateVehicle'
+    for (const teamId in summaryData) {
+      const docId = `${operationStore.selectedDate}_${teamId}`
+      const docRef = doc(db, 'dailyEntries', docId)
+      batch.set(
         docRef,
         {
+          [collectionName]: summaryData[teamId],
           date: operationStore.selectedDate,
           facilityId: operationStore.activeFacilityId,
-          teamId: team.id,
-          teamName: team.name,
-          invitations_tour: dailyInvitationsData_tour[teamId] || {},
-          invitations_privateVehicle: dailyInvitationsData_privateVehicle[teamId] || {},
+          teamId: teamId,
         },
         { merge: true },
       )
-    } catch (error) {
-      handleError(error, 'Veri kaydedilemedi.')
     }
-  }, 1000)
-}
-
-// Modal'dan gelen yeni kayıtları işleyen fonksiyon
-const handleSaveChanges = async ({ newRecords }) => {
-  if (newRecords.length === 0) {
-    toast.info('Yeni davet girişi yapılmadı.')
-    showListModal.value = false
-    return
-  }
-  try {
-    const createBatchInvitationRecords = httpsCallable(functions, 'createBatchInvitationRecords')
-    const result = await createBatchInvitationRecords({
-      records: newRecords,
-      facilityId: operationStore.activeFacilityId,
-      date: operationStore.selectedDate,
-    })
-    toast.success(
-      `${result.data.createdCount} yeni davet kaydı oluşturuldu ve toplamlar güncellendi!`,
-    )
-    showListModal.value = false
-  } catch (error) {
-    handleError(error, 'Yeni davet kayıtları oluşturulurken bir hata oluştu.')
-  }
-}
-
-// "Kaydet ve Aktar" butonu için tüm manuel verileri son kez kaydeden fonksiyon
-const saveAllData = async () => {
-  const batch = writeBatch(db)
-  distributorTeams.value.forEach((team) => {
-    const docRef = doc(db, 'dailyEntries', `${operationStore.selectedDate}_${team.id}`)
-    batch.set(
-      docRef,
-      {
-        date: operationStore.selectedDate,
-        facilityId: operationStore.activeFacilityId,
-        teamId: team.id,
-        teamName: team.name,
-        invitations_tour: dailyInvitationsData_tour[team.id] || {},
-        invitations_privateVehicle: dailyInvitationsData_privateVehicle[team.id] || {},
-        updatedAt: new Date(),
-      },
-      { merge: true },
-    )
-  })
-  try {
     await batch.commit()
-    return true
+    console.log('[CLIENT] 🪵 3. Özet veri dailyEntries koleksiyonuna kaydedildi.')
+
+    // Cloud Function'ı yeni yapısal veriyle çağır
+    const createBatchFromSummary = httpsCallable(functions, 'createInvitationRecordsFromSummary')
+    console.log('[CLIENT] 🪵 4. Cloud Function çağrılıyor...')
+    const result = await createBatchFromSummary({
+      date: operationStore.selectedDate,
+      facilityId: operationStore.activeFacilityId,
+      poolType: poolType,
+      summary: structuredSummary,
+    })
+
+    console.log('[CLIENT] 🪵 5. Cloud Function sonucu geldi:', result.data)
+
+    if (result.data.success) {
+      toast.update(toastId, {
+        content: `${result.data.createdCount} davet başarıyla canlı havuza aktarıldı!`,
+        options: { type: 'success', timeout: 4000 },
+      })
+    } else {
+      throw new Error(result.data.error || 'Cloud function tarafında bir hata oluştu.')
+    }
   } catch (error) {
-    handleError(error, 'Veriler toplu kaydedilirken bir hata oluştu.')
-    return false
+    console.error('[CLIENT] 💥 HATA:', error)
+    toast.update(toastId, {
+      content: `Bir hata oluştu: ${error.message}`,
+      options: { type: 'error', timeout: 5000 },
+    })
+    handleError(error, 'Davetler kaydedilirken bir hata oluştu.')
+  } finally {
+    isLoading.value = false
   }
 }
 
-const saveAndTransferToLottery = async () => {
-  const success = await saveAllData()
-  if (success) {
-    toast.success('Tüm davet verileri kaydedildi ve dağıtıma hazır!')
-    router.push('/veri-girisi/cekilis')
-  }
+const handleSaveChanges = ({ _newRecords }) => {
+  toast.info('30luk liste kaydetme özelliği henüz tamamlanmadı.')
 }
-
-watch(
-  [() => operationStore.selectedDate, () => operationStore.activeFacilityId, distributorTeams],
-  loadDailyInvitationsData,
-  { immediate: true, deep: true },
-)
-
-onUnmounted(() => {
-  clearTimeout(debounceTimer)
-})
 </script>
 
 <template>
-  <div class="invitation-entry">
-    <div class="header-actions">
-      <h3>Davet Girişi (Dağıtıcı Gruplar)</h3>
-      <button class="btn-primary" :disabled="isLoading" @click="openInvitationModal">
-        <i class="fas fa-th"></i>
-        {{ isLoading ? 'Veriler Yükleniyor...' : "30'luk Listeden Hızlı Giriş / Kontrol" }}
+  <div>
+    <div class="header">
+      <h4>Manuel Davet Girişi (Özet)</h4>
+      <button class="btn-secondary" @click="showListModal = true">
+        <i class="fas fa-list-ol"></i> 30'luk Liste Hızlı Giriş
       </button>
     </div>
-    <p>Ekip bazında davet toplamlarını girin veya hızlı giriş modunu kullanın.</p>
-
-    <div v-if="isLoading" class="loading">Veriler yükleniyor...</div>
-    <div v-else-if="distributorTeams.length > 0">
+    <p class="description">
+      Dağıtıcı ekiplerin günlük davet sayılarını toplu olarak girin. Her havuzun kendi "Kaydet"
+      butonu, hem bu veriyi kaydeder hem de çekiliş havuzuna aktarır.
+    </p>
+    <div v-if="isLoading" class="loading">Veriler Yükleniyor...</div>
+    <div v-else class="grid-layout">
       <InvitationGrid
         title="Tur Havuzu Girişi"
         :teams="distributorTeams"
         :pool-data="dailyInvitationsData_tour"
         pool-type="tour"
-        @data-changed="updatePoolData"
+        @data-changed="handleGridDataChange"
+        @save-grid="saveAndTransferData('tour')"
       />
-
       <InvitationGrid
         title="Kendi Araçlı Havuzu Girişi"
         :teams="distributorTeams"
         :pool-data="dailyInvitationsData_privateVehicle"
         pool-type="privateVehicle"
-        @data-changed="updatePoolData"
+        @data-changed="handleGridDataChange"
+        @save-grid="saveAndTransferData('privateVehicle')"
       />
-
-      <div class="card-footer">
-        <button class="btn-transfer" :disabled="!isDataEntered" @click="saveAndTransferToLottery">
-          <i class="fas fa-rocket"></i> Kaydet ve Dağıtıma Aktar
-        </button>
-      </div>
     </div>
-    <div v-else class="no-data">
-      Bu tesis için "Dağıtıcı Grup" olarak atanmış bir ekip bulunamadı.
-    </div>
+    <InvitationListModal
+      :show="showListModal"
+      :distributor-teams="distributorTeams"
+      @close="showListModal = false"
+      @save-changes="handleSaveChanges"
+    />
 
     <InvitationListModal
-      v-if="showListModal"
       :show="showListModal"
       :distributor-teams="distributorTeams"
       :invitation-records="invitationRecords"
@@ -266,28 +230,41 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.invitation-entry-panel {
-  padding: 20px;
-  background-color: var(--bg-secondary);
-  border-radius: 8px;
+.grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.description {
+  font-size: 14px;
+  color: var(--text-secondary);
   margin-bottom: 20px;
 }
-.actions {
-  margin-bottom: 20px;
-}
-.btn-primary {
-  padding: 10px 15px;
-  background-color: var(--color-accent);
+.btn-secondary {
+  background-color: var(--color-info);
   color: white;
   border: none;
+  padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
-  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
-.btn-primary:disabled {
-  background-color: #bdc3c7;
-  cursor: not-allowed;
+.loading {
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+@media (max-width: 900px) {
+  .grid-layout {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

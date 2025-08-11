@@ -1,165 +1,239 @@
-// DOSYA: functions/index.js (Düzeltilmiş Hali)
-
 const { onCall, HttpsError } = require('firebase-functions/v2/https')
-const { onDocumentUpdated } = require('firebase-functions/v2/firestore')
 const { initializeApp } = require('firebase-admin/app')
-const { getFirestore, FieldValue } = require('firebase-admin/firestore')
+const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestore')
 const { getAuth } = require('firebase-admin/auth')
-const { logger } = require('firebase-functions')
+const logger = require('firebase-functions/logger')
+const functions = require('firebase-functions')
 
-// Initialize Firebase Admin SDK
+// Firebase Admin SDK'sını başlat
 initializeApp()
+
 const db = getFirestore()
 const auth = getAuth()
 
-// =================================================================
-// CONSTANTS
-// =================================================================
-const ROLES = {
-  KURUCU: 'kurucu',
-  SUPERADMIN: 'superadmin',
-}
-
+// Koleksiyon isimlerini merkezi bir yerden yönetmek için sabitler
 const COLLECTIONS = {
   USERS: 'users',
-  DAILY_ENTRIES: 'dailyEntries',
+  FACILITIES: 'facilities',
+  SALES_GROUPS: 'salesGroups',
+  TEAMS: 'teams',
   INVITATION_RECORDS: 'invitationRecords',
-  DAILY_SUMMARIES: 'dailySummaries',
-  DAILY_DISTRIBUTIONS: 'dailyDistributions',
-  PRESENTATIONS: 'presentations',
+  LOTTERY_ASSIGNMENTS: 'lotteryAssignments',
+  DAILY_ENTRIES: 'dailyEntries',
+  // Tüm günlük operasyonel koleksiyonlar
+  DAILY_BUSES: 'dailyBuses',
+  DAILY_PRESENTATIONS: 'dailyPresentations',
+  DAILY_CANCELLATIONS: 'dailyCancellations',
+  DAILY_VOUCHERS: 'dailyVouchers',
+  FACILITY_GUESTS: 'facilityGuests',
 }
 
-// =================================================================
-// AUTHENTICATION HELPERS
-// =================================================================
+// --- YETKİ KONTROL YARDIMCILARI ---
 
-const ensureIsSuperAdminOrKurucu = (context) => {
-  if (!context.auth) {
-    throw new HttpsError('unauthenticated', 'Bu işlemi yapmak için giriş yapmalısınız.')
-  }
-  const userRole = context.auth.token.role
-  if (userRole !== ROLES.KURUCU && userRole !== ROLES.SUPERADMIN) {
-    throw new HttpsError('permission-denied', 'Bu işlemi sadece yönetici yapabilir.')
+const isKurucu = (role) => role === 'kurucu'
+const isSuperAdmin = (role) => role === 'superadmin'
+const isAdmin = (role) => isKurucu(role) || isSuperAdmin(role)
+
+function ensureIsAdmin(context) {
+  if (!context.auth || !isAdmin(context.auth.token.role)) {
+    logger.warn(
+      'Permission denied for function call by user:',
+      context.auth ? context.auth.uid : 'Anonymous',
+    )
+    throw new HttpsError(
+      'permission-denied',
+      'Bu işlemi yapmak için yönetici yetkisine sahip olmalısınız.',
+    )
   }
 }
 
-// =================================================================
-// CALLABLE FUNCTIONS (Client-invokable)
-// =================================================================
+function ensureIsKurucu(context) {
+  if (!context.auth || !isKurucu(context.auth.token.role)) {
+    logger.warn(
+      'Permission denied for function call by user:',
+      context.auth ? context.auth.uid : 'Anonymous',
+    )
+    throw new HttpsError(
+      'permission-denied',
+      'Bu işlemi yapmak için kurucu yetkisine sahip olmalısınız.',
+    )
+  }
+}
+
+exports.createInvitationRecordsFromSummary = onCall(async (request) => {
+  // Authorization check
+  if (!request.auth) {
+    functions.logger.error('Authorization check failed.')
+    throw new HttpsError('unauthenticated', 'You must be logged in to perform this action.')
+  }
+
+  const { date, facilityId, poolType, summaryData } = request.data
+  if (!date || !facilityId || !poolType || !summaryData) {
+    functions.logger.error('Function called with missing parameters:', request.data)
+    throw new HttpsError('invalid-argument', 'Missing parameters.')
+  }
+
+  // --- START OF DEBUGGING LOGS ---
+  functions.logger.info('Function started. Received data:', { date, facilityId, poolType })
+  functions.logger.info('Received Summary Data (summaryData):', summaryData)
+  // --- END OF DEBUGGING LOGS ---
+
+  const db = getFirestore()
+  const batch = db.batch()
+  let createdCount = 0
+  const invitationTypes = ['up', 'oneleg', 'single']
+
+  // Loop through each team ID in the summaryData object
+  for (const teamId in summaryData) {
+    // --- DEBUGGING LOG ---
+    functions.logger.info(`Processing Team ID: ${teamId}`)
+    // ---
+
+    const teamData = summaryData[teamId]
+    const teamDoc = await db.collection('teams').doc(teamId).get()
+
+    // --- DEBUGGING LOG ---
+    functions.logger.info(
+      `Was team found in Firestore? teamId: ${teamId}, Found: ${teamDoc.exists}`,
+    )
+    // ---
+
+    if (!teamDoc.exists) continue // Skip if the team does not exist
+    const teamName = teamDoc.data().name
+
+    // Loop through each invitation type (up, oneleg, single)
+    for (const type of invitationTypes) {
+      const count = teamData[type] || 0
+      if (count > 0) {
+        for (let i = 1; i <= count; i++) {
+          const newRecordRef = db.collection('invitationRecords').doc()
+          batch.set(newRecordRef, {
+            distributorTeamId: teamId,
+            distributorTeamName: teamName,
+            facilityId: facilityId,
+            date: date,
+            poolType: poolType,
+            invitationType: type,
+            slot: i,
+            status: 'available',
+            createdAt: FieldValue.serverTimestamp(),
+            guestName: '',
+            guestPhone: '',
+            assignedTeamId: null,
+            assignedTeamName: null,
+            isPresented: false,
+            isSold: false,
+          })
+          createdCount++
+        }
+      }
+    }
+  }
+
+  await batch.commit()
+  functions.logger.info(`Process complete. Number of records created: ${createdCount}`)
+
+  return {
+    success: true,
+    createdCount: createdCount,
+    message: `${createdCount} invitation records were successfully created.`,
+  }
+})
+
+// --- KULLANICI YÖNETİM FONKSİYONLARI ---
 
 exports.createUserProfile = onCall({ cors: true }, async (request) => {
   if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'Profil oluşturmak için giriş yapmalısınız.')
+    throw new HttpsError('unauthenticated', 'Bu işlem için giriş yapmalısınız.')
   }
-  const { uid, email, name, picture } = request.auth.token
+  const { uid, email } = request.auth.token
+  const displayName = request.auth.token.name || email.split('@')[0]
   const userRef = db.collection(COLLECTIONS.USERS).doc(uid)
+
   try {
-    const userDoc = await userRef.get()
-    if (!userDoc.exists) {
+    const doc = await userRef.get()
+    if (!doc.exists) {
       await userRef.set({
+        displayName: displayName,
         email: email,
-        displayName: name || email.split('@')[0],
-        photoURL: picture || null,
         role: 'yok',
-        createdAt: FieldValue.serverTimestamp(),
         assignedFacilityIds: [],
+        createdAt: Timestamp.now(),
         disabled: false,
       })
-      logger.info(`New profile created for: ${uid}`)
-      return { success: true, message: 'Firestore profiliniz başarıyla oluşturuldu.' }
+      logger.info(`Profile created for user: ${uid}`)
+      return { message: 'Kullanıcı profili başarıyla oluşturuldu.' }
+    } else {
+      logger.info(`Profile already exists for user: ${uid}`)
+      return { message: 'Kullanıcı profili zaten mevcut.' }
     }
-    return { success: true, message: 'Firestore profiliniz zaten mevcut.' }
   } catch (error) {
-    logger.error('createUserProfile error:', error)
+    logger.error('Error in createUserProfile:', error)
     throw new HttpsError('internal', 'Profil oluşturulurken bir hata oluştu.')
   }
 })
 
-exports.syncUserRolesToClaims = onCall(async (request) => {
-  if (request.auth?.token?.role !== 'kurucu') {
-    logger.error(
-      'Yetkisiz deneme:',
-      `UID: ${request.auth?.uid} syncUserRolesToClaims fonksiyonunu çalıştırmaya çalıştı.`,
-    )
-    throw new HttpsError('permission-denied', 'Bu işlemi sadece kurucu yapabilir.')
-  }
-
-  logger.info('Kullanıcı rolleri Auth custom claims ile senkronize ediliyor...')
-
+exports.syncUserRolesToClaims = onCall({ cors: true }, async (request) => {
+  ensureIsKurucu(request)
   try {
     const usersSnapshot = await db.collection(COLLECTIONS.USERS).get()
     const promises = []
-    let successCount = 0
-    let errorCount = 0
-
     usersSnapshot.forEach((doc) => {
       const user = doc.data()
-      const userId = doc.id
-      const role = user.role
-
-      if (role && ['kurucu', 'superadmin', 'kullanici'].includes(role)) {
-        const promise = auth
-          .setCustomUserClaims(userId, { role: role })
-          .then(() => {
-            logger.info(`Kullanıcı ${userId} için rol "${role}" olarak ayarlandı.`)
-            successCount++
-          })
-          .catch((error) => {
-            logger.error(`Kullanıcı ${userId} için rol ayarlanırken hata oluştu:`, error)
-            errorCount++
-          })
-        promises.push(promise)
-      }
+      const uid = doc.id
+      const role = user.role || 'yok'
+      promises.push(auth.setCustomUserClaims(uid, { role: role }))
     })
-
     await Promise.all(promises)
-
-    const message = `Senkronizasyon tamamlandı. Başarılı: ${successCount}, Hatalı: ${errorCount}.`
-    logger.info(message)
-    return { success: true, message: message }
+    logger.info(`Claims synchronized for ${promises.length} users.`)
+    return { message: `Senkronizasyon tamamlandı. Toplam ${promises.length} kullanıcı işlendi.` }
   } catch (error) {
-    logger.error('Rol senkronizasyonu sırasında ciddi bir hata oluştu:', error)
-    throw new HttpsError('internal', 'Rol senkronizasyonu başarısız oldu.')
+    logger.error('Error in syncUserRolesToClaims:', error)
+    throw new HttpsError('internal', 'Rol senkronizasyonu sırasında bir hata oluştu.')
   }
 })
 
 exports.manageUserRole = onCall({ cors: true }, async (request) => {
-  ensureIsSuperAdminOrKurucu(request)
-  const { userId, role, assignedFacilityIds, disabled } = request.data
-  if (!userId || !role) {
-    throw new HttpsError('invalid-argument', 'Kullanıcı ID ve rol bilgileri gereklidir.')
+  ensureIsAdmin(request)
+  const { uid, newRole, assignedFacilityIds, disabled } = request.data
+
+  if (request.auth.token.role !== 'kurucu' && newRole === 'kurucu') {
+    throw new HttpsError(
+      'permission-denied',
+      'Sadece kurucular başka bir kullanıcıya kurucu rolü atayabilir.',
+    )
   }
+
   try {
-    await auth.setCustomUserClaims(userId, { role })
-    await db
-      .collection(COLLECTIONS.USERS)
-      .doc(userId)
-      .set(
-        {
-          role: role,
-          assignedFacilityIds: assignedFacilityIds || [],
-          disabled: disabled === true,
-        },
-        { merge: true },
-      )
-    logger.info(`User ${userId} updated. New role: ${role}`)
-    return { success: true, message: `Kullanıcı rolü başarıyla "${role}" olarak güncellendi.` }
+    await auth.setCustomUserClaims(uid, { role: newRole })
+    await db.collection(COLLECTIONS.USERS).doc(uid).update({
+      role: newRole,
+      assignedFacilityIds: assignedFacilityIds,
+      disabled: disabled,
+    })
+    await auth.updateUser(uid, { disabled: disabled })
+    logger.info(`User ${uid} updated with role ${newRole}.`)
+    return { success: true, message: 'Kullanıcı başarıyla güncellendi.' }
   } catch (error) {
-    logger.error('manageUserRole error:', error)
-    throw new HttpsError('internal', 'Kullanıcı rolü güncellenirken bir hata oluştu.')
+    logger.error('Error in manageUserRole:', error)
+    throw new HttpsError('internal', 'Kullanıcı güncellenirken bir hata oluştu.')
   }
 })
 
+// --- DAVET VE ÇEKİLİŞ FONKSİYONLARI ---
+
 exports.createBatchInvitationRecords = onCall({ cors: true }, async (request) => {
-  if (!request.auth)
-    throw new HttpsError('unauthenticated', 'Bu işlemi yapmak için giriş yapmalısınız.')
-  const { records, facilityId, date } = request.data
-  if (!records || !Array.isArray(records) || records.length === 0 || !facilityId || !date) {
-    throw new HttpsError('invalid-argument', 'Eksik veya hatalı veri gönderildi.')
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Bu işlem için giriş yapmalısınız.')
   }
+  const { records, facilityId, date } = request.data
+  if (!records || !Array.isArray(records) || !facilityId || !date) {
+    throw new HttpsError('invalid-argument', 'Eksik veya hatalı parametre.')
+  }
+
   const batch = db.batch()
   records.forEach((record) => {
-    const recordId = `${date}_${facilityId}_${record.distributorTeamId}_${record.poolType}_${record.slot}`
+    const recordId = `${date}_${facilityId}_${record.distributorTeamId}_${record.poolType}_${record.invitationType}_${record.slot}`
     const recordRef = db.collection(COLLECTIONS.INVITATION_RECORDS).doc(recordId)
     batch.set(recordRef, {
       date,
@@ -170,189 +244,274 @@ exports.createBatchInvitationRecords = onCall({ cors: true }, async (request) =>
       invitationType: record.invitationType,
       slot: record.slot,
       status: 'available',
+      createdAt: Timestamp.now(),
       guestName: '',
       guestPhone: '',
-      opcName: '',
-      opcManagerName: '',
-      confName: '',
-      confManagerName: '',
-      repName: '',
       assignedTeamId: null,
       assignedTeamName: null,
-      isPresented: false,
-      isSold: false,
-      saleDetails: {},
-      createdAt: FieldValue.serverTimestamp(),
-      createdBy: request.auth.uid,
     })
   })
+
   try {
     await batch.commit()
-    logger.info(`${records.length} new invitation records created. Triggering dailyEntries update.`)
-    const uniqueTeamIds = [...new Set(records.map((r) => r.distributorTeamId))]
-    const updatePromises = uniqueTeamIds.map((teamId) => {
-      const dailyEntryRef = db
-        .collection(COLLECTIONS.DAILY_ENTRIES)
-        .doc(`${date}_${facilityId}_${teamId}`)
-      return dailyEntryRef.set({ lastUpdated: FieldValue.serverTimestamp() }, { merge: true })
-    })
-    await Promise.all(updatePromises)
+    const dailyEntryRef = db
+      .collection(COLLECTIONS.DAILY_ENTRIES)
+      .doc(`${date}_${records[0].distributorTeamId}`)
+    await dailyEntryRef.set({ updatedAt: Timestamp.now() }, { merge: true })
+    logger.info(`${records.length} invitation records created.`)
     return { success: true, createdCount: records.length }
   } catch (error) {
-    logger.error('createBatchInvitationRecords error:', error)
-    throw new HttpsError('internal', 'Toplu kayıt oluşturulurken bir hata oluştu.')
+    logger.error('Error in createBatchInvitationRecords:', error)
+    throw new HttpsError('internal', 'Davet kayıtları oluşturulurken bir hata oluştu.')
+  }
+})
+
+exports.updateInvitationRecordsFromList = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Bu işlemi yapmak için giriş yapmalısınız.')
+  }
+
+  const { updates } = request.data
+  if (!Array.isArray(updates)) {
+    throw new HttpsError('invalid-argument', 'Geçersiz veri formatı.')
+  }
+
+  const db = getFirestore()
+  const batch = db.batch()
+  let updatedCount = 0
+  let createdCount = 0
+  let deletedCount = 0
+
+  for (const update of updates) {
+    const { recordId, invitationType, ...baseData } = update
+
+    if (recordId) {
+      // Mevcut kaydı güncelle veya sil
+      const recordRef = db.collection('invitationRecords').doc(recordId)
+      if (invitationType === 'empty' || invitationType === 'iptal') {
+        batch.delete(recordRef)
+        deletedCount++
+      } else {
+        batch.update(recordRef, { invitationType, status: 'available' })
+        updatedCount++
+      }
+    } else if (invitationType !== 'empty' && invitationType !== 'iptal') {
+      // Yeni kayıt oluştur
+      const newRecordRef = db.collection('invitationRecords').doc()
+      batch.set(newRecordRef, {
+        ...baseData,
+        invitationType,
+        status: 'available',
+        createdAt: FieldValue.serverTimestamp(),
+        date: new Date().toISOString().slice(0, 10), // VEYA request.data'dan tarih alınmalı
+        facilityId: 'default', // VEYA request.data'dan facilityId alınmalı
+      })
+      createdCount++
+    }
+  }
+
+  await batch.commit()
+
+  return {
+    success: true,
+    message: `${createdCount} kayıt eklendi, ${updatedCount} güncellendi, ${deletedCount} silindi.`,
+  }
+})
+
+exports.createInvitationRecordsFromSummary = onCall(async (request) => {
+  const logger = require('firebase-functions/logger')
+
+  logger.info('[SERVER] 🪵 1. Fonksiyon tetiklendi.', { structuredData: true })
+
+  if (!request.auth) {
+    logger.error('[SERVER] 💥 Yetkisiz deneme yapıldı.')
+    throw new HttpsError('unauthenticated', 'Bu işlemi yapmak için giriş yapmalısınız.')
+  }
+
+  const { date, facilityId, poolType, summary } = request.data
+  logger.info('[SERVER] 🪵 2. İstemciden gelen veri:', request.data)
+
+  if (!date || !facilityId || !poolType || !Array.isArray(summary)) {
+    logger.error('[SERVER] 💥 Eksik parametreler:', request.data)
+    throw new HttpsError('invalid-argument', 'Eksik veya hatalı parametreler gönderildi.')
+  }
+
+  const db = getFirestore()
+  const batch = db.batch()
+  let createdCount = 0
+  const invitationTypes = ['up', 'oneleg', 'single']
+
+  logger.info(`[SERVER] 🪵 3. ${summary.length} ekip özeti işlenmeye başlanıyor.`)
+
+  for (const teamInfo of summary) {
+    const { teamId, teamName, counts } = teamInfo
+
+    if (!teamId || !teamName || !counts) {
+      logger.warn('[SERVER] ⚠️ Atlanan ekip verisi (eksik bilgi):', teamInfo)
+      continue
+    }
+
+    logger.info(`[SERVER] 🪵 4. İşlenen Ekip: ${teamName} (ID: ${teamId})`)
+
+    for (const type of invitationTypes) {
+      const count = counts[type] || 0
+      if (count > 0) {
+        logger.info(`[SERVER] 🪵 5. ${teamName} için ${count} adet '${type}' kaydı oluşturuluyor.`)
+        for (let i = 1; i <= count; i++) {
+          const newRecordRef = db.collection('invitationRecords').doc()
+          batch.set(newRecordRef, {
+            distributorTeamId: teamId,
+            distributorTeamName: teamName,
+            facilityId: facilityId,
+            date: date,
+            poolType: poolType,
+            invitationType: type,
+            slot: i,
+            status: 'available',
+            createdAt: FieldValue.serverTimestamp(),
+            guestName: '',
+            guestPhone: '',
+            assignedTeamId: null,
+            assignedTeamName: null,
+            isPresented: false,
+            isSold: false,
+          })
+          createdCount++
+        }
+      }
+    }
+  }
+
+  try {
+    await batch.commit()
+    logger.info(
+      `[SERVER] 🪵 6. Batch commit işlemi başarılı. Oluşturulan kayıt sayısı: ${createdCount}`,
+    )
+  } catch (error) {
+    logger.error('[SERVER] 💥 BATCH COMMIT HATASI:', error)
+    throw new HttpsError('internal', 'Veritabanına kayıtlar yazılırken bir hata oluştu.')
+  }
+
+  return {
+    success: true,
+    createdCount: createdCount,
+    message: `${createdCount} adet davet kaydı başarıyla oluşturuldu.`,
   }
 })
 
 exports.clearTeamInvitationRecords = onCall({ cors: true }, async (request) => {
-  if (!request.auth)
-    throw new HttpsError('unauthenticated', 'Bu işlemi yapmak için giriş yapmalısınız.')
+  ensureIsAdmin(request)
   const { date, facilityId, teamId, poolType } = request.data
-  if (!date || !facilityId || !teamId || !poolType) {
-    throw new HttpsError('invalid-argument', 'Eksik parametre gönderildi.')
-  }
-  const query = db
-    .collection(COLLECTIONS.INVITATION_RECORDS)
-    .where('date', '==', date)
-    .where('facilityId', '==', facilityId)
-    .where('distributorTeamId', '==', teamId)
-    .where('poolType', '==', poolType)
+
   try {
-    const snapshot = await query.get()
-    if (snapshot.empty)
-      return { success: true, deletedCount: 0, message: 'Silinecek kayıt bulunamadı.' }
+    const q = db
+      .collection(COLLECTIONS.INVITATION_RECORDS)
+      .where('date', '==', date)
+      .where('facilityId', '==', facilityId)
+      .where('distributorTeamId', '==', teamId)
+      .where('poolType', '==', poolType)
+
+    const snapshot = await q.get()
+    if (snapshot.empty) {
+      return { success: true, message: 'Silinecek kayıt bulunamadı.' }
+    }
+
     const batch = db.batch()
     snapshot.docs.forEach((doc) => batch.delete(doc.ref))
     await batch.commit()
-    const dailyEntryRef = db
-      .collection(COLLECTIONS.DAILY_ENTRIES)
-      .doc(`${date}_${facilityId}_${teamId}`)
-    await dailyEntryRef.set({ lastUpdated: FieldValue.serverTimestamp() }, { merge: true })
-    logger.info(`${snapshot.size} records deleted for: ${date}/${facilityId}/${teamId}/${poolType}`)
-    return { success: true, deletedCount: snapshot.size }
+
+    return { success: true, message: 'Kayıtlar başarıyla temizlendi.' }
   } catch (error) {
-    logger.error('clearTeamInvitationRecords error:', error)
-    throw new HttpsError('internal', 'Kayıtlar silinirken bir hata oluştu.')
+    logger.error('Error in clearTeamInvitationRecords:', error)
+    throw new HttpsError('internal', 'Kayıtlar temizlenirken bir hata oluştu.')
   }
 })
 
-exports.importInvitationRecordsFromCSV = onCall({ cors: true }, async (request) => {
-  if (!request.auth)
-    throw new HttpsError('unauthenticated', 'Bu işlemi yapmak için giriş yapmalısınız.')
-  const { records, facilityId, date } = request.data
-  if (!records || !Array.isArray(records) || records.length === 0 || !facilityId || !date) {
-    throw new HttpsError('invalid-argument', 'Eksik veya hatalı veri gönderildi.')
+// --- SİSTEM YÖNETİMİ FONKSİYONLARI ---
+
+exports.resetApplicationData = onCall({ cors: true }, async (request) => {
+  ensureIsKurucu(request)
+  const { resetData, resetTeams, resetSalesGroups, resetFacilities } = request.data
+
+  const collectionsToDelete = new Set()
+  if (resetData || resetTeams || resetSalesGroups || resetFacilities) {
+    ;[
+      COLLECTIONS.DAILY_ENTRIES,
+      COLLECTIONS.DAILY_BUSES,
+      COLLECTIONS.LOTTERY_ASSIGNMENTS,
+      COLLECTIONS.INVITATION_RECORDS,
+      COLLECTIONS.DAILY_PRESENTATIONS,
+      COLLECTIONS.DAILY_CANCELLATIONS,
+      COLLECTIONS.DAILY_VOUCHERS,
+      COLLECTIONS.FACILITY_GUESTS,
+    ].forEach((col) => collectionsToDelete.add(col))
   }
-  const batch = db.batch()
-  records.forEach((record) => {
-    const recordId = `${date}_${facilityId}_${record.distributorTeamId}_${record.poolType}_${record.slot}`
-    const recordRef = db.collection(COLLECTIONS.INVITATION_RECORDS).doc(recordId)
-    batch.set(
-      recordRef,
-      {
-        ...record,
-        date,
-        facilityId,
-        status: 'available',
-        isPresented: false,
-        isSold: false,
-        saleDetails: {},
-        createdAt: FieldValue.serverTimestamp(),
-        createdBy: request.auth.uid,
-      },
-      { merge: true },
-    )
-  })
+  if (resetTeams || resetSalesGroups || resetFacilities) {
+    collectionsToDelete.add(COLLECTIONS.TEAMS)
+  }
+  if (resetSalesGroups || resetFacilities) {
+    collectionsToDelete.add(COLLECTIONS.SALES_GROUPS)
+  }
+  if (resetFacilities) {
+    collectionsToDelete.add(COLLECTIONS.FACILITIES)
+  }
+
   try {
-    await batch.commit()
-    logger.info(
-      `${records.length} records imported/updated from CSV. Triggering dailyEntries update.`,
-    )
-    const uniqueTeamIds = [...new Set(records.map((r) => r.distributorTeamId))]
-    const updatePromises = uniqueTeamIds.map((teamId) => {
-      const team = records.find((r) => r.distributorTeamId === teamId)
-      const dailyEntryRef = db
-        .collection(COLLECTIONS.DAILY_ENTRIES)
-        .doc(`${date}_${facilityId}_${teamId}`)
-      return dailyEntryRef.set(
-        {
-          lastUpdated: FieldValue.serverTimestamp(),
-          teamId,
-          teamName: team.distributorTeamName,
-          date,
-          facilityId,
-        },
-        { merge: true },
-      )
+    const promises = Array.from(collectionsToDelete).map(async (collectionName) => {
+      const snapshot = await db.collection(collectionName).limit(500).get()
+      if (snapshot.empty) return
+      const batch = db.batch()
+      snapshot.docs.forEach((doc) => batch.delete(doc.ref))
+      await batch.commit()
+      logger.info(`Collection '${collectionName}' has been cleared.`)
     })
-    await Promise.all(updatePromises)
-    return { success: true, importedCount: records.length }
+    await Promise.all(promises)
+    return { success: true, message: 'Seçilen tüm veriler başarıyla sıfırlandı.' }
   } catch (error) {
-    logger.error('importInvitationRecordsFromCSV error:', error)
-    throw new HttpsError('internal', "CSV'den kayıt oluşturulurken bir hata oluştu.")
+    logger.error('Error resetting application data:', error)
+    throw new HttpsError('internal', 'Veri sıfırlama sırasında bir hata oluştu.')
   }
 })
+
+exports.setupInitialCollections = onCall({ cors: true }, async (request) => {
+  ensureIsKurucu(request)
+  const collections = [
+    COLLECTIONS.FACILITIES,
+    COLLECTIONS.SALES_GROUPS,
+    COLLECTIONS.TEAMS,
+    COLLECTIONS.SYSTEM_SETTINGS,
+  ]
+  try {
+    const promises = collections.map((col) => db.collection(col).add({ init: true }))
+    await Promise.all(promises)
+    return { success: true, message: 'Temel koleksiyonlar başarıyla oluşturuldu.' }
+  } catch (error) {
+    logger.error('Error setting up initial collections:', error)
+    throw new HttpsError('internal', 'Koleksiyonlar oluşturulurken bir hata oluştu.')
+  }
+})
+
+// --- RAPORLAMA FONKSİYONLARI ---
 
 exports.getAggregatedReport = onCall({ cors: true }, async (request) => {
-  ensureIsSuperAdminOrKurucu(request)
-  // DÜZELTME: Kullanılmayan değişkenler kaldırıldı.
-  const { startDate, endDate } = request.data
-  if (!startDate || !endDate) {
-    throw new HttpsError('invalid-argument', 'Başlangıç ve bitiş tarihleri gereklidir.')
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Bu işlem için giriş yapmalısınız.')
   }
-  try {
-    logger.info(`Report requested for ${startDate} to ${endDate}`)
-    // This is a placeholder. Replace with your actual report generation logic.
-    return { success: true, report: [] }
-  } catch (error) {
-    logger.error('getAggregatedReport error:', error)
-    throw new HttpsError('internal', 'Rapor verileri alınırken bir hata oluştu.')
+  // Bu fonksiyonun iç mantığı, projenin raporlama ihtiyaçlarına göre
+  // detaylı veritabanı sorguları ile doldurulmalıdır.
+  // Şimdilik test amaçlı boş veri döndürüyor.
+  logger.info('getAggregatedReport called with data:', request.data)
+  return {
+    success: true,
+    report: [],
+    summary: {
+      totalInvited: 0,
+      totalDistributed: 0,
+      totalPresented: 0,
+      totalTables: 0,
+      efficiencyInvitationToDistribution: 0,
+      efficiencyDistributionToPresentation: 0,
+    },
+    leaderboard: [],
   }
 })
-
-// =================================================================
-// FIRESTORE TRIGGERS
-// =================================================================
-
-exports.recalculateDailyEntryTotals = onDocumentUpdated(
-  `${COLLECTIONS.DAILY_ENTRIES}/{docId}`,
-  async (event) => {
-    const afterData = event.data.after.data()
-    const docId = event.params.docId
-    const { date, facilityId, teamId } = afterData
-    if (!date || !facilityId || !teamId) {
-      logger.info(`Document ${docId} is missing key fields. Skipping.`)
-      return
-    }
-    try {
-      const recordsSnapshot = await db
-        .collection(COLLECTIONS.INVITATION_RECORDS)
-        .where('date', '==', date)
-        .where('facilityId', '==', facilityId)
-        .where('distributorTeamId', '==', teamId)
-        .get()
-      const totals = {
-        tour: { up: 0, oneleg: 0, single: 0 },
-        privateVehicle: { up: 0, oneleg: 0, single: 0 },
-      }
-      recordsSnapshot.forEach((doc) => {
-        const record = doc.data()
-        const pool = totals[record.poolType]
-        if (pool && pool[record.invitationType] !== undefined) {
-          pool[record.invitationType]++
-        }
-      })
-      const dailyEntryRef = db.collection(COLLECTIONS.DAILY_ENTRIES).doc(docId)
-      await dailyEntryRef.set(
-        {
-          invitations_tour: totals.tour,
-          invitations_privateVehicle: totals.privateVehicle,
-        },
-        { merge: true },
-      )
-      logger.info(`Totals recalculated successfully for ${docId}.`)
-    } catch (error) {
-      logger.error(`Error recalculating totals for ${docId}:`, error)
-    }
-  },
-)

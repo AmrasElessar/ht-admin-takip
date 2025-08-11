@@ -1,337 +1,96 @@
-// Detaylı Yetki Sistemi - Firestore Rules
-// DOSYA: firestore.rules
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ===============================
-    // HELPER FUNCTIONS
-    // ===============================
-    
-    /**
-     * Kurucu - En yüksek yetki (her şeyi yapabilir)
-     */
-    function isFounder() {
-      return request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'kurucu';
-    }
-    
-    /**
-     * Super Admin - Sınırlı admin yetkisi
-     */
-    function isSuperAdmin() {
-      return request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
-    }
-    
-    /**
-     * Normal kullanıcı
-     */
-    function isUser() {
-      return request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'kullanici';
-    }
-    
-    /**
-     * Kimlik doğrulaması kontrolü
-     */
-    function isAuthenticated() {
+
+    // --- YARDIMCI FONKSİYONLAR ---
+    function isSignedIn() {
       return request.auth != null;
     }
-    
-    /**
-     * Kullanıcının kendi profili mi?
-     */
+    function getRole() {
+      return request.auth.token.role;
+    }
+    function isKurucu() {
+      return getRole() == 'kurucu';
+    }
+    function isSuperAdmin() {
+      return getRole() == 'superadmin';
+    }
+    function isAdmin() {
+      return isKurucu() || isSuperAdmin();
+    }
     function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+      return request.auth.uid == userId;
     }
-    
-    /**
-     * Kullanıcı bu tesise atanmış mı?
-     */
-    function isAssignedToFacility(facilityId) {
-      return request.auth != null && 
-        facilityId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('assignedFacilityIds', []);
-    }
-    
-    /**
-     * Kullanıcı profil güncellemesi için izin verilen alanlar
-     */
-    function allowedProfileFields() {
-      return request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['displayName', 'photoURL', 'availability', 'statusMessage']);
-    }
-    
-    /**
-     * Super admin'in kendi tesis atamasını değiştirmeye çalışıyor mu?
-     */
-    function isSuperAdminEditingOwnFacilities(userId) {
-      return isSuperAdmin() && 
-             userId == request.auth.uid && 
-             request.resource.data.diff(resource.data).affectedKeys().hasAny(['assignedFacilityIds']);
+    function isUser() {
+      return getRole() == 'kullanici';
     }
 
-    // ===============================
-    // USERS COLLECTION
-    // ===============================
-    
+    // --- ANA VERİ YÖNETİM KURALLARI ---
     match /users/{userId} {
-      // Okuma yetkisi:
-      // - Kurucu: Herkesi okuyabilir
-      // - Super Admin: Herkesi okuyabilir  
-      // - Kullanıcı: Sadece kendini okuyabilir
-      allow read: if isAuthenticated() && 
-                    (isFounder() || isSuperAdmin() || isOwner(userId));
-      
-      // Yazma yetkisi:
-      // - Kurucu: Herkesi güncelleyebilir
-      // - Super Admin: Sadece tesis atama yapabilir (kendi tesisine dokunamaz)
-      // - Kullanıcı: Sadece kendi profil bilgilerini güncelleyebilir
-      allow create: if isFounder(); // Sadece kurucu yeni kullanıcı oluşturabilir
-      
-      allow update: if (isFounder()) ||
-                      (isSuperAdmin() && !isSuperAdminEditingOwnFacilities(userId)) ||
-                      (isOwner(userId) && allowedProfileFields());
-      
-      // Silme yetkisi:
-      // - Sadece kurucu kullanıcı silebilir
-      allow delete: if isFounder();
+      allow read: if isSignedIn();
+      allow update: if isOwner(userId) || isAdmin();
+      allow create, delete: if isKurucu();
+    }
+    match /facilities/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isKurucu();
+    }
+    match /salesGroups/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin();
+      allow delete: if isKurucu();
+    }
+    match /teams/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin();
+      allow delete: if isKurucu();
+    }
+    match /systemSettings/{docId} {
+        allow read: if isSignedIn();
+        allow write: if isKurucu();
     }
 
-    // ===============================
-    // FACILITIES COLLECTION  
-    // ===============================
-    
-    match /facilities/{facilityId} {
-      // Okuma yetkisi:
-      // - Kurucu: Tüm tesisleri okuyabilir
-      // - Super Admin: Atanmış tesisleri okuyabilir
-      // - Kullanıcı: Atanmış tesisleri okuyabilir
-      allow read: if isAuthenticated() && 
-                    (isFounder() || isAssignedToFacility(facilityId));
-      
-      // Yazma yetkisi:
-      // - Sadece kurucu tesis oluşturabilir/güncelleyebilir/silebilir
-      allow write: if isFounder();
-    }
-
-    // ===============================
-    // SALES GROUPS COLLECTION
-    // ===============================
-    
-    match /salesGroups/{groupId} {
-      // Okuma yetkisi:
-      // - Tüm authenticated kullanıcılar okuyabilir (UI için gerekli)
-      allow read: if isAuthenticated();
-      
-      // Yazma yetkisi:
-      // - Kurucu: Oluşturabilir/güncelleyebilir/silebilir
-      // - Super Admin: Sadece güncelleyebilir (silemez)
-      allow create, delete: if isFounder();
-      allow update: if isFounder() || isSuperAdmin();
-    }
-
-    // ===============================
-    // TEAMS COLLECTION
-    // ===============================
-    
-    match /teams/{teamId} {
-      // Okuma yetkisi:
-      // - Kurucu: Tüm ekipleri okuyabilir
-      // - Super Admin: Atanmış tesislerdeki ekipleri okuyabilir
-      // - Kullanıcı: Atanmış tesislerdeki ekipleri okuyabilir
-      allow read: if isAuthenticated() && 
-                    (isFounder() || isAssignedToFacility(resource.data.facilityId));
-      
-      // Yazma yetkisi:
-      // - Kurucu: Her şeyi yapabilir
-      // - Super Admin: Atanmış tesislerde ekip oluşturabilir/güncelleyebilir (silemez)
-      allow create, update: if (isFounder()) ||
-                              (isSuperAdmin() && isAssignedToFacility(request.resource.data.facilityId));
-      allow delete: if isFounder();
-    }
-
-    // ===============================
-    // DAILY ENTRIES COLLECTION
-    // ===============================
-    
-    match /dailyEntries/{docId} {
-      // Okuma yetkisi:
-      // - Atanmış tesislerden verileri okuyabilir
-      allow read: if isAuthenticated() && 
-                    (isFounder() || isAssignedToFacility(resource.data.facilityId));
-      
-      // Yazma yetkisi:
-      // - Kurucu: Her şeyi yapabilir
-      // - Super Admin: Atanmış tesislerde veri girebilir
-      // - Kullanıcı: Atanmış tesislerde veri girebilir
-      allow write: if isAuthenticated() && 
-                     (isFounder() || isAssignedToFacility(request.resource.data.facilityId));
-    }
-
-    // ===============================
-    // DAILY BUSES COLLECTION
-    // ===============================
+    // --- OPERASYONEL VERİ KURALLARI (DÜZELTİLMİŞ BÖLÜM) ---
+    // Her koleksiyon için ayrı match blokları tanımlanmıştır.
     
     match /dailyBuses/{docId} {
-      allow read, write: if isAuthenticated() && 
-                           (isFounder() || isAssignedToFacility(request.resource.data.facilityId));
+      allow read: if isSignedIn();
+      allow write: if isUser() || isAdmin();
     }
-
-    // ===============================
-    // DAILY DISTRIBUTIONS COLLECTION
-    // ===============================
-    
-    match /dailyDistributions/{docId} {
-      allow read, write: if isAuthenticated() && 
-                           (isFounder() || isAssignedToFacility(request.resource.data.facilityId));
+    match /dailyEntries/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isUser() || isAdmin();
     }
-
-    // ===============================
-    // DAILY PRESENTATIONS COLLECTION
-    // ===============================
-    
-    match /dailyPresentations/{docId} {
-      allow read, write: if isAuthenticated() && 
-                           (isFounder() || isAssignedToFacility(request.resource.data.facilityId));
-    }
-
-    // ===============================
-    // DAILY CANCELLATIONS COLLECTION
-    // ===============================
-    
-    match /dailyCancellations/{docId} {
-      allow read, write: if isAuthenticated() && 
-                           (isFounder() || isAssignedToFacility(request.resource.data.facilityId));
-    }
-
-    // ===============================
-    // DAILY VOUCHERS COLLECTION
-    // ===============================
-    
     match /dailyVouchers/{docId} {
-      allow read, write: if isAuthenticated() && 
-                           (isFounder() || isAssignedToFacility(request.resource.data.facilityId));
+      allow read: if isSignedIn();
+      allow write: if isUser() || isAdmin();
     }
-
-    // ===============================
-    // INVITATIONS COLLECTION
-    // ===============================
-    
-    match /invitations/{invitationId} {
-      allow read, write: if isAuthenticated() && 
-                           (isFounder() || isAssignedToFacility(request.resource.data.facilityId));
+    match /facilityGuests/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isUser() || isAdmin();
     }
-
-    match /invitationRecords/{recordId} {
-  
-  // Helper fonksiyonlar aynı kalacak
-  function isAssignedToRecordFacility(docData) {
-    return request.auth != null && 
-      docData.facilityId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('assignedFacilityIds', []);
-  }
-  
-  function allowedUserUpdateFields() {
-    return request.resource.data.diff(resource.data).affectedKeys()
-      .hasOnly([
-        'guestName', 'guestPhone', 'opcName', 'opcManagerName', 
-        'confName', 'confManagerName', 'repName', 
-        'isSold', 'saleDetails'
-      ]);
-  }
-
-  // YENİ KURALLAR
-  // get: Tek bir dokümana ID'si ile erişildiğinde çalışır. Güvenliği en üst düzeyde tutar.
-  allow get: if isAuthenticated() && (isFounder() || isSuperAdmin() || isAssignedToRecordFacility(resource.data));
-
-  // list: Bir koleksiyon sorgulandığında çalışır.
-  // Kullanıcının kimliği doğrulandıysa sorguya izin veriyoruz.
-  // Güvenliği ön yüzdeki kodumuz sağlıyor, çünkü sorguyu HER ZAMAN
-  // "where('facilityId', '==', kullanicinin_yetkili_oldugu_tesis)"
-  // şeklinde, kısıtlayarak gönderiyoruz.
-  allow list: if isAuthenticated();
-
-  // Yazma kuralları aynı kalacak
-  allow create: if isAuthenticated() && isAssignedToRecordFacility(request.resource.data);
-  allow update: if isAuthenticated() && (
-    (isFounder() || isSuperAdmin()) || 
-    (isAssignedToRecordFacility(resource.data) && allowedUserUpdateFields())
-  );
-  allow delete: if isFounder();
-}
-
-    // ===============================
-    // FACILITY GUESTS COLLECTION
-    // ===============================
-    
-    match /facilityGuests/{guestId} {
-      allow read, write: if isAuthenticated() && 
-                           (isFounder() || isAssignedToFacility(request.resource.data.facilityId));
+    match /invitationRecords/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isUser() || isAdmin();
     }
-
-    // ===============================
-    // LOTTERY ASSIGNMENTS COLLECTION
-    // ===============================
-    
-    match /lotteryAssignments/{assignmentId} {
-      allow read, write: if isAuthenticated() && 
-                           (isFounder() || isAssignedToFacility(request.resource.data.facilityId));
+    match /lotteryAssignments/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isUser() || isAdmin();
     }
-
-    // ===============================
-    // SYSTEM SETTINGS COLLECTION
-    // ===============================
-    
-    match /systemSettings/{settingId} {
-      // Okuma yetkisi:
-      // - Tüm authenticated kullanıcılar okuyabilir (UI için)
-      allow read: if isAuthenticated();
-      
-      // Yazma yetkisi:
-      // - Sadece kurucu sistem ayarlarını değiştirebilir
-      allow write: if isFounder();
+    match /dailyPresentations/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isUser() || isAdmin();
     }
-
-    // ===============================
-    // DAILY SUMMARIES COLLECTION
-    // ===============================
     
-    match /dailySummaries/{summaryId} {
-  // Okuma yetkisini "get" ve "list" olarak ayırıyoruz.
-  allow get: if isAuthenticated() && 
-                (isFounder() || isAssignedToFacility(resource.data.facilityId));
-  allow list: if isAuthenticated();
-  
-  // Yazma yetkisi aynı kalıyor.
-  allow write: if isFounder();
-}
-
-    // ===============================
-    // FORM DEFINITIONS COLLECTION
-    // ===============================
-    
-    match /formDefinitions/{formId} {
-      allow read: if isAuthenticated();
-      allow write: if isFounder();
+    // XP Sistemi Kuralları
+    match /userXP/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
     }
-
-    // ===============================
-    // FORM DATA COLLECTION
-    // ===============================
-    
-    match /formData/{dataId} {
-      allow read, write: if isAuthenticated() && 
-                           (isFounder() || isAssignedToFacility(request.resource.data.facilityId));
-    }
-
-    // ===============================
-    // FALLBACK RULE - TÜM DİĞER ERİŞİMLERİ REDDET
-    // ===============================
-    
-    match /{document=**} {
-      allow read, write: if false;
+    match /xpTransactions/{transactionId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
     }
   }
 }

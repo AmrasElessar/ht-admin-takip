@@ -18,21 +18,20 @@ const dailyGuestData = reactive({})
 
 const groupedClosingTeams = computed(() => {
   const groups = {}
+
+  // Önce grupları alalım
   const nonDistributorGroups = userStore.allSalesGroups
     .filter((g) => !g.isDistributor)
     .sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99))
 
-  const closingTeams = userStore.allTeams.filter(
-    (team) =>
-      // DEĞİŞİKLİK: props -> operationStore
-      team.facilityId === operationStore.activeFacilityId &&
-      nonDistributorGroups.map((g) => g.id).includes(team.salesGroupId),
-  )
+  // Merkezi, filtrelenmiş ve doğru olan ekip listesini userStore'dan alıyoruz
+  const closingTeamsInFacility = userStore.closingTeams
 
+  // Şimdi sadece gruplama işlemini yapıyoruz
   nonDistributorGroups.forEach((group) => {
-    const teamsInGroup = closingTeams
-      .filter((t) => t.salesGroupId === group.id)
-      .sort((a, b) => a.name.localeCompare(b.name))
+    const teamsInGroup = closingTeamsInFacility.filter((t) => t.salesGroupId === group.id)
+    // Sıralamaya gerek yok çünkü userStore'daki liste zaten sıralı geliyor
+
     if (teamsInGroup.length > 0) {
       groups[group.name] = teamsInGroup
     }

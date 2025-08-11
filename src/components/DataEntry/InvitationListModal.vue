@@ -2,6 +2,10 @@
 <script setup>
 import { reactive, watch, ref } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
+import { getFunctions, httpsCallable } from 'firebase/functions' // Bu import'u en üste ekleyin
+import { useToast } from 'vue-toastification' // Bu import'u en üste ekleyin
+
+const toast = useToast()
 
 const props = defineProps({
   show: { type: Boolean, required: true },
@@ -59,43 +63,70 @@ const rotateType = (teamId, slotIndex) => {
   currentItem.type = typeRotation[nextIndex]
 }
 
-const saveChanges = () => {
-  const newRecords = []
+const saveChanges = async () => {
+  const recordsToUpdate = []
+
+  // Değişen veya yeni eklenen slotları bul
   ;['tour', 'privateVehicle'].forEach((poolType) => {
+    if (!listData[poolType]) return
+
     props.distributorTeams.forEach((team) => {
       const teamId = team.id
-      const currentSlots = listData[poolType][teamId]
-      const initialSlots = initialListData.value[poolType][teamId]
+      const currentSlots = listData[poolType][teamId] || []
+      const initialSlots =
+        (initialListData.value[poolType] && initialListData.value[poolType][teamId]) || []
+
       for (let i = 0; i < totalSlots; i++) {
         const currentSlot = currentSlots[i]
-        const initialSlot = initialSlots[i]
-        if (
-          initialSlot.type === 'empty' &&
-          currentSlot.type !== 'empty' &&
-          currentSlot.type !== 'iptal'
-        ) {
-          newRecords.push({
+        const initialSlot = initialSlots.find((s) => s.slot === i + 1) || { type: 'empty' }
+
+        // Eğer slot değiştiyse (boştan doluya, doludan başka doluya veya doludan boşa)
+        if (currentSlot.type !== initialSlot.type) {
+          recordsToUpdate.push({
             distributorTeamId: teamId,
             distributorTeamName: team.name,
             poolType: poolType,
             slot: currentSlot.slot,
-            invitationType: currentSlot.type,
+            invitationType: currentSlot.type, // 'empty' veya 'iptal' de olabilir
+            recordId: initialSlot.id || null, // Var olan kaydın ID'si
           })
         }
       }
     })
   })
-  emit('save-changes', { newRecords })
+
+  if (recordsToUpdate.length === 0) {
+    toast.info('Herhangi bir değişiklik yapılmadı.')
+    emit('close')
+    return
+  }
+
+  try {
+    const functions = getFunctions()
+    const updateRecordsFromList = httpsCallable(functions, 'updateInvitationRecordsFromList')
+    const result = await updateRecordsFromList({ updates: recordsToUpdate })
+
+    if (result.data.success) {
+      toast.success(result.data.message)
+    } else {
+      throw new Error(result.data.error)
+    }
+    emit('close')
+  } catch (error) {
+    toast.error(`Kayıtlar güncellenirken bir hata oluştu: ${error.message}`)
+  }
 }
 
 watch(
-  () => props.show,
-  (isShown) => {
-    if (isShown) {
+  // Artık hem pencerenin açılmasını hem de ekip listesinin gelmesini bekliyoruz
+  [() => props.show, () => props.distributorTeams],
+  ([isShown, teams]) => {
+    // Sadece pencere açıksa VE ekip listesi doluysa veriyi hazırla
+    if (isShown && teams && teams.length > 0) {
       initializeDataFromRecords()
     }
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 )
 </script>
 

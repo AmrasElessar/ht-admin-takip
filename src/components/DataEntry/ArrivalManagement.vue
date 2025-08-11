@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted, watchEffect } from 'vue'
 import { db } from '../../firebaseConfig'
 import { collection, query, where, onSnapshot, documentId } from 'firebase/firestore'
 import { useUserStore } from '../../stores/userStore'
@@ -193,6 +193,13 @@ watch(
 onUnmounted(() => {
   if (unsubEntries) unsubEntries()
   if (unsubGuests) unsubGuests()
+})
+
+watchEffect(() => {
+  console.log('--- [ArrivalManagement] ---')
+  console.log('Ham Veri | dailyEntries (Davetler):', dailyEntries.value)
+  console.log('Ham Veri | facilityGuests (Harici Gelenler):', facilityGuests.value)
+  console.log('Hesaplanmış Rapor Verisi:', combinedData.value)
 })
 </script>
 

@@ -1,17 +1,15 @@
 <script setup>
-import { ref, onUnmounted, watch, computed } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { db } from '@/firebaseConfig'
 import { doc, onSnapshot, collection, query, where, documentId, setDoc } from 'firebase/firestore'
 import { useUserStore } from '../../stores/userStore'
-import { useOperationStore } from '../../stores/operationStore' // YENİ
+import { useOperationStore } from '../../stores/operationStore'
 import { handleError } from '@/utils/errorHandler'
 import { useToast } from 'vue-toastification'
-
-// DEĞİŞİKLİK: defineProps kaldırıldı
-// const props = defineProps({ ... })
+import { auth } from '@/firebaseConfig'
 
 const userStore = useUserStore()
-const operationStore = useOperationStore() // YENİ
+const operationStore = useOperationStore()
 const toast = useToast()
 const isLoading = ref(true)
 const reportData = ref([])
@@ -21,17 +19,7 @@ let unsubLottery = null
 let unsubGuests = null
 let unsubPresentations = null
 
-const closingTeams = computed(() => {
-  const nonDistributorGroupIds = userStore.allSalesGroups
-    .filter((g) => !g.isDistributor)
-    .map((g) => g.id)
-  return userStore.allTeams.filter(
-    (team) =>
-      // DEĞİŞİKLİK: props -> operationStore
-      team.facilityId === operationStore.activeFacilityId &&
-      nonDistributorGroupIds.includes(team.salesGroupId),
-  )
-})
+const closingTeams = computed(() => userStore.closingTeams)
 
 const groupedReportData = computed(() => {
   const grouped = {}
@@ -54,7 +42,7 @@ const reportTotals = computed(() => {
   const groupTotals = {}
   const grandTotals = {
     lottoUp: 0,
-    lottoOneleg: 0, // Düzeltme: Raporunuzda lottoOs yerine lottoOneleg kullanılıyor
+    lottoOneleg: 0,
     lottoSingle: 0,
     guestUp: 0,
     guestOneleg: 0,
@@ -67,7 +55,7 @@ const reportTotals = computed(() => {
     netSingle: 0,
   }
   for (const groupName in groupedReportData.value) {
-    const groupTotal = { ...grandTotals } // Başlangıç değerleri için
+    const groupTotal = { ...grandTotals }
     groupedReportData.value[groupName].forEach((team) => {
       Object.keys(groupTotal).forEach((key) => (groupTotal[key] += team[key] || 0))
     })
@@ -78,144 +66,142 @@ const reportTotals = computed(() => {
 })
 
 const fetchAllData = () => {
-  isLoading.value = true
-  if (unsubLottery) unsubLottery()
-  if (unsubGuests) unsubGuests()
-  if (unsubPresentations) unsubPresentations()
+  if (!auth.currentUser) {
+    isLoading.value = true
+    if (unsubLottery) unsubLottery()
+    if (unsubGuests) unsubGuests()
+    if (unsubPresentations) unsubPresentations()
 
-  // DEĞİŞİKLİK: props -> operationStore
-  const lotteryDocRef = doc(
-    db,
-    'lotteryAssignments',
-    `${operationStore.selectedDate}_${operationStore.activeFacilityId}`,
-  )
-  const teamIds = closingTeams.value.map((t) => t.id)
-  if (teamIds.length === 0) {
-    reportData.value = []
-    isLoading.value = false
-    return
-  }
-  // DEĞİŞİKLİK: props.selectedDate -> operationStore.selectedDate
-  const docIds = teamIds.map((id) => `${operationStore.selectedDate}_${id}`)
-  if (docIds.length === 0) {
-    isLoading.value = false
-    return
-  }
+    const lotteryDocRef = doc(
+      db,
+      'lotteryAssignments',
+      `${operationStore.selectedDate}_${operationStore.activeFacilityId}`,
+    )
+    const teamIds = closingTeams.value.map((t) => t.id)
+    if (teamIds.length === 0) {
+      reportData.value = []
+      isLoading.value = false
+      return
+    }
 
-  const guestsQuery = query(collection(db, 'facilityGuests'), where(documentId(), 'in', docIds))
-  const presentationsQuery = query(
-    collection(db, 'dailyPresentations'),
-    where(documentId(), 'in', docIds),
-  )
+    const docIds = teamIds.map((id) => `${operationStore.selectedDate}_${id}`)
+    if (docIds.length === 0) {
+      isLoading.value = false
+      return
+    }
 
-  let lotteryAssignments = {}
-  let facilityGuests = {}
-  let presentations = {}
+    const guestsQuery = query(collection(db, 'facilityGuests'), where(documentId(), 'in', docIds))
+    const presentationsQuery = query(
+      collection(db, 'dailyPresentations'),
+      where(documentId(), 'in', docIds),
+    )
 
-  const processData = () => {
-    const result = closingTeams.value.map((team) => {
-      const lotto = lotteryAssignments[team.id] || []
-      const guest = facilityGuests[team.id] || { up: 0, oneleg: 0, single: 0 }
-      const pres = presentations[team.id] || {
-        up: 0,
-        oneleg: 0,
-        single: 0,
-        cancelledUp: 0,
-        cancelledOneleg: 0,
-        cancelledSingle: 0,
-      }
+    let lotteryAssignments = {}
+    let facilityGuests = {}
+    let presentations = {}
 
-      const lottoUp = lotto.filter((i) => i.type === 'up').length
-      const lottoOneleg = lotto.filter((i) => i.type === 'oneleg' || i.type === 'os').length
-      const lottoSingle = lotto.filter((i) => i.type === 'single').length
-
-      const guestUp = guest.up || 0
-      const guestOneleg = guest.oneleg || 0
-      const guestSingle = guest.single || 0
-
-      const cancelledUp = pres.cancelledUp || 0
-      const cancelledOneleg = pres.cancelledOneleg || 0
-      const cancelledSingle = pres.cancelledSingle || 0
-
-      const totalAssignedUp = lottoUp + guestUp
-      const totalAssignedOneleg = lottoOneleg + guestOneleg
-      const totalAssignedSingle = lottoSingle + guestSingle
-
-      return {
-        teamId: team.id,
-        teamName: team.name,
-        lottoUp,
-        lottoOneleg,
-        lottoSingle,
-        guestUp,
-        guestOneleg,
-        guestSingle,
-        cancelledUp,
-        cancelledOneleg,
-        cancelledSingle,
-        netUp: totalAssignedUp - cancelledUp,
-        netOneleg: totalAssignedOneleg - cancelledOneleg,
-        netSingle: totalAssignedSingle - cancelledSingle,
-      }
-    })
-    reportData.value = result
-    isLoading.value = false
-  }
-
-  unsubLottery = onSnapshot(
-    lotteryDocRef,
-    (docSnap) => {
-      const allAssignments = {}
-      if (docSnap.exists()) {
-        const data = docSnap.data()
-        // Veritabanındaki 'lotteryPackages' listesini kontrol et
-        if (data.lotteryPackages && Array.isArray(data.lotteryPackages)) {
-          // Her bir çekiliş paketinin içindeki atamaları döngüye al
-          data.lotteryPackages.forEach((pkg) => {
-            if (pkg.assignments) {
-              // Her bir ekibin atamalarını ana 'allAssignments' listesine ekle
-              for (const teamId in pkg.assignments) {
-                if (!allAssignments[teamId]) {
-                  allAssignments[teamId] = []
-                }
-                allAssignments[teamId].push(...pkg.assignments[teamId])
-              }
-            }
-          })
+    const processData = () => {
+      const result = closingTeams.value.map((team) => {
+        const lotto = lotteryAssignments[team.id] || []
+        const guest = facilityGuests[team.id] || { up: 0, oneleg: 0, single: 0 }
+        const pres = presentations[team.id] || {
+          up: 0,
+          oneleg: 0,
+          single: 0,
+          cancelledUp: 0,
+          cancelledOneleg: 0,
+          cancelledSingle: 0,
         }
-      }
-      // Tüm çekilişlerden birleştirilmiş yeni listeyi ata
-      lotteryAssignments = allAssignments
-      processData()
-    },
-    (error) => handleError(error, 'Çekiliş sonuçları dinlenirken hata oluştu.'),
-  )
 
-  unsubGuests = onSnapshot(
-    guestsQuery,
-    (snapshot) => {
-      const newGuests = {}
-      snapshot.forEach((doc) => {
-        newGuests[doc.data().teamId] = doc.data()
-      })
-      facilityGuests = newGuests
-      processData()
-    },
-    (error) => handleError(error, 'Tesise gelen misafir verileri dinlenirken hata oluştu.'),
-  )
+        const lottoUp = lotto.filter((i) => i.type === 'up').length
+        const lottoOneleg = lotto.filter((i) => i.type === 'oneleg' || i.type === 'os').length
+        const lottoSingle = lotto.filter((i) => i.type === 'single').length
 
-  unsubPresentations = onSnapshot(
-    presentationsQuery,
-    (snapshot) => {
-      const newPres = {}
-      snapshot.forEach((doc) => {
-        newPres[doc.data().teamId] = doc.data()
+        const guestUp = guest.up || 0
+        const guestOneleg = guest.oneleg || 0
+        const guestSingle = guest.single || 0
+
+        const cancelledUp = pres.cancelledUp || 0
+        const cancelledOneleg = pres.cancelledOneleg || 0
+        const cancelledSingle = pres.cancelledSingle || 0
+
+        const totalAssignedUp = lottoUp + guestUp
+        const totalAssignedOneleg = lottoOneleg + guestOneleg
+        const totalAssignedSingle = lottoSingle + guestSingle
+
+        return {
+          teamId: team.id,
+          teamName: team.name,
+          lottoUp,
+          lottoOneleg,
+          lottoSingle,
+          guestUp,
+          guestOneleg,
+          guestSingle,
+          cancelledUp,
+          cancelledOneleg,
+          cancelledSingle,
+          netUp: totalAssignedUp - cancelledUp,
+          netOneleg: totalAssignedOneleg - cancelledOneleg,
+          netSingle: totalAssignedSingle - cancelledSingle,
+        }
       })
-      presentations = newPres
-      processData()
-    },
-    (error) => handleError(error, 'Sunum verileri dinlenirken hata oluştu.'),
-  )
+      reportData.value = result
+      isLoading.value = false
+    }
+
+    unsubLottery = onSnapshot(
+      lotteryDocRef,
+      (docSnap) => {
+        const allAssignments = {}
+        if (docSnap.exists()) {
+          const data = docSnap.data()
+          if (data.lotteryPackages && Array.isArray(data.lotteryPackages)) {
+            data.lotteryPackages.forEach((pkg) => {
+              if (pkg.assignments) {
+                for (const teamId in pkg.assignments) {
+                  if (!allAssignments[teamId]) {
+                    allAssignments[teamId] = []
+                  }
+                  allAssignments[teamId].push(...pkg.assignments[teamId])
+                }
+              }
+            })
+          }
+        }
+        lotteryAssignments = allAssignments
+        processData()
+      },
+      (error) => handleError(error, 'Çekiliş sonuçları dinlenirken hata oluştu.'),
+    )
+
+    unsubGuests = onSnapshot(
+      guestsQuery,
+      (snapshot) => {
+        const newGuests = {}
+        snapshot.forEach((doc) => {
+          newGuests[doc.data().teamId] = doc.data()
+        })
+        facilityGuests = newGuests
+        processData()
+      },
+      (error) => handleError(error, 'Tesise gelen misafir verileri dinlenirken hata oluştu.'),
+    )
+
+    unsubPresentations = onSnapshot(
+      presentationsQuery,
+      (snapshot) => {
+        const newPres = {}
+        snapshot.forEach((doc) => {
+          newPres[doc.data().teamId] = doc.data()
+        })
+        presentations = newPres
+        processData()
+      },
+      (error) => handleError(error, 'Sunum verileri dinlenirken hata oluştu.'),
+    )
+    return
+  }
 }
 
 const saveCancellationData = (teamId) => {
@@ -224,7 +210,6 @@ const saveCancellationData = (teamId) => {
     const teamData = reportData.value.find((r) => r.teamId === teamId)
     if (!teamData) return
 
-    // DEĞİŞİKLİK: props.selectedDate -> operationStore.selectedDate
     const docId = `${operationStore.selectedDate}_${teamId}`
     const docRef = doc(db, 'dailyPresentations', docId)
     try {
@@ -234,7 +219,6 @@ const saveCancellationData = (teamId) => {
           cancelledUp: teamData.cancelledUp || 0,
           cancelledOneleg: teamData.cancelledOneleg || 0,
           cancelledSingle: teamData.cancelledSingle || 0,
-          // DEĞİŞİKLİK: props -> operationStore
           date: operationStore.selectedDate,
           facilityId: operationStore.activeFacilityId,
           teamId: teamId,
@@ -248,7 +232,6 @@ const saveCancellationData = (teamId) => {
   }, 1000)
 }
 
-// DEĞİŞİKLİK: props -> operationStore
 watch(
   [() => operationStore.selectedDate, () => operationStore.activeFacilityId, closingTeams],
   fetchAllData,
@@ -264,6 +247,9 @@ onUnmounted(() => {
   if (unsubPresentations) unsubPresentations()
   clearTimeout(debounceTimer)
 })
+
+// Removed the watchEffect block that was causing the eslint errors
+// as the variables it was trying to reference don't exist in this scope
 </script>
 
 <template>

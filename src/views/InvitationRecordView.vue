@@ -1,11 +1,8 @@
+<!-- cSpell:words unparse FEFF kayitlari oneleg -->
 <script setup>
-import { ref } from 'vue'
+import { ref, watchEffect } from 'vue'
 import { useInvitationRecords } from '@/composables/useInvitationRecords'
 import { useToast } from 'vue-toastification'
-import { useOperationStore } from '@/stores/operationStore'
-import { useUserStore } from '@/stores/userStore'
-import { httpsCallable } from 'firebase/functions'
-import { functions } from '@/firebaseConfig'
 import { handleError } from '@/utils/errorHandler'
 import SaleEntryModal from '@/components/common/SaleEntryModal.vue'
 import papa from 'papaparse'
@@ -19,15 +16,20 @@ const {
   clearTeamRecords,
 } = useInvitationRecords()
 const toast = useToast()
-const operationStore = useOperationStore()
-const userStore = useUserStore()
-const fileInput = ref(null) // Hidden file input
 
 // Track which phone input is currently being edited
 const editingPhoneRecordId = ref(null)
 
 // Track which accordions are open
 const openAccordions = ref([])
+
+/**
+ * Helper function: Pool type'a göre label döndür
+ */
+const getPoolLabel = (poolType) => {
+  if (!poolType) return 'Belirtilmemiş'
+  return poolType === 'tour' ? 'Tur Havuzu' : 'Kendi Araçlı Havuzu'
+}
 
 /**
  * Masks phone number (e.g.: 0532***1212)
@@ -100,170 +102,94 @@ const handleExport = () => {
   if (records.value.length === 0) {
     return toast.warning('Dışa aktarılacak veri bulunmuyor.')
   }
+
   const dataToExport = records.value.map((rec) => ({
-    Slot: rec.slot,
-    Havuz: rec.poolType === 'tour' ? 'Tur' : 'KA',
-    Tip: rec.invitationType,
-    Distributor_Team: rec.distributorTeamName,
-    Assigned_Team: rec.assignedTeamName || '',
-    Name_Surname: rec.guestName,
-    Phone: rec.guestPhone,
-    OPC: rec.opcName,
-    OPC_Manager: rec.opcManagerName,
-    Conf: rec.confName,
-    Conf_Manager: rec.confManagerName,
-    Rep_Name: rec.repName,
-    Is_Sold: rec.isSold ? 'Yes' : 'No',
-    Sale_Volume: rec.saleDetails?.volume || 0,
-    Sale_DownPayment: rec.saleDetails?.downPayment || 0,
-    Sale_Installments: rec.saleDetails?.installments || 0,
+    Slot: rec.slot || '',
+    Havuz: getPoolLabel(rec.poolType),
+    Tip: rec.invitationType || '',
+    Ekip: rec.assignedTeamName || '',
+    AdSoyad: rec.guestName || '',
+    Telefon: rec.guestPhone || '',
+    OPC: rec.opcName || '',
+    'OPC Mng': rec.opcManagerName || '',
+    Conf: rec.confName || '',
+    'Conf Mng': rec.confManagerName || '',
+    'Rep Adı': rec.repName || '',
+    Satış: rec.isSold ? 'Evet' : 'Hayır',
+    Durum: rec.status || '',
   }))
+
   const csv = papa.unparse(dataToExport)
   const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
   const link = document.createElement('a')
   link.href = URL.createObjectURL(blob)
-  const todayStr = operationStore.selectedDate
-  link.setAttribute('download', `Invitation_Tracking_Report_${todayStr}.csv`)
-  document.body.appendChild(link)
+  link.download = `davet_kayitlari_${new Date().toISOString().slice(0, 10)}.csv`
   link.click()
-  document.body.removeChild(link)
-  toast.success('Rapor başarıyla dışa aktarıldı!')
+  URL.revokeObjectURL(link.href)
+  toast.success('Kayıtlar başarıyla dışa aktarıldı!')
 }
 
-const triggerImport = () => {
-  fileInput.value.click()
-}
-
-const handleFileImport = (event) => {
-  const file = event.target.files[0]
-  if (!file) return
-
-  papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    complete: async (results) => {
-      try {
-        if (!results.data || results.data.length === 0) {
-          return toast.warning('CSV dosyası boş veya geçersiz.')
-        }
-        const recordsToCreate = results.data
-          .map((row) => {
-            const team = userStore.distributorTeams.find((t) => t.name === row.Distributor_Team)
-            if (!team || !row.Slot || !row.Tip || !row.Havuz) {
-              toast.warning(`Hatalı satır atlandı: ${JSON.stringify(row)}`)
-              return null
-            }
-            return {
-              distributorTeamId: team.id,
-              distributorTeamName: team.name,
-              slot: Number(row.Slot),
-              invitationType: row.Tip.toLowerCase(),
-              poolType: row.Havuz.toLowerCase() === 'tur' ? 'tour' : 'privateVehicle',
-              guestName: row.Name_Surname || '',
-              guestPhone: row.Phone || '',
-              opcName: row.OPC || '',
-              opcManagerName: row.OPC_Manager || '',
-              confName: row.Conf || '',
-              confManagerName: row.Conf_Manager || '',
-              repName: row.Rep_Name || '',
-            }
-          })
-          .filter(Boolean)
-
-        if (recordsToCreate.length === 0) {
-          return toast.error('CSV dosyasında geçerli hiçbir kayıt bulunamadı.')
-        }
-
-        const importFunction = httpsCallable(functions, 'importInvitationRecordsFromCSV')
-        await importFunction({
-          records: recordsToCreate,
-          facilityId: operationStore.activeFacilityId,
-          date: operationStore.selectedDate,
-        })
-
-        toast.success(
-          `${recordsToCreate.length} kayıt başarıyla içe aktarıldı ve toplamlar güncellendi!`,
-        )
-      } catch (error) {
-        handleError(error, 'Veriler içe aktarılırken bir hata oluştu.')
-      } finally {
-        event.target.value = null
-      }
-    },
-    error: (err) => {
-      toast.error('CSV dosyası okunurken bir hata oluştu: ' + err.message)
-    },
-  })
-}
-
+// Clear team records handler
 const handleClearTeamRecords = async (teamName, teamId, poolType) => {
   if (
-    confirm(
-      `${teamName} ekibinin ${poolType === 'tour' ? 'Tur' : 'KA'} havuzundaki tüm kayıtlarını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+    !confirm(
+      `${teamName} ekibinin ${getPoolLabel(poolType)} kayıtlarını temizlemek istediğinizden emin misiniz?`,
     )
   ) {
-    try {
-      const result = await clearTeamRecords(teamId, poolType)
-      if (result.success) {
-        toast.success(`${teamName} ekibinin ${result.deletedCount} kaydı başarıyla silindi.`)
-      }
-    } catch (error) {
-      // Error is already shown in composable via toast
-      handleError(error, 'Kayıtlar silinirken bir hata oluştu.')
-    }
+    return
+  }
+
+  try {
+    await clearTeamRecords(teamId, poolType)
+    toast.success(`${teamName} ekibinin kayıtları temizlendi.`)
+  } catch (error) {
+    handleError(error, 'Kayıtlar temizlenirken bir hata oluştu.')
   }
 }
+
+watchEffect(() => {
+  console.log('--- [InvitationRecordView] ---')
+  console.log('Ham Veri | records (Tüm Kayıtlar):', records.value)
+  console.log('Hesaplanmış Veri | groupedRecords (Gruplanmış):', groupedRecords.value)
+})
 </script>
 
 <template>
-  <div class="invitation-records-container">
+  <div class="invitation-record-view">
     <div class="page-header">
-      <div>
-        <h3>Detaylı Davet Takip Listesi</h3>
-        <p>Tüm davet kayıtlarını yönetin, CSV ile içe/dışa aktarın.</p>
-      </div>
-      <div class="actions-bar">
-        <input
-          ref="fileInput"
-          type="file"
-          style="display: none"
-          accept=".csv"
-          @change="handleFileImport"
-        />
-        <button class="btn-secondary" @click="triggerImport">
-          <i class="fas fa-file-import"></i> CSV'den İçe Aktar
-        </button>
-        <button class="btn-info" @click="handleExport">
-          <i class="fas fa-file-export"></i> Dışa Aktar
+      <h2>Davet Kayıt Takibi</h2>
+      <div class="header-actions">
+        <button class="btn-secondary" @click="handleExport">
+          <i class="fas fa-download"></i> Dışa Aktar
         </button>
       </div>
     </div>
 
-    <div v-if="isLoading" class="loading-state">Veriler Yükleniyor...</div>
-    <div
-      v-else-if="
-        Object.keys(groupedRecords.tour).length === 0 &&
-        Object.keys(groupedRecords.privateVehicle).length === 0
-      "
-      class="no-data-state"
-    >
-      Seçili tarih ve tesis için davet kaydı bulunamadı.
+    <div v-if="isLoading" class="loading-state">
+      <i class="fas fa-spinner fa-spin"></i>
+      Kayıtlar yükleniyor...
     </div>
+
+    <div v-else-if="!records || records.length === 0" class="empty-state">
+      <i class="fas fa-inbox"></i>
+      <p>Henüz davet kaydı bulunmuyor.</p>
+    </div>
+
     <div v-else>
       <div v-for="(pool, poolType) in groupedRecords" :key="poolType">
         <div v-if="Object.keys(pool).length > 0" class="pool-group">
           <h4 class="pool-title">
-            {{ poolType === 'tour' ? 'Tur Havuzu' : 'Kendi Araçlı Havuzu' }}
+            {{ getPoolLabel(poolType) }}
           </h4>
           <div class="accordion-container">
             <div v-for="(teamRecords, teamName) in pool" :key="teamName" class="accordion-item">
               <div class="accordion-header" @click="toggleAccordion(teamName + poolType)">
-                <span>{{ teamName }} ({{ teamRecords.length }} Kayıt)</span>
+                <span>{{ teamName }} ({{ teamRecords?.length || 0 }} Kayıt)</span>
                 <div class="header-actions">
                   <button
                     class="btn-clear"
                     @click.stop="
-                      handleClearTeamRecords(teamName, teamRecords[0].distributorTeamId, poolType)
+                      handleClearTeamRecords(teamName, teamRecords[0]?.distributorTeamId, poolType)
                     "
                   >
                     Temizle
@@ -296,19 +222,19 @@ const handleClearTeamRecords = async (teamName, teamId, poolType) => {
                       <tr
                         v-for="record in teamRecords"
                         :key="record.id"
-                        :class="`status-${record.status}`"
+                        :class="`status-${record.status || 'unknown'}`"
                       >
-                        <td class="text-center">{{ record.slot }}</td>
+                        <td class="text-center">{{ record.slot || '-' }}</td>
                         <td class="text-center">
-                          <span :class="`type-tag type-${record.invitationType}`">{{
-                            record.invitationType.toUpperCase()
-                          }}</span>
+                          <span :class="`type-tag type-${record.invitationType || 'unknown'}`">
+                            {{ (record.invitationType || 'N/A').toUpperCase() }}
+                          </span>
                         </td>
                         <td>{{ record.assignedTeamName || '-' }}</td>
                         <td>
                           <input
                             type="text"
-                            :value="record.guestName"
+                            :value="record.guestName || ''"
                             placeholder="Ad Soyad"
                             @input="updateRecordField(record.id, 'guestName', $event.target.value)"
                           />
@@ -318,28 +244,27 @@ const handleClearTeamRecords = async (teamName, teamId, poolType) => {
                             type="tel"
                             :value="
                               editingPhoneRecordId === record.id
-                                ? record.guestPhone
-                                : maskPhoneNumber(record.guestPhone)
+                                ? record.guestPhone || ''
+                                : maskPhoneNumber(record.guestPhone || '')
                             "
                             placeholder="Telefon"
-                            autocomplete="off"
-                            @input="updateRecordField(record.id, 'guestPhone', $event.target.value)"
                             @focus="editingPhoneRecordId = record.id"
                             @blur="editingPhoneRecordId = null"
+                            @input="updateRecordField(record.id, 'guestPhone', $event.target.value)"
                           />
                         </td>
                         <td>
                           <input
                             type="text"
-                            :value="record.opcName"
-                            placeholder="OPC Adı"
+                            :value="record.opcName || ''"
+                            placeholder="OPC"
                             @input="updateRecordField(record.id, 'opcName', $event.target.value)"
                           />
                         </td>
                         <td>
                           <input
                             type="text"
-                            :value="record.opcManagerName"
+                            :value="record.opcManagerName || ''"
                             placeholder="OPC Mng"
                             @input="
                               updateRecordField(record.id, 'opcManagerName', $event.target.value)
@@ -349,7 +274,7 @@ const handleClearTeamRecords = async (teamName, teamId, poolType) => {
                         <td>
                           <input
                             type="text"
-                            :value="record.confName"
+                            :value="record.confName || ''"
                             placeholder="Conf"
                             @input="updateRecordField(record.id, 'confName', $event.target.value)"
                           />
@@ -357,7 +282,7 @@ const handleClearTeamRecords = async (teamName, teamId, poolType) => {
                         <td>
                           <input
                             type="text"
-                            :value="record.confManagerName"
+                            :value="record.confManagerName || ''"
                             placeholder="Conf Mng"
                             @input="
                               updateRecordField(record.id, 'confManagerName', $event.target.value)
@@ -367,7 +292,7 @@ const handleClearTeamRecords = async (teamName, teamId, poolType) => {
                         <td>
                           <input
                             type="text"
-                            :value="record.repName"
+                            :value="record.repName || ''"
                             placeholder="Rep Adı"
                             @input="updateRecordField(record.id, 'repName', $event.target.value)"
                           />
@@ -375,7 +300,7 @@ const handleClearTeamRecords = async (teamName, teamId, poolType) => {
                         <td class="text-center">
                           <input
                             type="checkbox"
-                            :checked="record.isSold"
+                            :checked="record.isSold || false"
                             @change="handleCheckboxChange(record, $event)"
                           />
                         </td>
@@ -400,170 +325,207 @@ const handleClearTeamRecords = async (teamName, teamId, poolType) => {
 </template>
 
 <style scoped>
+.invitation-record-view {
+  padding: 20px;
+}
+
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 15px;
+  align-items: center;
   margin-bottom: 20px;
 }
-.actions-bar {
+
+.header-actions {
   display: flex;
   gap: 10px;
-  flex-shrink: 0;
 }
-.actions-bar button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 15px;
-  font-weight: bold;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  color: white;
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #666;
 }
-.btn-secondary {
-  background-color: #7f8c8d;
+
+.loading-state i {
+  font-size: 24px;
+  margin-bottom: 10px;
 }
-.btn-info {
-  background-color: var(--color-info);
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
 }
-.accordion-header .header-actions {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-.btn-clear {
-  background-color: transparent;
-  border: none;
-  color: var(--color-danger);
-  font-size: 12px;
-  font-weight: bold;
-  cursor: pointer;
-  padding: 5px;
-}
+
 .pool-group {
   margin-bottom: 30px;
 }
+
 .pool-title {
-  padding: 10px;
-  background-color: var(--bg-primary);
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  margin-bottom: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 16px;
+  margin: 0;
+  border-radius: 8px 8px 0 0;
+  font-size: 16px;
+  font-weight: 600;
 }
+
 .accordion-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 0 0 8px 8px;
 }
+
 .accordion-item {
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  overflow: hidden;
+  border-bottom: 1px solid #f0f0f0;
 }
+
 .accordion-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 15px;
-  background-color: var(--bg-tabbar);
+  padding: 16px;
+  background: #f8f9fa;
   cursor: pointer;
-  font-weight: bold;
+  transition: background-color 0.2s;
 }
+
 .accordion-header:hover {
-  background-color: var(--bg-primary);
+  background: #e9ecef;
 }
-.accordion-header .fa-chevron-down {
-  transition: transform 0.3s ease;
+
+.accordion-header .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.accordion-header .fa-chevron-down.is-open {
+
+.btn-clear {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-clear:hover {
+  background: #c82333;
+}
+
+.accordion-header i {
+  transition: transform 0.3s;
+}
+
+.accordion-header i.is-open {
   transform: rotate(180deg);
 }
+
 .accordion-content {
-  padding: 10px;
-  background-color: var(--bg-secondary);
+  padding: 0;
 }
+
 .table-wrapper {
   overflow-x: auto;
 }
+
 .records-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1600px;
+  font-size: 14px;
 }
-.records-table th,
-.records-table td {
-  border: 1px solid var(--border-color);
-  padding: 8px;
-  font-size: 13px;
-  vertical-align: middle;
-}
+
 .records-table th {
-  background-color: var(--bg-primary);
-  font-weight: bold;
+  background: #f8f9fa;
+  padding: 12px 8px;
+  text-align: left;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
   white-space: nowrap;
 }
-.records-table tbody tr:hover {
-  background-color: var(--bg-primary);
+
+.records-table td {
+  padding: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
 }
-.records-table input[type='text'],
-.records-table input[type='tel'] {
+
+.records-table input {
   width: 100%;
-  padding: 5px;
-  border: 1px solid transparent;
+  padding: 6px;
+  border: 1px solid #ddd;
   border-radius: 4px;
-  background-color: transparent;
-  min-width: 120px;
+  font-size: 13px;
 }
-.records-table input[type='text']:focus,
-.records-table input[type='tel']:focus {
+
+.records-table input:focus {
   outline: none;
-  background-color: var(--bg-primary);
-  border-color: var(--color-accent);
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
-.records-table input[type='checkbox'] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
+
 .text-center {
   text-align: center;
 }
-.status-assigned {
-  background-color: #e8f5e9;
-}
-.status-presented {
-  background-color: #e3f2fd;
-}
-.status-sold {
-  background-color: #fff8e1;
-  font-weight: bold;
-}
+
 .type-tag {
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: white;
-  font-weight: bold;
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
   font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
+
 .type-up {
-  background-color: #3498db;
+  background: #d4edda;
+  color: #155724;
 }
 .type-oneleg {
-  background-color: #f1c40f;
-  color: #333;
+  background: #fff3cd;
+  color: #856404;
 }
 .type-single {
-  background-color: #e74c3c;
+  background: #f8d7da;
+  color: #721c24;
 }
-.loading-state,
-.no-data-state {
-  text-align: center;
-  padding: 40px;
-  color: var(--text-secondary);
-  font-style: italic;
+.type-unknown {
+  background: #e2e3e5;
+  color: #6c757d;
+}
+
+.status-assigned {
+  background-color: rgba(255, 193, 7, 0.1);
+}
+.status-presented {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+.status-sold {
+  background-color: rgba(40, 167, 69, 0.1);
+}
+.status-unknown {
+  background-color: rgba(108, 117, 125, 0.1);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
 }
 </style>

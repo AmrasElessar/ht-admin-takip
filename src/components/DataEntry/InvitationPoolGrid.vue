@@ -7,9 +7,7 @@ import { useOperationStore } from '../../stores/operationStore'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '@/firebaseConfig'
 import { useToast } from 'vue-toastification'
-import { useRouter } from 'vue-router'
 
-const router = useRouter()
 const lotteryStore = useLotteryStore()
 const userStore = useUserStore()
 const operationStore = useOperationStore()
@@ -29,8 +27,8 @@ const generateListFromTotals = (totals) => {
     generatedList.push({ slot: slot++, type: 'up' })
   }
   for (let i = 0; i < (totals.oneleg || 0); i++) {
+    // cspell:disable-line
     if (slot > 30) break
-    generatedList.push({ slot: slot++, type: 'oneleg' })
   }
   for (let i = 0; i < (totals.single || 0); i++) {
     if (slot > 30) break
@@ -334,28 +332,18 @@ const updateInvitationStatusInFirestore = async (invitationToUpdate, newStatus) 
     console.error('Detaylı hata:', error) // cspell:disable-line
   }
 }
-
-const openManualAddModal = () => {
-  router.push('/veri-girisi/davet')
-}
 </script>
 
 <template>
   <div class="card live-pool-grid">
     <div v-if="lotteryStore.isInvitationsLoading">Canlı havuz yükleniyor...</div>
-    <!-- cspell:disable-line -->
+    <div v-else-if="!groupedTourInvitations && !groupedPrivateVehicleInvitations">
+      Henüz gösterilecek davet kaydı bulunmamaktadır.
+    </div>
     <div v-else>
       <div class="pool-section">
-        <h4 class="card-title-with-button">
-          <span>Tur (TUR) Havuzu</span>
-          <button class="btn-add-manual" @click="openManualAddModal('tour')">
-            + Manuel Davet Ekle
-          </button>
-        </h4>
         <div class="grid-container">
           <div class="team-column-header">
-            <div class="header-cell">Dağıtıcı Ekip</div>
-            <!-- cspell:disable-line -->
             <div
               v-for="(teamData, teamId) in groupedTourInvitations"
               :key="teamId"
@@ -365,9 +353,6 @@ const openManualAddModal = () => {
             </div>
           </div>
           <div class="slots-scroll-container">
-            <div class="slots-header">
-              <div v-for="i in 30" :key="i" class="slot-header-cell">{{ i }}</div>
-            </div>
             <div class="slots-body">
               <div
                 v-for="(teamData, teamId) in groupedTourInvitations"
@@ -377,13 +362,14 @@ const openManualAddModal = () => {
                 <div v-for="i in 30" :key="i" class="slot-cell-wrapper">
                   <div
                     class="slot-cell"
-                    :class="`status-${(teamData.invitations.find((inv) => inv.slot === i) || {}).status || 'empty'}`"
-                    :title="getTooltipText(teamData.invitations.find((inv) => inv.slot === i))"
-                    @click="handleSlotClick(teamData.invitations.find((inv) => inv.slot === i))"
+                    :class="`status-${teamData.invitations?.find((inv) => inv.slot === i)?.status || 'empty'}`"
+                    :title="getTooltipText(teamData.invitations?.find((inv) => inv.slot === i))"
+                    @click="handleSlotClick(teamData.invitations?.find((inv) => inv.slot === i))"
                   >
                     <span>{{
-                      (teamData.invitations.find((inv) => inv.slot === i) || {}).type
-                        ?.toUpperCase()
+                      teamData.invitations
+                        ?.find((inv) => inv.slot === i)
+                        ?.type?.toUpperCase()
                         .substring(0, 2)
                     }}</span>
                   </div>
@@ -395,17 +381,8 @@ const openManualAddModal = () => {
       </div>
 
       <div class="pool-section">
-        <h4 class="card-title-with-button">
-          <span>Kendi Araçlı (KA) Havuzu</span>
-          <!-- cspell:disable-line -->
-          <button class="btn-add-manual" @click="openManualAddModal('privateVehicle')">
-            + Manuel Davet Ekle
-          </button>
-        </h4>
         <div class="grid-container">
           <div class="team-column-header">
-            <div class="header-cell">Dağıtıcı Ekip</div>
-            <!-- cspell:disable-line -->
             <div
               v-for="(teamData, teamId) in groupedPrivateVehicleInvitations"
               :key="teamId"
@@ -415,9 +392,6 @@ const openManualAddModal = () => {
             </div>
           </div>
           <div class="slots-scroll-container">
-            <div class="slots-header">
-              <div v-for="i in 30" :key="i" class="slot-header-cell">{{ i }}</div>
-            </div>
             <div class="slots-body">
               <div
                 v-for="(teamData, teamId) in groupedPrivateVehicleInvitations"
@@ -427,13 +401,14 @@ const openManualAddModal = () => {
                 <div v-for="i in 30" :key="i" class="slot-cell-wrapper">
                   <div
                     class="slot-cell"
-                    :class="`status-${(teamData.invitations.find((inv) => inv.slot === i) || {}).status || 'empty'}`"
-                    :title="getTooltipText(teamData.invitations.find((inv) => inv.slot === i))"
-                    @click="handleSlotClick(teamData.invitations.find((inv) => inv.slot === i))"
+                    :class="`status-${teamData.invitations?.find((inv) => inv.slot === i)?.status || 'empty'}`"
+                    :title="getTooltipText(teamData.invitations?.find((inv) => inv.slot === i))"
+                    @click="handleSlotClick(teamData.invitations?.find((inv) => inv.slot === i))"
                   >
                     <span>{{
-                      (teamData.invitations.find((inv) => inv.slot === i) || {}).type
-                        ?.toUpperCase()
+                      teamData.invitations
+                        ?.find((inv) => inv.slot === i)
+                        ?.type?.toUpperCase()
                         .substring(0, 2)
                     }}</span>
                   </div>
