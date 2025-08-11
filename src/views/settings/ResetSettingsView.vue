@@ -156,7 +156,7 @@ const executeReset = async () => {
   <div>
     <h2>Sistemi Sıfırla</h2>
     <div class="danger-zone">
-      <h3><i class="fas fa-exclamation-triangle"></i> Tehlikeli Alan</h3>
+      <h3><i class="fas fa-exclamation-triangle" /> Tehlikeli Alan</h3>
       <p>
         Bu sayfadaki işlemler veritabanından kalıcı olarak veri siler ve bu işlemler geri alınamaz.
         Lütfen ne yaptığınızdan emin olun.
@@ -165,49 +165,48 @@ const executeReset = async () => {
     <div class="card">
       <h3>Sıfırlanacak Verileri Seçin</h3>
       <div class="checkbox-group">
-        <label
-          ><input v-model="resetOptions.resetData" type="checkbox" /> Günlük Sayım Verileri (Davet,
-          Gelen, Fiş, Otobüs, İptaller, Sunumlar, Tesis Misafirleri)</label
+        <label><input
+          v-model="resetOptions.resetData"
+          type="checkbox"
+        > Günlük Sayım Verileri (Davet,
+          Gelen, Fiş, Otobüs, İptaller, Sunumlar, Tesis Misafirleri)</label>
+        <label><input
+          v-model="resetOptions.resetInvitations"
+          type="checkbox"
+          :disabled="resetOptions.resetData"
         >
-        <label
-          ><input
-            v-model="resetOptions.resetInvitations"
-            type="checkbox"
-            :disabled="resetOptions.resetData"
-          />
-          Davet Kayıtları</label
+          Davet Kayıtları</label>
+        <label><input
+          v-model="resetOptions.resetPresentationAttendance"
+          type="checkbox"
+          :disabled="resetOptions.resetData"
         >
-        <label
-          ><input
-            v-model="resetOptions.resetPresentationAttendance"
-            type="checkbox"
-            :disabled="resetOptions.resetData"
-          />
-          Tanıtım Katılım Kayıtları</label
+          Tanıtım Katılım Kayıtları</label>
+        <label><input
+          v-model="resetOptions.resetTeams"
+          type="checkbox"
+        > Ekipler</label>
+        <label><input
+          v-model="resetOptions.resetSalesGroups"
+          type="checkbox"
+          :disabled="resetOptions.resetFacilities"
         >
-        <label><input v-model="resetOptions.resetTeams" type="checkbox" /> Ekipler</label>
-        <label
-          ><input
-            v-model="resetOptions.resetSalesGroups"
-            type="checkbox"
-            :disabled="resetOptions.resetFacilities"
-          />
-          Satış Grupları (Yarı Kritik)</label
-        >
-        <label
-          ><input v-model="resetOptions.resetFacilities" type="checkbox" /> Tesisler (Kritik)</label
-        >
+          Satış Grupları (Yarı Kritik)</label>
+        <label><input
+          v-model="resetOptions.resetFacilities"
+          type="checkbox"
+        > Tesisler (Kritik)</label>
       </div>
       <button
         class="reset-btn"
         :disabled="
           isLoading ||
-          (!resetOptions.resetData &&
-            !resetOptions.resetTeams &&
-            !resetOptions.resetSalesGroups &&
-            !resetOptions.resetFacilities &&
-            !resetOptions.resetInvitations &&
-            !resetOptions.resetPresentationAttendance)
+            (!resetOptions.resetData &&
+              !resetOptions.resetTeams &&
+              !resetOptions.resetSalesGroups &&
+              !resetOptions.resetFacilities &&
+              !resetOptions.resetInvitations &&
+              !resetOptions.resetPresentationAttendance)
         "
         @click="confirmReset"
       >
@@ -215,7 +214,10 @@ const executeReset = async () => {
         <span v-else>Seçilenleri Sıfırla</span>
       </button>
     </div>
-    <div v-if="message" :class="['message', { success: !isError, error: isError }]">
+    <div
+      v-if="message"
+      :class="['message', { success: !isError, error: isError }]"
+    >
       {{ message }}
     </div>
 

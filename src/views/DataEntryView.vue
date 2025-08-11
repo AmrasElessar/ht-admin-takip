@@ -60,50 +60,121 @@ watch(
   <div>
     <div class="command-center">
       <h1>Operasyon Merkezi</h1>
-      <div v-if="!operationStore.activeFacilityId && !isLoading" class="alert-box">
+      <div
+        v-if="!operationStore.activeFacilityId && !isLoading"
+        class="alert-box"
+      >
         Bu kullanıcıya atanmış bir tesis bulunmuyor veya sisteme hiç tesis eklenmemiş. Lütfen
         Ayarlar'dan kontrol edin.
       </div>
       <div v-else>
         <div class="header-controls">
-          <div v-if="canSwitchFacility" class="form-group">
-            <label for="facility-select"><i class="fas fa-building"></i> Aktif Tesis:</label>
-            <select id="facility-select" v-model="operationStore.activeFacilityId">
-              <option v-for="facility in facilities" :key="facility.id" :value="facility.id">
+          <div
+            v-if="canSwitchFacility"
+            class="form-group"
+          >
+            <label for="facility-select"><i class="fas fa-building" /> Aktif Tesis:</label>
+            <select
+              id="facility-select"
+              v-model="operationStore.activeFacilityId"
+            >
+              <option
+                v-for="facility in facilities"
+                :key="facility.id"
+                :value="facility.id"
+              >
                 {{ facility.name }}
               </option>
             </select>
           </div>
-          <div v-else class="info-box">
-            <strong><i class="fas fa-building"></i> Tesis:</strong>
+          <div
+            v-else
+            class="info-box"
+          >
+            <strong><i class="fas fa-building" /> Tesis:</strong>
             {{
               facilities.find((f) => f.id === operationStore.activeFacilityId)?.name ||
-              'Yükleniyor...'
+                'Yükleniyor...'
             }}
           </div>
           <div class="form-group">
-            <label for="date"><i class="fas fa-calendar-alt"></i> Tarih:</label>
-            <input id="date" v-model="operationStore.selectedDate" type="date" />
+            <label for="date"><i class="fas fa-calendar-alt" /> Tarih:</label>
+            <input
+              id="date"
+              v-model="operationStore.selectedDate"
+              type="date"
+            >
           </div>
         </div>
 
         <div class="sub-nav">
-          <RouterLink to="/veri-girisi/tesise-gelen" active-class="active">Tesise Gelen</RouterLink>
-          <RouterLink to="/veri-girisi/davet" active-class="active">Davet Girişi</RouterLink>
-          <RouterLink to="/veri-girisi/davet-takip" active-class="active">Davet Takip</RouterLink>
-
-          <RouterLink to="/veri-girisi/gelis-yonetimi" active-class="active"
-            >Geliş Yönetimi</RouterLink
+          <RouterLink
+            to="/veri-girisi/tesise-gelen"
+            active-class="active"
           >
-          <RouterLink to="/veri-girisi/cekilis" active-class="active">Çekiliş Paneli</RouterLink>
-          <RouterLink to="/veri-girisi/dagitim" active-class="active">Dağıtım Paneli</RouterLink>
-          <RouterLink to="/veri-girisi/masa-sayimi" active-class="active">Masa Sayımı</RouterLink>
-          <RouterLink to="/veri-girisi/otobus" active-class="active">Otobüs</RouterLink>
-          <RouterLink to="/veri-girisi/fis-girisi" active-class="active">Fiş Girişi</RouterLink>
+            Tesise Gelen
+          </RouterLink>
+          <RouterLink
+            to="/veri-girisi/davet"
+            active-class="active"
+          >
+            Davet Girişi
+          </RouterLink>
+          <RouterLink
+            to="/veri-girisi/davet-takip"
+            active-class="active"
+          >
+            Davet Takip
+          </RouterLink>
+
+          <RouterLink
+            to="/veri-girisi/gelis-yonetimi"
+            active-class="active"
+          >
+            Geliş Yönetimi
+          </RouterLink>
+          <RouterLink
+            to="/veri-girisi/cekilis"
+            active-class="active"
+          >
+            Çekiliş Paneli
+          </RouterLink>
+          <RouterLink
+            to="/veri-girisi/dagitim"
+            active-class="active"
+          >
+            Dağıtım Paneli
+          </RouterLink>
+          <RouterLink
+            to="/veri-girisi/masa-sayimi"
+            active-class="active"
+          >
+            Masa Sayımı
+          </RouterLink>
+          <RouterLink
+            to="/veri-girisi/otobus"
+            active-class="active"
+          >
+            Otobüs
+          </RouterLink>
+          <RouterLink
+            to="/veri-girisi/fis-girisi"
+            active-class="active"
+          >
+            Fiş Girişi
+          </RouterLink>
         </div>
 
-        <div v-if="isLoading" class="loading">Veriler yükleniyor...</div>
-        <div v-else class="data-entry-content">
+        <div
+          v-if="isLoading"
+          class="loading"
+        >
+          Veriler yükleniyor...
+        </div>
+        <div
+          v-else
+          class="data-entry-content"
+        >
           <RouterView />
         </div>
       </div>

@@ -96,7 +96,10 @@ defineProps({
 </script>
 
 <template>
-  <div class="language-switcher" :class="{ compact: compact }">
+  <div
+    class="language-switcher"
+    :class="{ compact: compact }"
+  >
     <!-- Toggle Mode (for 2 languages) -->
     <button
       v-if="mode === 'toggle'"
@@ -104,25 +107,46 @@ defineProps({
       :title="`Switch to ${availableLocales[0]?.name}`"
       @click="toggleLanguage"
     >
-      <span v-if="showFlags" class="flag">{{ currentLocaleConfig?.flag }}</span>
-      <span v-if="showNames" class="name">{{ currentLocaleConfig?.name }}</span>
-      <i class="fas fa-globe-americas icon" :class="{ 'icon-only': !showNames && !showFlags }"></i>
+      <span
+        v-if="showFlags"
+        class="flag"
+      >{{ currentLocaleConfig?.flag }}</span>
+      <span
+        v-if="showNames"
+        class="name"
+      >{{ currentLocaleConfig?.name }}</span>
+      <i
+        class="fas fa-globe-americas icon"
+        :class="{ 'icon-only': !showNames && !showFlags }"
+      />
     </button>
 
     <!-- Dropdown Mode (for multiple languages) -->
-    <div v-else-if="mode === 'dropdown'" class="language-dropdown">
+    <div
+      v-else-if="mode === 'dropdown'"
+      class="language-dropdown"
+    >
       <button
         class="dropdown-trigger"
         :title="$t('language.selectLanguage')"
         @click="$refs.dropdown.classList.toggle('show')"
         @blur="$refs.dropdown.classList.remove('show')"
       >
-        <span v-if="showFlags" class="flag">{{ currentLocaleConfig?.flag }}</span>
-        <span v-if="showNames" class="name">{{ currentLocaleConfig?.name }}</span>
-        <i class="fas fa-chevron-down dropdown-icon"></i>
+        <span
+          v-if="showFlags"
+          class="flag"
+        >{{ currentLocaleConfig?.flag }}</span>
+        <span
+          v-if="showNames"
+          class="name"
+        >{{ currentLocaleConfig?.name }}</span>
+        <i class="fas fa-chevron-down dropdown-icon" />
       </button>
 
-      <div ref="dropdown" class="dropdown-menu">
+      <div
+        ref="dropdown"
+        class="dropdown-menu"
+      >
         <button
           v-for="localeOption in SUPPORTED_LOCALES"
           :key="localeOption.code"
@@ -130,8 +154,14 @@ defineProps({
           :class="{ active: localeOption.code === getCurrentLocale() }"
           @click="handleLanguageChange(localeOption.code)"
         >
-          <span v-if="showFlags" class="flag">{{ localeOption.flag }}</span>
-          <span v-if="showNames" class="name">{{ localeOption.name }}</span>
+          <span
+            v-if="showFlags"
+            class="flag"
+          >{{ localeOption.flag }}</span>
+          <span
+            v-if="showNames"
+            class="name"
+          >{{ localeOption.name }}</span>
         </button>
       </div>
     </div>

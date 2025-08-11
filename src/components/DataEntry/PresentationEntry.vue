@@ -220,7 +220,12 @@ onUnmounted(() => {
 
 <template>
   <div class="presentation-panel">
-    <div v-if="isLoading" class="loading">Veriler Yükleniyor...</div>
+    <div
+      v-if="isLoading"
+      class="loading"
+    >
+      Veriler Yükleniyor...
+    </div>
     <div v-else>
       <div class="presentation-grid">
         <div class="team-row header-row">
@@ -232,7 +237,11 @@ onUnmounted(() => {
           <label>Masadaki Single</label>
           <span>Tur Sonrası İptal</span>
         </div>
-        <div v-for="team in closingTeams" :key="team.id" class="team-row">
+        <div
+          v-for="team in closingTeams"
+          :key="team.id"
+          class="team-row"
+        >
           <strong class="team-name">{{ team.name }}</strong>
           <div class="summary-chip">
             {{ combinedDistributionData[team.id]?.totalUp || 0 }} /
@@ -245,28 +254,28 @@ onUnmounted(() => {
             type="number"
             min="0"
             @input="savePresentationData(team.id)"
-          />
+          >
           <input
             v-if="presentationData[team.id]"
             v-model.number="presentationData[team.id].up"
             type="number"
             min="0"
             @input="savePresentationData(team.id)"
-          />
+          >
           <input
             v-if="presentationData[team.id]"
             v-model.number="presentationData[team.id].oneleg"
             type="number"
             min="0"
             @input="savePresentationData(team.id)"
-          />
+          >
           <input
             v-if="presentationData[team.id]"
             v-model.number="presentationData[team.id].single"
             type="number"
             min="0"
             @input="savePresentationData(team.id)"
-          />
+          >
           <div
             class="summary-chip cancellation-chip"
             :class="{ positive: getCancellationCount(team.id) < 0 }"
@@ -278,8 +287,11 @@ onUnmounted(() => {
       <div class="close-operations-section">
         <h3>Günlük Operasyonları Kapat</h3>
         <p>Bu işlem, seçilen tarih için tüm günlük operasyon verilerini sıfırlayacaktır.</p>
-        <button class="btn-close-day" @click="closeDailyOperations">
-          <i class="fas fa-calendar-times"></i> Turu Kapat ve Verileri Sıfırla
+        <button
+          class="btn-close-day"
+          @click="closeDailyOperations"
+        >
+          <i class="fas fa-calendar-times" /> Turu Kapat ve Verileri Sıfırla
         </button>
       </div>
     </div>

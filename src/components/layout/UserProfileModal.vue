@@ -39,36 +39,60 @@ const assignedFacilities = computed(() => {
 </script>
 
 <template>
-  <BaseModal :show="show" @close="$emit('close')">
+  <BaseModal
+    :show="show"
+    @close="$emit('close')"
+  >
     <template #header>
       <h3>Kullanıcı Profili</h3>
     </template>
 
-    <div v-if="currentUser" class="profile-modal-content">
+    <div
+      v-if="currentUser"
+      class="profile-modal-content"
+    >
       <img
         :src="
           currentUser.photoURL ||
-          `https://ui-avatars.com/api/?name=${currentUser.displayName}&background=random&color=fff`
+            `https://ui-avatars.com/api/?name=${currentUser.displayName}&background=random&color=fff`
         "
         alt="Avatar"
         class="modal-avatar"
-      />
-      <h2 class="modal-user-name">{{ currentUser.displayName }}</h2>
-      <p class="modal-email">{{ currentUser.email }}</p>
+      >
+      <h2 class="modal-user-name">
+        {{ currentUser.displayName }}
+      </h2>
+      <p class="modal-email">
+        {{ currentUser.email }}
+      </p>
 
       <div class="info-grid">
         <div class="info-item">
           <span class="label">Rol</span>
-          <span class="value role" :class="currentUser.role">{{ userRoleDisplay }}</span>
+          <span
+            class="value role"
+            :class="currentUser.role"
+          >{{ userRoleDisplay }}</span>
         </div>
         <div class="info-item">
           <span class="label">Atanmış Tesisler</span>
-          <div v-if="assignedFacilities.length > 0" class="value">
+          <div
+            v-if="assignedFacilities.length > 0"
+            class="value"
+          >
             <ul>
-              <li v-for="facility in assignedFacilities" :key="facility.id">{{ facility.name }}</li>
+              <li
+                v-for="facility in assignedFacilities"
+                :key="facility.id"
+              >
+                {{ facility.name }}
+              </li>
             </ul>
           </div>
-          <div v-else class="value">
+          <div
+            v-else
+            class="value"
+          >
             <p>Atanmış tesis yok.</p>
           </div>
         </div>

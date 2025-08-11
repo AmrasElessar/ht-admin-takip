@@ -18,9 +18,19 @@
           >
             <path
               d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-            ></path>
-            <line x1="12" y1="9" x2="12" y2="13"></line>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            />
+            <line
+              x1="12"
+              y1="9"
+              x2="12"
+              y2="13"
+            />
+            <line
+              x1="12"
+              y1="17"
+              x2="12.01"
+              y2="17"
+            />
           </svg>
           DİKKAT! BU İŞLEM GERİ ALINAMAZ!
         </h2>
@@ -35,7 +45,10 @@
         <div class="card">
           <h3>Günlük Verileri Sıfırla</h3>
           <p>Yalnızca 'dailyEntries' ve 'dailyBuses' koleksiyonlarındaki tüm verileri siler.</p>
-          <button :disabled="isLoading" @click="confirmReset('resetData')">
+          <button
+            :disabled="isLoading"
+            @click="confirmReset('resetData')"
+          >
             <span v-if="isLoading && currentReset === 'resetData'">SİLİNİYOR...</span>
             <span v-else>GÜNLÜK VERİLERİ SİL</span>
           </button>
@@ -43,7 +56,10 @@
         <div class="card">
           <h3>Ekipleri ve Verileri Sıfırla</h3>
           <p>'teams' koleksiyonunu ve tüm günlük verileri siler.</p>
-          <button :disabled="isLoading" @click="confirmReset('resetTeams')">
+          <button
+            :disabled="isLoading"
+            @click="confirmReset('resetTeams')"
+          >
             <span v-if="isLoading && currentReset === 'resetTeams'">SİLİNİYOR...</span>
             <span v-else>EKİPLERİ SİL</span>
           </button>
@@ -51,7 +67,10 @@
         <div class="card">
           <h3>Satış Gruplarını ve Ekipleri Sıfırla</h3>
           <p>'salesGroups', 'teams' ve tüm günlük verileri siler.</p>
-          <button :disabled="isLoading" @click="confirmReset('resetSalesGroups')">
+          <button
+            :disabled="isLoading"
+            @click="confirmReset('resetSalesGroups')"
+          >
             <span v-if="isLoading && currentReset === 'resetSalesGroups'">SİLİNİYOR...</span>
             <span v-else>SATIŞ GRUPLARINI SİL</span>
           </button>
@@ -73,7 +92,10 @@
         </div>
       </div>
 
-      <div v-if="message" :class="['message', { success: !isError, error: isError }]">
+      <div
+        v-if="message"
+        :class="['message', { success: !isError, error: isError }]"
+      >
         {{ message }}
       </div>
     </div>

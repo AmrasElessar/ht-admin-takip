@@ -40,46 +40,64 @@ const onStatusChange = (event) => {
 
 <template>
   <div>
-    <div v-if="currentUser" class="profile-widget" @click="showProfileCard = !showProfileCard">
+    <div
+      v-if="currentUser"
+      class="profile-widget"
+      @click="showProfileCard = !showProfileCard"
+    >
       <div class="profile-top">
         <img
           :src="
             currentUser.photoURL ||
-            `https://ui-avatars.com/api/?name=${currentUser.displayName}&background=random&color=fff`
+              `https://ui-avatars.com/api/?name=${currentUser.displayName}&background=random&color=fff`
           "
           alt="Avatar"
           class="avatar"
-        />
+        >
         <div class="user-details">
           <span class="user-name">{{ currentUser.displayName }}</span>
           <div class="status-container">
-            <span class="level-info"
-              >Level {{ userStore.currentUserRole === 'kurucu' ? 100 : xpStore.level }}</span
-            >
-            <span class="status-dot" :style="{ backgroundColor: currentStatusObject.color }"></span>
+            <span class="level-info">Level {{ userStore.currentUserRole === 'kurucu' ? 100 : xpStore.level }}</span>
+            <span
+              class="status-dot"
+              :style="{ backgroundColor: currentStatusObject.color }"
+            />
             <select
               :value="userStatus.availability"
               class="status-select"
               @change="onStatusChange"
               @click.stop
             >
-              <option v-for="status in statuses" :key="status.value" :value="status.value">
+              <option
+                v-for="status in statuses"
+                :key="status.value"
+                :value="status.value"
+              >
                 {{ status.text }}
               </option>
             </select>
           </div>
-          <span v-if="userStatus.statusMessage" class="status-message">
+          <span
+            v-if="userStatus.statusMessage"
+            class="status-message"
+          >
             {{ userStatus.statusMessage }}
           </span>
         </div>
       </div>
 
       <div class="xp-bar-wrapper">
-        <XPProgressBar size="small" :show-text="false" />
+        <XPProgressBar
+          size="small"
+          :show-text="false"
+        />
       </div>
     </div>
 
-    <UserProfileCard :show="showProfileCard" @close="showProfileCard = false" />
+    <UserProfileCard
+      :show="showProfileCard"
+      @close="showProfileCard = false"
+    />
   </div>
 </template>
 

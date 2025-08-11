@@ -228,19 +228,31 @@ onUnmounted(() => {
         :disabled="isLoading || totals.grand.total === 0"
         @click="openShareModal"
       >
-        <i class="fab fa-whatsapp"></i> WhatsApp ile Paylaş
+        <i class="fab fa-whatsapp" /> WhatsApp ile Paylaş
       </button>
     </div>
     <p>Ekip bazında misafir ve personel fiş sayılarını buradan girin.</p>
 
-    <div v-if="isLoading" class="loading">Veriler yükleniyor...</div>
-    <div v-else class="card">
+    <div
+      v-if="isLoading"
+      class="loading"
+    >
+      Veriler yükleniyor...
+    </div>
+    <div
+      v-else
+      class="card"
+    >
       <div class="data-grid">
         <div class="grid-row header">
-          <div class="team-name">Ekip Adı</div>
+          <div class="team-name">
+            Ekip Adı
+          </div>
           <div>Misafir Fiş</div>
           <div>Personel Fiş</div>
-          <div class="total-col">Ekip Toplam</div>
+          <div class="total-col">
+            Ekip Toplam
+          </div>
         </div>
 
         <div
@@ -251,40 +263,54 @@ onUnmounted(() => {
           <div class="grid-row group-header">
             {{ groupName }}
           </div>
-          <div v-for="team in teams" :key="team.id" class="grid-row">
-            <div class="team-name">{{ team.name }}</div>
+          <div
+            v-for="team in teams"
+            :key="team.id"
+            class="grid-row"
+          >
+            <div class="team-name">
+              {{ team.name }}
+            </div>
             <input
               v-model.number="dailyVoucherData[team.id].guestCount"
               type="number"
               min="0"
               @input="saveDataForTeam(team.id)"
-            />
+            >
             <input
               v-model.number="dailyVoucherData[team.id].staffCount"
               type="number"
               min="0"
               @input="saveDataForTeam(team.id)"
-            />
+            >
             <div class="total-col">
               {{
                 (dailyVoucherData[team.id].guestCount || 0) +
-                (dailyVoucherData[team.id].staffCount || 0)
+                  (dailyVoucherData[team.id].staffCount || 0)
               }}
             </div>
           </div>
           <div class="grid-row group-footer">
-            <div class="team-name">Grup Toplamı</div>
+            <div class="team-name">
+              Grup Toplamı
+            </div>
             <div>{{ totals.group[groupName]?.guest }}</div>
             <div>{{ totals.group[groupName]?.staff }}</div>
-            <div class="total-col">{{ totals.group[groupName]?.total }}</div>
+            <div class="total-col">
+              {{ totals.group[groupName]?.total }}
+            </div>
           </div>
         </div>
 
         <div class="grid-row grand-total">
-          <div class="team-name">GENEL TOPLAM</div>
+          <div class="team-name">
+            GENEL TOPLAM
+          </div>
           <div>{{ totals.grand.guest }}</div>
           <div>{{ totals.grand.staff }}</div>
-          <div class="total-col">{{ totals.grand.total }}</div>
+          <div class="total-col">
+            {{ totals.grand.total }}
+          </div>
         </div>
       </div>
     </div>

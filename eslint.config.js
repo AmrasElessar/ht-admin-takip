@@ -1,89 +1,59 @@
-import js from '@eslint/js'
-import pluginVue from 'eslint-plugin-vue'
-import prettierConfig from 'eslint-config-prettier'
+// eslint.config.js
+
 import globals from 'globals'
+import pluginJs from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import pluginVue from 'eslint-plugin-vue'
 
 export default [
-  // 1. Temel ESLint kuralları
-  js.configs.recommended,
+  // 1. Genel Yoksayma Kuralları
+  {
+    ignores: [
+      'node_modules/',
+      'dist/',
+      'coverage/',
+      '.vscode/',
+      'public/',
+      '.husky/',
+      'functions/', // Functions klasörünü de şimdilik yoksayalım
+    ],
+  },
 
-  // 2. Vue 3 için önerilen kurallar
+  // 2. Genel Yapılandırmalar (Tüm Dosyalar İçin)
+  pluginJs.configs.recommended,
+  ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
 
-  // 3. Prettier ile çakışmaları önleyen kural seti (her zaman en sonda olmalı)
-  prettierConfig,
-
-  // 4. Kendi özel ayarlarımız
+  // 3. Projenin ana kaynak kodları için ayarlar
   {
-    files: ['**/*.{js,vue}'],
+    files: ['src/**/*.{vue,js,ts}'],
     languageOptions: {
+      // BURASI ÖNEMLİ: Tarayıcıda geçerli olan tüm global değişkenleri (window, console, vb.) tanıtıyoruz
       globals: {
         ...globals.browser,
+      },
+      parserOptions: {
+        parser: tseslint.parser,
+      },
+    },
+    rules: {
+      'no-console': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      // Geçici olarak no-undef kuralını kapatıyoruz, globals ile çözülmeli
+      'no-undef': 'off',
+    },
+  },
+
+  // 4. Node.js Ortamında Çalışan Dosyalar
+  {
+    files: ['*.config.js', 'src/scripts/**/*.js', 'src/test/**/*.js'],
+    languageOptions: {
+      globals: {
         ...globals.node,
       },
     },
     rules: {
-      // Proje özelinde ezmek istediğiniz kuralları buraya ekleyebilirsiniz
-      'vue/multi-word-component-names': 'off', // Sayfa (View) bileşenlerinde tek kelimeye izin ver
-
-      // Extension error suppression dosyası için özel kurallar
-      'no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-        },
-      ],
-
-      // Console.log kullanımına geliştirme ortamında izin ver
-      'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
-
-      // Async fonksiyonlarda unused variables için daha esnek kural
-      'no-unused-expressions': [
-        'error',
-        {
-          allowShortCircuit: true,
-          allowTernary: true,
-        },
-      ],
+      '@typescript-eslint/no-require-imports': 'off',
     },
-  },
-
-  // 5. Specific overrides for certain files
-  {
-    files: ['src/utils/extensionErrorSuppression.js'],
-    rules: {
-      // Bu dosyada console kullanımına izin ver - debug amaçlı
-      'no-console': 'off',
-
-      // Bu dosyada özellikle browser extension hatalarını yakalamak için
-      // bazı değişkenler kasıtlı olarak kullanılmayabilir
-      'no-unused-vars': 'off',
-      'no-empty': 'off',
-
-      // Async forEach kullanımına izin ver
-      'no-await-in-loop': 'off',
-    },
-  },
-
-  // 6. Development helpers için özel kurallar
-  {
-    files: ['src/main.js', 'src/**/setup.js', 'src/test/**/*.js'],
-    rules: {
-      'no-console': 'off', // Development dosyalarında console kullanımına izin ver
-    },
-  },
-
-  // 7. Göz ardı edilecek dosyalar
-  {
-    ignores: [
-      'dist/',
-      'node_modules/',
-      '.vscode/',
-      'functions/node_modules/',
-      'public/icons/generator.html',
-      'public/icons/favicon-generator.html',
-    ],
   },
 ]

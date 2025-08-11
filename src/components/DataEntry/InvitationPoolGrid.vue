@@ -336,7 +336,9 @@ const updateInvitationStatusInFirestore = async (invitationToUpdate, newStatus) 
 
 <template>
   <div class="card live-pool-grid">
-    <div v-if="lotteryStore.isInvitationsLoading">Canlı havuz yükleniyor...</div>
+    <div v-if="lotteryStore.isInvitationsLoading">
+      Canlı havuz yükleniyor...
+    </div>
     <div v-else-if="!groupedTourInvitations && !groupedPrivateVehicleInvitations">
       Henüz gösterilecek davet kaydı bulunmamaktadır.
     </div>
@@ -359,7 +361,11 @@ const updateInvitationStatusInFirestore = async (invitationToUpdate, newStatus) 
                 :key="teamId"
                 class="team-row"
               >
-                <div v-for="i in 30" :key="i" class="slot-cell-wrapper">
+                <div
+                  v-for="i in 30"
+                  :key="i"
+                  class="slot-cell-wrapper"
+                >
                   <div
                     class="slot-cell"
                     :class="`status-${teamData.invitations?.find((inv) => inv.slot === i)?.status || 'empty'}`"
@@ -398,7 +404,11 @@ const updateInvitationStatusInFirestore = async (invitationToUpdate, newStatus) 
                 :key="teamId"
                 class="team-row"
               >
-                <div v-for="i in 30" :key="i" class="slot-cell-wrapper">
+                <div
+                  v-for="i in 30"
+                  :key="i"
+                  class="slot-cell-wrapper"
+                >
                   <div
                     class="slot-cell"
                     :class="`status-${teamData.invitations?.find((inv) => inv.slot === i)?.status || 'empty'}`"

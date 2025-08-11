@@ -175,26 +175,33 @@ const saveAndTransferData = async (poolType) => {
     isLoading.value = false
   }
 }
-
-const handleSaveChanges = ({ _newRecords }) => {
-  toast.info('30luk liste kaydetme özelliği henüz tamamlanmadı.')
-}
 </script>
 
 <template>
   <div>
     <div class="header">
       <h4>Manuel Davet Girişi (Özet)</h4>
-      <button class="btn-secondary" @click="showListModal = true">
-        <i class="fas fa-list-ol"></i> 30'luk Liste Hızlı Giriş
+      <button
+        class="btn-secondary"
+        @click="showListModal = true"
+      >
+        <i class="fas fa-list-ol" /> 30'luk Liste Hızlı Giriş
       </button>
     </div>
     <p class="description">
       Dağıtıcı ekiplerin günlük davet sayılarını toplu olarak girin. Her havuzun kendi "Kaydet"
       butonu, hem bu veriyi kaydeder hem de çekiliş havuzuna aktarır.
     </p>
-    <div v-if="isLoading" class="loading">Veriler Yükleniyor...</div>
-    <div v-else class="grid-layout">
+    <div
+      v-if="isLoading"
+      class="loading"
+    >
+      Veriler Yükleniyor...
+    </div>
+    <div
+      v-else
+      class="grid-layout"
+    >
       <InvitationGrid
         title="Tur Havuzu Girişi"
         :teams="distributorTeams"

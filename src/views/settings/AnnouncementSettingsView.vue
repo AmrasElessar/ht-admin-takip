@@ -49,8 +49,13 @@ onMounted(async () => {
   <div>
     <h2>Duyuru Yönetimi</h2>
     <p>Uygulamanın en üstünde kayan yazıda görünecek metni ve ayarlarını buradan düzenleyin.</p>
-    <div v-if="isLoading">Ayarlar yükleniyor...</div>
-    <div v-else class="card">
+    <div v-if="isLoading">
+      Ayarlar yükleniyor...
+    </div>
+    <div
+      v-else
+      class="card"
+    >
       <form @submit.prevent="saveSettings">
         <div class="settings-grid">
           <div class="form-group">
@@ -58,8 +63,11 @@ onMounted(async () => {
             <div class="toggle-container">
               <span>Kapalı</span>
               <label class="switch">
-                <input v-model="isEnabled" type="checkbox" />
-                <span class="slider round"></span>
+                <input
+                  v-model="isEnabled"
+                  type="checkbox"
+                >
+                <span class="slider round" />
               </label>
               <span>Açık</span>
             </div>
@@ -76,11 +84,11 @@ onMounted(async () => {
               min="1"
               max="25"
               class="speed-slider"
-            />
+            >
           </div>
         </div>
 
-        <hr class="separator" />
+        <hr class="separator">
 
         <div class="form-group">
           <label for="announcement-text">Duyuru Metni</label>
@@ -89,10 +97,15 @@ onMounted(async () => {
             v-model="announcementText"
             placeholder="Duyuru metnini buraya yazın..."
             rows="4"
-          ></textarea>
+          />
         </div>
 
-        <button type="submit" class="save-btn">Tüm Ayarları Kaydet</button>
+        <button
+          type="submit"
+          class="save-btn"
+        >
+          Tüm Ayarları Kaydet
+        </button>
       </form>
     </div>
   </div>

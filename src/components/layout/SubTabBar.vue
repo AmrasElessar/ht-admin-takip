@@ -20,7 +20,10 @@ const goToTab = (path) => {
 </script>
 
 <template>
-  <div v-if="tabStore.currentSubTabs.length > 0" class="sub-tab-bar">
+  <div
+    v-if="tabStore.currentSubTabs.length > 0"
+    class="sub-tab-bar"
+  >
     <div
       v-for="tab in tabStore.currentSubTabs"
       :key="tab.path"
@@ -28,7 +31,12 @@ const goToTab = (path) => {
       @click="goToTab(tab.path)"
     >
       <span>{{ tab.displayName }}</span>
-      <button class="close-btn" @click.stop="handleCloseTab(tab)">×</button>
+      <button
+        class="close-btn"
+        @click.stop="handleCloseTab(tab)"
+      >
+        ×
+      </button>
     </div>
   </div>
 </template>

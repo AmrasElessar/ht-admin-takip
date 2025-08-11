@@ -1,5 +1,8 @@
 <template>
-  <div v-if="lines > 1" class="skeleton-container">
+  <div
+    v-if="lines > 1"
+    class="skeleton-container"
+  >
     <div
       v-for="line in lines"
       :key="line"
@@ -7,7 +10,10 @@
       :style="skeletonStyles"
       class="skeleton-line"
     >
-      <div v-if="isShimmerAnimation" class="skeleton-shimmer"></div>
+      <div
+        v-if="isShimmerAnimation"
+        class="skeleton-shimmer"
+      />
     </div>
   </div>
   <div
@@ -18,7 +24,10 @@
     aria-live="polite"
     :aria-label="ariaLabel"
   >
-    <div v-if="isShimmerAnimation" class="skeleton-shimmer"></div>
+    <div
+      v-if="isShimmerAnimation"
+      class="skeleton-shimmer"
+    />
   </div>
 </template>
 

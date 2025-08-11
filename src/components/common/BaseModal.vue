@@ -1,11 +1,24 @@
 <template>
   <teleport to="body">
     <transition name="modal-fade">
-      <div v-if="show" class="modal-overlay" @click="$emit('close')">
-        <div class="modal-content" :class="{ 'x-large': isXLarge }" @click.stop>
-          <header v-if="title || $slots.header" class="modal-header">
+      <div
+        v-if="show"
+        class="modal-overlay"
+        @click="$emit('close')"
+      >
+        <div
+          class="modal-content"
+          :class="{ 'x-large': isXLarge }"
+          @click.stop
+        >
+          <header
+            v-if="title || $slots.header"
+            class="modal-header"
+          >
             <slot name="header">
-              <h2 class="modal-title">{{ title }}</h2>
+              <h2 class="modal-title">
+                {{ title }}
+              </h2>
             </slot>
             <button
               v-if="showCloseButton"
@@ -23,8 +36,11 @@
             </slot>
           </main>
 
-          <footer v-if="$slots.actions" class="modal-actions">
-            <slot name="actions"></slot>
+          <footer
+            v-if="$slots.actions"
+            class="modal-actions"
+          >
+            <slot name="actions" />
           </footer>
         </div>
       </div>

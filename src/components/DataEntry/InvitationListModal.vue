@@ -131,32 +131,56 @@ watch(
 </script>
 
 <template>
-  <BaseModal :show="show" :is-x-large="true" @close="$emit('close')">
+  <BaseModal
+    :show="show"
+    :is-x-large="true"
+    @close="$emit('close')"
+  >
     <template #header>
       <h3>30'luk Listeden Hızlı Giriş / Kontrol</h3>
     </template>
     <div class="pool-selector">
-      <label><input v-model="selectedPoolType" type="radio" value="tour" /> Tur Havuzu</label>
-      <label
-        ><input v-model="selectedPoolType" type="radio" value="privateVehicle" /> Kendi Araçlı
-        Havuzu</label
-      >
+      <label><input
+        v-model="selectedPoolType"
+        type="radio"
+        value="tour"
+      > Tur Havuzu</label>
+      <label><input
+        v-model="selectedPoolType"
+        type="radio"
+        value="privateVehicle"
+      > Kendi Araçlı
+        Havuzu</label>
     </div>
     <div class="grid-wrapper">
       <div class="team-column">
-        <div class="header-cell team-header">Ekip Adı</div>
-        <div v-for="team in distributorTeams" :key="team.id" class="team-name-cell">
+        <div class="header-cell team-header">
+          Ekip Adı
+        </div>
+        <div
+          v-for="team in distributorTeams"
+          :key="team.id"
+          class="team-name-cell"
+        >
           {{ team.name }}
         </div>
       </div>
       <div class="slots-scroll-container">
         <div class="slots-content">
           <div class="header-row">
-            <div v-for="i in totalSlots" :key="i" class="slot-column-header">
+            <div
+              v-for="i in totalSlots"
+              :key="i"
+              class="slot-column-header"
+            >
               {{ i }}
             </div>
           </div>
-          <div v-for="team in distributorTeams" :key="team.id" class="data-row">
+          <div
+            v-for="team in distributorTeams"
+            :key="team.id"
+            class="data-row"
+          >
             <div
               v-for="(item, index) in listData[selectedPoolType]?.[team.id] || []"
               :key="item.slot"
@@ -180,8 +204,18 @@ watch(
     </div>
     <template #actions>
       <div class="right-buttons">
-        <button class="btn-cancel" @click="$emit('close')">Kapat</button>
-        <button class="btn-confirm" @click="saveChanges">Değişiklikleri Kaydet</button>
+        <button
+          class="btn-cancel"
+          @click="$emit('close')"
+        >
+          Kapat
+        </button>
+        <button
+          class="btn-confirm"
+          @click="saveChanges"
+        >
+          Değişiklikleri Kaydet
+        </button>
       </div>
     </template>
   </BaseModal>

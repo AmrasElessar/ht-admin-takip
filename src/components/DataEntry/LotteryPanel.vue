@@ -17,7 +17,7 @@ import LotteryAnimation from './LotteryAnimation.vue'
       <div class="left-column">
         <div class="card">
           <h4>
-            <i class="fas fa-layer-group"></i>
+            <i class="fas fa-layer-group" />
             1. Mevcut Havuz Durumu
           </h4>
           <p>'Davet Girişi' ekranından aktarılan ve çekilişe uygun olan davetlerin genel durumu.</p>
@@ -26,7 +26,7 @@ import LotteryAnimation from './LotteryAnimation.vue'
 
         <div class="card">
           <h4>
-            <i class="fas fa-th-list"></i>
+            <i class="fas fa-th-list" />
             2. Canlı Davet Havuzu Gridleri
           </h4>
           <p>
@@ -38,7 +38,7 @@ import LotteryAnimation from './LotteryAnimation.vue'
 
         <div class="card">
           <h4>
-            <i class="fas fa-users"></i>
+            <i class="fas fa-users" />
             3. Ekip Atama Durumları
           </h4>
           <p>
@@ -51,7 +51,7 @@ import LotteryAnimation from './LotteryAnimation.vue'
       <div class="right-column">
         <div class="card">
           <h4>
-            <i class="fas fa-pencil-ruler"></i>
+            <i class="fas fa-pencil-ruler" />
             4. Çekiliş Kuralları Oluşturucu
           </h4>
           <p>Mevcut havuzdaki davetleri kapatıcı ekiplere dağıtmak için kurallar oluşturun.</p>
@@ -60,7 +60,7 @@ import LotteryAnimation from './LotteryAnimation.vue'
 
         <div class="card">
           <h4>
-            <i class="fas fa-tasks"></i>
+            <i class="fas fa-tasks" />
             5. Kurallar ve Sonuçlar
           </h4>
           <p>

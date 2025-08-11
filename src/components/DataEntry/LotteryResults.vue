@@ -30,9 +30,15 @@ const confirmAndSave = () => {
 
 <template>
   <div>
-    <div v-if="lotteryStore.rules.length > 0" class="rules-list card">
+    <div
+      v-if="lotteryStore.rules.length > 0"
+      class="rules-list card"
+    >
       <h5>Hazırlanan Kurallar</h5>
-      <TransitionGroup name="rule-list" tag="div">
+      <TransitionGroup
+        name="rule-list"
+        tag="div"
+      >
         <div
           v-for="rule in lotteryStore.rules"
           :key="rule.id"
@@ -40,16 +46,31 @@ const confirmAndSave = () => {
           :class="`status-${rule.status}`"
         >
           <div class="rule-main">
-            <span v-html="lotteryStore.sanitize(rule.description)"></span>
+            <span v-html="lotteryStore.sanitize(rule.description)" />
             <div class="rule-actions">
-              <button class="delete-btn" @click="lotteryStore.deleteRule(rule.id)">Sil</button>
+              <button
+                class="delete-btn"
+                @click="lotteryStore.deleteRule(rule.id)"
+              >
+                Sil
+              </button>
             </div>
           </div>
         </div>
       </TransitionGroup>
-      <button class="btn-run-lottery" :disabled="lotteryStore.isLotteryRunning" @click="runLottery">
-        <i v-if="!lotteryStore.isLotteryRunning" class="fas fa-play"></i>
-        <i v-else class="fas fa-spinner fa-spin"></i>
+      <button
+        class="btn-run-lottery"
+        :disabled="lotteryStore.isLotteryRunning"
+        @click="runLottery"
+      >
+        <i
+          v-if="!lotteryStore.isLotteryRunning"
+          class="fas fa-play"
+        />
+        <i
+          v-else
+          class="fas fa-spinner fa-spin"
+        />
         {{
           lotteryStore.isLotteryRunning ? 'Çekiliş Devam Ediyor...' : 'Kurallarla Çekilişi Başlat'
         }}
@@ -70,7 +91,7 @@ const confirmAndSave = () => {
           <summary>
             <span>
               <strong>Çekiliş Paketi #{{ index + 1 }}:</strong>
-              <span v-html="lotteryStore.sanitize(lotto.description)"></span>
+              <span v-html="lotteryStore.sanitize(lotto.description)" />
             </span>
             <button
               class="cancel-lotto-btn"
@@ -85,11 +106,9 @@ const confirmAndSave = () => {
               v-for="[teamId, invitations] in getRandomizedAssignments(lotto.assignments)"
               :key="teamId"
             >
-              <strong
-                >{{
-                  userStore.closingTeams.find((t) => t.id === teamId)?.name || 'Bilinmeyen Ekip'
-                }}:</strong
-              >
+              <strong>{{
+                userStore.closingTeams.find((t) => t.id === teamId)?.name || 'Bilinmeyen Ekip'
+              }}:</strong>
               <span>{{
                 invitations.map((i) => `${i.distributorTeamName}-${i.slot}`).join(', ')
               }}</span>
@@ -99,12 +118,15 @@ const confirmAndSave = () => {
       </div>
     </div>
 
-    <div v-if="lotteryStore.completedLotteries.length > 0" class="card final-actions">
+    <div
+      v-if="lotteryStore.completedLotteries.length > 0"
+      class="card final-actions"
+    >
       <button
         :disabled="lotteryStore.isSaving || lotteryStore.isLotteryRunning"
         @click="confirmAndSave"
       >
-        <i class="fas fa-check-double"></i>
+        <i class="fas fa-check-double" />
         {{
           lotteryStore.isSaving ? 'Kaydediliyor...' : 'Tüm Çekilişleri Onayla ve Veritabanına Aktar'
         }}

@@ -185,49 +185,84 @@ onUnmounted(() => {
     <div class="header">
       <h3>Günlük Otobüs Yönetimi</h3>
       <div>
-        <button class="btn-primary" @click="openAddBusModal">
-          <i class="fas fa-plus"></i> Yeni Otobüs Ekle
+        <button
+          class="btn-primary"
+          @click="openAddBusModal"
+        >
+          <i class="fas fa-plus" /> Yeni Otobüs Ekle
         </button>
         <button
           class="whatsapp-share-btn"
           :disabled="dailyBuses.length === 0"
           @click="openShareModal"
         >
-          <i class="fab fa-whatsapp"></i> WhatsApp ile Paylaş
+          <i class="fab fa-whatsapp" /> WhatsApp ile Paylaş
         </button>
       </div>
     </div>
-    <div v-if="dailyBuses.length === 0" class="no-data">Bu tarihe ait otobüs kaydı yok.</div>
-    <div v-else class="accordion-container">
-      <div v-for="bus in dailyBuses" :key="bus.id" class="accordion-item">
-        <div class="accordion-header" @click="toggleBusAccordion(bus.id)">
+    <div
+      v-if="dailyBuses.length === 0"
+      class="no-data"
+    >
+      Bu tarihe ait otobüs kaydı yok.
+    </div>
+    <div
+      v-else
+      class="accordion-container"
+    >
+      <div
+        v-for="bus in dailyBuses"
+        :key="bus.id"
+        class="accordion-item"
+      >
+        <div
+          class="accordion-header"
+          @click="toggleBusAccordion(bus.id)"
+        >
           <div class="bus-info">
-            <i class="fas fa-bus-alt bus-icon"></i>
+            <i class="fas fa-bus-alt bus-icon" />
             <div>
               <strong>Plaka: {{ bus.plate }}</strong>
               <small>Güzergah: {{ bus.startPoint }} -> {{ bus.endPoint }}</small>
               <small v-if="bus.driverName">Şoför: {{ bus.driverName }}</small>
             </div>
           </div>
-          <div class="passenger-summary" :class="{ 'over-capacity': isCapacityExceeded(bus) }">
+          <div
+            class="passenger-summary"
+            :class="{ 'over-capacity': isCapacityExceeded(bus) }"
+          >
             <strong>{{ totalPassengersOnBus(bus) }}</strong> / {{ bus.capacity || '∞' }}
           </div>
           <div class="actions">
-            <button class="delete-btn" title="Otobüsü Sil" @click.stop="deleteBus(bus.id)">
-              <i class="fas fa-trash"></i>
+            <button
+              class="delete-btn"
+              title="Otobüsü Sil"
+              @click.stop="deleteBus(bus.id)"
+            >
+              <i class="fas fa-trash" />
             </button>
             <i
               class="fas fa-chevron-down expand-icon"
               :class="{ 'is-open': openBusIds.includes(bus.id) }"
-            ></i>
+            />
           </div>
         </div>
-        <div v-if="openBusIds.includes(bus.id)" class="accordion-content">
-          <p v-if="isCapacityExceeded(bus)" class="error-message">
-            <i class="fas fa-exclamation-triangle"></i> Uyarı: Otobüs kapasitesi aşıldı!
+        <div
+          v-if="openBusIds.includes(bus.id)"
+          class="accordion-content"
+        >
+          <p
+            v-if="isCapacityExceeded(bus)"
+            class="error-message"
+          >
+            <i class="fas fa-exclamation-triangle" /> Uyarı: Otobüs kapasitesi aşıldı!
           </p>
           <div class="passenger-entry-grid">
-            <div v-for="team in teams" :key="team.id" class="passenger-team-row">
+            <div
+              v-for="team in teams"
+              :key="team.id"
+              class="passenger-team-row"
+            >
               <label>{{ team.name }}</label>
               <input
                 v-model.number="bus.passengers[team.id]"
@@ -235,33 +270,64 @@ onUnmounted(() => {
                 min="0"
                 placeholder="0"
                 @input="saveBusData"
-              />
+              >
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <BaseModal :show="showBusModal" @close="cancelAddBus">
-      <template #header><h3>Yeni Otobüs Ekle</h3></template>
+    <BaseModal
+      :show="showBusModal"
+      @close="cancelAddBus"
+    >
+      <template #header>
+        <h3>Yeni Otobüs Ekle</h3>
+      </template>
       <form @submit.prevent="addBus">
-        <div class="form-group"><label>Plaka</label><input v-model="newBus.plate" required /></div>
         <div class="form-group">
-          <label>Şoför Adı (İsteğe Bağlı)</label><input v-model="newBus.driverName" />
+          <label>Plaka</label><input
+            v-model="newBus.plate"
+            required
+          >
         </div>
         <div class="form-group">
-          <label>Başlangıç Noktası</label><input v-model="newBus.startPoint" required />
+          <label>Şoför Adı (İsteğe Bağlı)</label><input v-model="newBus.driverName">
         </div>
         <div class="form-group">
-          <label>Varış Noktası</label><input v-model="newBus.endPoint" required />
+          <label>Başlangıç Noktası</label><input
+            v-model="newBus.startPoint"
+            required
+          >
         </div>
         <div class="form-group">
-          <label>Kapasite</label><input v-model.number="newBus.capacity" type="number" min="1" />
+          <label>Varış Noktası</label><input
+            v-model="newBus.endPoint"
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label>Kapasite</label><input
+            v-model.number="newBus.capacity"
+            type="number"
+            min="1"
+          >
         </div>
       </form>
       <template #actions>
-        <button type="button" class="btn-cancel" @click="cancelAddBus">İptal</button>
-        <button class="btn-confirm" @click="addBus">Ekle</button>
+        <button
+          type="button"
+          class="btn-cancel"
+          @click="cancelAddBus"
+        >
+          İptal
+        </button>
+        <button
+          class="btn-confirm"
+          @click="addBus"
+        >
+          Ekle
+        </button>
       </template>
     </BaseModal>
 

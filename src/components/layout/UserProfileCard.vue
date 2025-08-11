@@ -43,20 +43,32 @@ const assignedFacilities = computed(() => {
 </script>
 
 <template>
-  <div v-if="show" class="profile-card-overlay" @click.self="$emit('close')">
+  <div
+    v-if="show"
+    class="profile-card-overlay"
+    @click.self="$emit('close')"
+  >
     <div class="profile-card">
       <div class="card-header">
         <h4>Profil Kartı</h4>
-        <button class="close-btn" @click="$emit('close')">×</button>
+        <button
+          class="close-btn"
+          @click="$emit('close')"
+        >
+          ×
+        </button>
       </div>
-      <div v-if="currentUser" class="card-content">
+      <div
+        v-if="currentUser"
+        class="card-content"
+      >
         <input
           v-model="statusMessage"
           type="text"
           class="status-input"
           placeholder="Durum mesajı yazın..."
           @input="onMessageInput"
-        />
+        >
         <div class="info-item">
           <span class="label">Rol</span>
           <span class="value">{{ currentUser.role }}</span>
@@ -64,7 +76,11 @@ const assignedFacilities = computed(() => {
         <div class="info-item">
           <span class="label">Atanmış Tesisler</span>
           <div class="value tags">
-            <span v-for="facility in assignedFacilities" :key="facility" class="tag">
+            <span
+              v-for="facility in assignedFacilities"
+              :key="facility"
+              class="tag"
+            >
               {{ facility }}
             </span>
             <span v-if="assignedFacilities.length === 0">Yok</span>

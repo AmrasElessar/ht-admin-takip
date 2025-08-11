@@ -87,10 +87,19 @@ watch(selectedBaseThemeId, (newThemeId) => {
   <div>
     <h2>Profilim</h2>
     <p>Kişisel bilgilerinizi buradan düzenleyebilirsiniz.</p>
-    <div v-if="isLoading">Yükleniyor...</div>
-    <div v-else class="card">
+    <div v-if="isLoading">
+      Yükleniyor...
+    </div>
+    <div
+      v-else
+      class="card"
+    >
       <h3>Kişisel Bilgiler</h3>
-      <Form v-slot="{ meta }" class="profile-form" @submit="saveProfile">
+      <Form
+        v-slot="{ meta }"
+        class="profile-form"
+        @submit="saveProfile"
+      >
         <div class="form-grid">
           <div class="form-group">
             <label for="firstName">Ad</label>
@@ -101,7 +110,10 @@ watch(selectedBaseThemeId, (newThemeId) => {
               type="text"
               :rules="isRequired"
             />
-            <ErrorMessage name="firstName" class="error-message" />
+            <ErrorMessage
+              name="firstName"
+              class="error-message"
+            />
           </div>
           <div class="form-group">
             <label for="lastName">Soyad</label>
@@ -112,34 +124,72 @@ watch(selectedBaseThemeId, (newThemeId) => {
               type="text"
               :rules="isRequired"
             />
-            <ErrorMessage name="lastName" class="error-message" />
+            <ErrorMessage
+              name="lastName"
+              class="error-message"
+            />
           </div>
           <div class="form-group">
             <label for="username">Kullanıcı Adı</label>
-            <Field id="username" v-model="profileData.username" name="username" type="text" />
+            <Field
+              id="username"
+              v-model="profileData.username"
+              name="username"
+              type="text"
+            />
           </div>
           <div class="form-group">
             <label for="gender">Cinsiyet</label>
-            <Field id="gender" v-model="profileData.gender" name="gender" as="select">
-              <option value="">Belirtilmemiş</option>
-              <option value="male">Erkek</option>
-              <option value="female">Kadın</option>
+            <Field
+              id="gender"
+              v-model="profileData.gender"
+              name="gender"
+              as="select"
+            >
+              <option value="">
+                Belirtilmemiş
+              </option>
+              <option value="male">
+                Erkek
+              </option>
+              <option value="female">
+                Kadın
+              </option>
             </Field>
           </div>
         </div>
-        <hr class="separator" />
+        <hr class="separator">
         <h3>Tema Seçimi</h3>
         <div class="form-group">
           <label for="theme-select">Uygulama Teması (Açık Mod)</label>
-          <select id="theme-select" v-model="selectedBaseThemeId" class="profile-select">
-            <option v-for="theme in themeStore.themes" :key="theme.id" :value="theme.id">
+          <select
+            id="theme-select"
+            v-model="selectedBaseThemeId"
+            class="profile-select"
+          >
+            <option
+              v-for="theme in themeStore.themes"
+              :key="theme.id"
+              :value="theme.id"
+            >
               {{ theme.name }}
             </option>
           </select>
         </div>
 
-        <button type="submit" class="save-btn" :disabled="!meta.valid">Bilgileri Güncelle</button>
-        <p v-if="successMessage" class="message success">{{ successMessage }}</p>
+        <button
+          type="submit"
+          class="save-btn"
+          :disabled="!meta.valid"
+        >
+          Bilgileri Güncelle
+        </button>
+        <p
+          v-if="successMessage"
+          class="message success"
+        >
+          {{ successMessage }}
+        </p>
       </Form>
     </div>
   </div>

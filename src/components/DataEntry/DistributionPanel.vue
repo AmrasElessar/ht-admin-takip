@@ -260,19 +260,46 @@ onUnmounted(() => {
       sayıları. Net Toplam, Masa Sayımı ekranına yansır.
     </p>
 
-    <div v-if="isLoading" class="loading">Sonuçlar Yükleniyor...</div>
-    <div v-else-if="reportData.length === 0" class="no-data">
+    <div
+      v-if="isLoading"
+      class="loading"
+    >
+      Sonuçlar Yükleniyor...
+    </div>
+    <div
+      v-else-if="reportData.length === 0"
+      class="no-data"
+    >
       Bu tarih için gösterilecek dağıtım verisi bulunmuyor.
     </div>
-    <div v-else class="table-container">
+    <div
+      v-else
+      class="table-container"
+    >
       <table class="reports-table">
         <thead>
           <tr>
-            <th rowspan="2">Ekip Adı</th>
-            <th colspan="3">Çekilişten Gelen</th>
-            <th colspan="3">Tesise Gelen</th>
-            <th colspan="3" class="cancel-col-header">İptal (Manuel Giriş)</th>
-            <th colspan="3" class="total-col-header">Net Toplam (Masaya Giden)</th>
+            <th rowspan="2">
+              Ekip Adı
+            </th>
+            <th colspan="3">
+              Çekilişten Gelen
+            </th>
+            <th colspan="3">
+              Tesise Gelen
+            </th>
+            <th
+              colspan="3"
+              class="cancel-col-header"
+            >
+              İptal (Manuel Giriş)
+            </th>
+            <th
+              colspan="3"
+              class="total-col-header"
+            >
+              Net Toplam (Masaya Giden)
+            </th>
           </tr>
           <tr>
             <th>UP</th>
@@ -281,20 +308,42 @@ onUnmounted(() => {
             <th>UP</th>
             <th>Oneleg</th>
             <th>Single</th>
-            <th class="cancel-col-header">UP</th>
-            <th class="cancel-col-header">Oneleg</th>
-            <th class="cancel-col-header">Single</th>
-            <th class="total-col-header">UP</th>
-            <th class="total-col-header">Oneleg</th>
-            <th class="total-col-header">Single</th>
+            <th class="cancel-col-header">
+              UP
+            </th>
+            <th class="cancel-col-header">
+              Oneleg
+            </th>
+            <th class="cancel-col-header">
+              Single
+            </th>
+            <th class="total-col-header">
+              UP
+            </th>
+            <th class="total-col-header">
+              Oneleg
+            </th>
+            <th class="total-col-header">
+              Single
+            </th>
           </tr>
         </thead>
-        <tbody v-for="(teams, groupName) in groupedReportData" :key="groupName">
+        <tbody
+          v-for="(teams, groupName) in groupedReportData"
+          :key="groupName"
+        >
           <tr class="group-header-row">
-            <th :colspan="12">{{ groupName }}</th>
+            <th :colspan="12">
+              {{ groupName }}
+            </th>
           </tr>
-          <tr v-for="row in teams" :key="row.teamId">
-            <td class="team-name">{{ row.teamName }}</td>
+          <tr
+            v-for="row in teams"
+            :key="row.teamId"
+          >
+            <td class="team-name">
+              {{ row.teamName }}
+            </td>
             <td>{{ row.lottoUp }}</td>
             <td>{{ row.lottoOneleg }}</td>
             <td>{{ row.lottoSingle }}</td>
@@ -307,7 +356,7 @@ onUnmounted(() => {
                 type="number"
                 min="0"
                 @input="saveCancellationData(row.teamId)"
-              />
+              >
             </td>
             <td class="cancel-col">
               <input
@@ -315,7 +364,7 @@ onUnmounted(() => {
                 type="number"
                 min="0"
                 @input="saveCancellationData(row.teamId)"
-              />
+              >
             </td>
             <td class="cancel-col">
               <input
@@ -323,43 +372,77 @@ onUnmounted(() => {
                 type="number"
                 min="0"
                 @input="saveCancellationData(row.teamId)"
-              />
+              >
             </td>
-            <td class="total-col">{{ row.netUp }}</td>
-            <td class="total-col">{{ row.netOneleg }}</td>
-            <td class="total-col">{{ row.netSingle }}</td>
+            <td class="total-col">
+              {{ row.netUp }}
+            </td>
+            <td class="total-col">
+              {{ row.netOneleg }}
+            </td>
+            <td class="total-col">
+              {{ row.netSingle }}
+            </td>
           </tr>
           <tr class="group-footer-row">
-            <td class="team-name">Grup Toplamı</td>
+            <td class="team-name">
+              Grup Toplamı
+            </td>
             <td>{{ reportTotals.group[groupName]?.lottoUp }}</td>
             <td>{{ reportTotals.group[groupName]?.lottoOneleg }}</td>
             <td>{{ reportTotals.group[groupName]?.lottoSingle }}</td>
             <td>{{ reportTotals.group[groupName]?.guestUp }}</td>
             <td>{{ reportTotals.group[groupName]?.guestOneleg }}</td>
             <td>{{ reportTotals.group[groupName]?.guestSingle }}</td>
-            <td class="cancel-col">{{ reportTotals.group[groupName]?.cancelledUp }}</td>
-            <td class="cancel-col">{{ reportTotals.group[groupName]?.cancelledOneleg }}</td>
-            <td class="cancel-col">{{ reportTotals.group[groupName]?.cancelledSingle }}</td>
-            <td class="total-col">{{ reportTotals.group[groupName]?.netUp }}</td>
-            <td class="total-col">{{ reportTotals.group[groupName]?.netOneleg }}</td>
-            <td class="total-col">{{ reportTotals.group[groupName]?.netSingle }}</td>
+            <td class="cancel-col">
+              {{ reportTotals.group[groupName]?.cancelledUp }}
+            </td>
+            <td class="cancel-col">
+              {{ reportTotals.group[groupName]?.cancelledOneleg }}
+            </td>
+            <td class="cancel-col">
+              {{ reportTotals.group[groupName]?.cancelledSingle }}
+            </td>
+            <td class="total-col">
+              {{ reportTotals.group[groupName]?.netUp }}
+            </td>
+            <td class="total-col">
+              {{ reportTotals.group[groupName]?.netOneleg }}
+            </td>
+            <td class="total-col">
+              {{ reportTotals.group[groupName]?.netSingle }}
+            </td>
           </tr>
         </tbody>
         <tfoot>
           <tr class="grand-total-row">
-            <td class="team-name">GENEL TOPLAM</td>
+            <td class="team-name">
+              GENEL TOPLAM
+            </td>
             <td>{{ reportTotals.grand.lottoUp }}</td>
             <td>{{ reportTotals.grand.lottoOneleg }}</td>
             <td>{{ reportTotals.grand.lottoSingle }}</td>
             <td>{{ reportTotals.grand.guestUp }}</td>
             <td>{{ reportTotals.grand.guestOneleg }}</td>
             <td>{{ reportTotals.grand.guestSingle }}</td>
-            <td class="cancel-col">{{ reportTotals.grand.cancelledUp }}</td>
-            <td class="cancel-col">{{ reportTotals.grand.cancelledOneleg }}</td>
-            <td class="cancel-col">{{ reportTotals.grand.cancelledSingle }}</td>
-            <td class="total-col">{{ reportTotals.grand.netUp }}</td>
-            <td class="total-col">{{ reportTotals.grand.netOneleg }}</td>
-            <td class="total-col">{{ reportTotals.grand.netSingle }}</td>
+            <td class="cancel-col">
+              {{ reportTotals.grand.cancelledUp }}
+            </td>
+            <td class="cancel-col">
+              {{ reportTotals.grand.cancelledOneleg }}
+            </td>
+            <td class="cancel-col">
+              {{ reportTotals.grand.cancelledSingle }}
+            </td>
+            <td class="total-col">
+              {{ reportTotals.grand.netUp }}
+            </td>
+            <td class="total-col">
+              {{ reportTotals.grand.netOneleg }}
+            </td>
+            <td class="total-col">
+              {{ reportTotals.grand.netSingle }}
+            </td>
           </tr>
         </tfoot>
       </table>

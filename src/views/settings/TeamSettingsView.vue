@@ -238,17 +238,29 @@ onMounted(() => {
     <div class="card data-actions-card">
       <h3>Toplu Veri İşlemleri</h3>
       <div class="button-group">
-        <button class="btn-secondary" @click="downloadTemplate">
-          <i class="fas fa-file-alt"></i> Boş Şablon İndir
+        <button
+          class="btn-secondary"
+          @click="downloadTemplate"
+        >
+          <i class="fas fa-file-alt" /> Boş Şablon İndir
         </button>
-        <button class="btn-success" @click="triggerFileUpload">
-          <i class="fas fa-file-import"></i> CSV'den İçe Aktar
+        <button
+          class="btn-success"
+          @click="triggerFileUpload"
+        >
+          <i class="fas fa-file-import" /> CSV'den İçe Aktar
         </button>
-        <button class="btn-info" @click="exportData">
-          <i class="fas fa-file-export"></i> Tümünü Dışa Aktar
+        <button
+          class="btn-info"
+          @click="exportData"
+        >
+          <i class="fas fa-file-export" /> Tümünü Dışa Aktar
         </button>
-        <button class="btn-danger" @click="confirmClearAllData">
-          <i class="fas fa-trash-alt"></i> Tüm Ekipleri Sil
+        <button
+          class="btn-danger"
+          @click="confirmClearAllData"
+        >
+          <i class="fas fa-trash-alt" /> Tüm Ekipleri Sil
         </button>
       </div>
       <input
@@ -257,62 +269,149 @@ onMounted(() => {
         style="display: none"
         accept=".csv"
         @change="handleFileUpload"
-      />
+      >
     </div>
 
     <div class="card">
       <h3>Ekip Ekle / Düzenle</h3>
-      <Form v-slot="{ meta }" class="add-form-grid" @submit="addTeam">
+      <Form
+        v-slot="{ meta }"
+        class="add-form-grid"
+        @submit="addTeam"
+      >
         <div class="form-field">
-          <Field name="newTeamName" type="text" placeholder="Yeni ekip adı" :rules="isRequired" />
-          <ErrorMessage name="newTeamName" class="error-message" />
+          <Field
+            name="newTeamName"
+            type="text"
+            placeholder="Yeni ekip adı"
+            :rules="isRequired"
+          />
+          <ErrorMessage
+            name="newTeamName"
+            class="error-message"
+          />
         </div>
         <div class="form-field">
-          <Field name="selectedFacility" as="select" :rules="isRequired" initial-value="">
-            <option disabled value="">Tesis Seçin</option>
-            <option v-for="facility in facilities" :key="facility.id" :value="facility.id">
+          <Field
+            name="selectedFacility"
+            as="select"
+            :rules="isRequired"
+            initial-value=""
+          >
+            <option
+              disabled
+              value=""
+            >
+              Tesis Seçin
+            </option>
+            <option
+              v-for="facility in facilities"
+              :key="facility.id"
+              :value="facility.id"
+            >
               {{ facility.name }}
             </option>
           </Field>
-          <ErrorMessage name="selectedFacility" class="error-message" />
+          <ErrorMessage
+            name="selectedFacility"
+            class="error-message"
+          />
         </div>
         <div class="form-field">
-          <Field name="selectedSalesGroup" as="select" :rules="isRequired" initial-value="">
-            <option disabled value="">Satış Grubu Seçin</option>
-            <option v-for="group in salesGroups" :key="group.id" :value="group.id">
+          <Field
+            name="selectedSalesGroup"
+            as="select"
+            :rules="isRequired"
+            initial-value=""
+          >
+            <option
+              disabled
+              value=""
+            >
+              Satış Grubu Seçin
+            </option>
+            <option
+              v-for="group in salesGroups"
+              :key="group.id"
+              :value="group.id"
+            >
               {{ group.name }}
             </option>
           </Field>
-          <ErrorMessage name="selectedSalesGroup" class="error-message" />
+          <ErrorMessage
+            name="selectedSalesGroup"
+            class="error-message"
+          />
         </div>
-        <button type="submit" :disabled="!meta.valid">Ekip Ekle</button>
+        <button
+          type="submit"
+          :disabled="!meta.valid"
+        >
+          Ekip Ekle
+        </button>
       </Form>
 
       <div class="accordion-container">
-        <div v-for="facility in groupedAndSortedTeams" :key="facility.id" class="accordion-item">
-          <div class="accordion-header" @click="toggleFacility(facility.id)">
-            <span><i class="fas fa-building"></i> {{ facility.name }}</span>
+        <div
+          v-for="facility in groupedAndSortedTeams"
+          :key="facility.id"
+          class="accordion-item"
+        >
+          <div
+            class="accordion-header"
+            @click="toggleFacility(facility.id)"
+          >
+            <span><i class="fas fa-building" /> {{ facility.name }}</span>
             <i
               class="fas fa-chevron-down"
               :class="{ 'is-open': openFacilityIds.includes(facility.id) }"
-            ></i>
+            />
           </div>
-          <div v-if="openFacilityIds.includes(facility.id)" class="accordion-content">
-            <div v-for="group in facility.groups" :key="group.id" class="accordion-item-inner">
-              <div class="accordion-header-inner" @click="toggleGroup(group.id)">
-                <span><i class="fas fa-users"></i> {{ group.name }}</span>
+          <div
+            v-if="openFacilityIds.includes(facility.id)"
+            class="accordion-content"
+          >
+            <div
+              v-for="group in facility.groups"
+              :key="group.id"
+              class="accordion-item-inner"
+            >
+              <div
+                class="accordion-header-inner"
+                @click="toggleGroup(group.id)"
+              >
+                <span><i class="fas fa-users" /> {{ group.name }}</span>
                 <i
                   class="fas fa-chevron-down"
                   :class="{ 'is-open': openGroupIds.includes(group.id) }"
-                ></i>
+                />
               </div>
-              <ul v-if="openGroupIds.includes(group.id)" class="team-list">
-                <li v-for="team in group.teams" :key="team.id">
-                  <div v-if="editingTeam?.id !== team.id" class="team-display">
+              <ul
+                v-if="openGroupIds.includes(group.id)"
+                class="team-list"
+              >
+                <li
+                  v-for="team in group.teams"
+                  :key="team.id"
+                >
+                  <div
+                    v-if="editingTeam?.id !== team.id"
+                    class="team-display"
+                  >
                     <span>{{ team.name }}</span>
                     <div class="actions">
-                      <button class="edit-btn" @click="startEdit(team)">Düzenle</button>
-                      <button class="delete-btn" @click="deleteTeam(team.id)">Sil</button>
+                      <button
+                        class="edit-btn"
+                        @click="startEdit(team)"
+                      >
+                        Düzenle
+                      </button>
+                      <button
+                        class="delete-btn"
+                        @click="deleteTeam(team.id)"
+                      >
+                        Sil
+                      </button>
                     </div>
                   </div>
                   <Form
@@ -322,14 +421,23 @@ onMounted(() => {
                     :initial-values="editingTeam"
                     @submit="saveEdit"
                   >
-                    <Field v-model="editingTeam.name" name="name" type="text" :rules="isRequired" />
+                    <Field
+                      v-model="editingTeam.name"
+                      name="name"
+                      type="text"
+                      :rules="isRequired"
+                    />
                     <Field
                       v-model="editingTeam.facilityId"
                       name="facilityId"
                       as="select"
                       :rules="isRequired"
                     >
-                      <option v-for="f in facilities" :key="f.id" :value="f.id">
+                      <option
+                        v-for="f in facilities"
+                        :key="f.id"
+                        :value="f.id"
+                      >
                         {{ f.name }}
                       </option>
                     </Field>
@@ -339,15 +447,29 @@ onMounted(() => {
                       as="select"
                       :rules="isRequired"
                     >
-                      <option v-for="g in salesGroups" :key="g.id" :value="g.id">
+                      <option
+                        v-for="g in salesGroups"
+                        :key="g.id"
+                        :value="g.id"
+                      >
                         {{ g.name }}
                       </option>
                     </Field>
                     <div class="actions">
-                      <button class="save-btn" type="submit" :disabled="!meta.valid || !meta.dirty">
+                      <button
+                        class="save-btn"
+                        type="submit"
+                        :disabled="!meta.valid || !meta.dirty"
+                      >
                         Kaydet
                       </button>
-                      <button type="button" class="cancel-btn" @click="cancelEdit">İptal</button>
+                      <button
+                        type="button"
+                        class="cancel-btn"
+                        @click="cancelEdit"
+                      >
+                        İptal
+                      </button>
                     </div>
                   </Form>
                 </li>

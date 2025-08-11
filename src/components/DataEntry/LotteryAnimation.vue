@@ -28,10 +28,16 @@ const teamAssignments = computed(() => {
 
 <template>
   <Transition name="fade">
-    <div v-if="lotteryStore.isLotteryRunning" class="animation-overlay">
+    <div
+      v-if="lotteryStore.isLotteryRunning"
+      class="animation-overlay"
+    >
       <div class="animation-container">
-        <div v-if="lotteryStore.currentRuleForAnimation" class="rule-display">
-          <p v-html="lotteryStore.currentRuleForAnimation.description"></p>
+        <div
+          v-if="lotteryStore.currentRuleForAnimation"
+          class="rule-display"
+        >
+          <p v-html="lotteryStore.currentRuleForAnimation.description" />
         </div>
 
         <div class="source-pool">
@@ -44,9 +50,7 @@ const teamAssignments = computed(() => {
               :class="`type-${inv.type}`"
             >
               <span class="inv-type">{{ inv.type.toUpperCase() }}</span>
-              <span class="inv-source-short"
-                >{{ inv.distributorTeamName.substring(0, 4) }}-{{ inv.slot }}</span
-              >
+              <span class="inv-source-short">{{ inv.distributorTeamName.substring(0, 4) }}-{{ inv.slot }}</span>
             </div>
           </TransitionGroup>
         </div>
@@ -57,8 +61,14 @@ const teamAssignments = computed(() => {
             :key="team.id"
             class="team-box"
           >
-            <div class="team-name">{{ team.name }}</div>
-            <TransitionGroup name="distribute-item" tag="div" class="received-invitations">
+            <div class="team-name">
+              {{ team.name }}
+            </div>
+            <TransitionGroup
+              name="distribute-item"
+              tag="div"
+              class="received-invitations"
+            >
               <div
                 v-for="item in teamAssignments[team.id]"
                 :key="item.id"

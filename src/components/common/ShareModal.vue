@@ -19,20 +19,35 @@ const emit = defineEmits(['close', 'share'])
 </script>
 
 <template>
-  <BaseModal :show="show" @close="emit('close')">
+  <BaseModal
+    :show="show"
+    @close="emit('close')"
+  >
     <template #header>
       <h3 class="modal-title">
-        <i class="fab fa-whatsapp"></i>
+        <i class="fab fa-whatsapp" />
         {{ title }}
       </h3>
     </template>
 
-    <textarea readonly class="share-textarea" :value="shareText"></textarea>
+    <textarea
+      readonly
+      class="share-textarea"
+      :value="shareText"
+    />
 
     <template #actions>
-      <button class="btn-cancel" @click="emit('close')">Kapat</button>
-      <button class="btn-share" @click="emit('share')">
-        <i class="fas fa-share-alt"></i> Paylaş
+      <button
+        class="btn-cancel"
+        @click="emit('close')"
+      >
+        Kapat
+      </button>
+      <button
+        class="btn-share"
+        @click="emit('share')"
+      >
+        <i class="fas fa-share-alt" /> Paylaş
       </button>
     </template>
   </BaseModal>

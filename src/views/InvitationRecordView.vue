@@ -159,31 +159,53 @@ watchEffect(() => {
     <div class="page-header">
       <h2>Davet Kayıt Takibi</h2>
       <div class="header-actions">
-        <button class="btn-secondary" @click="handleExport">
-          <i class="fas fa-download"></i> Dışa Aktar
+        <button
+          class="btn-secondary"
+          @click="handleExport"
+        >
+          <i class="fas fa-download" /> Dışa Aktar
         </button>
       </div>
     </div>
 
-    <div v-if="isLoading" class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
+    <div
+      v-if="isLoading"
+      class="loading-state"
+    >
+      <i class="fas fa-spinner fa-spin" />
       Kayıtlar yükleniyor...
     </div>
 
-    <div v-else-if="!records || records.length === 0" class="empty-state">
-      <i class="fas fa-inbox"></i>
+    <div
+      v-else-if="!records || records.length === 0"
+      class="empty-state"
+    >
+      <i class="fas fa-inbox" />
       <p>Henüz davet kaydı bulunmuyor.</p>
     </div>
 
     <div v-else>
-      <div v-for="(pool, poolType) in groupedRecords" :key="poolType">
-        <div v-if="Object.keys(pool).length > 0" class="pool-group">
+      <div
+        v-for="(pool, poolType) in groupedRecords"
+        :key="poolType"
+      >
+        <div
+          v-if="Object.keys(pool).length > 0"
+          class="pool-group"
+        >
           <h4 class="pool-title">
             {{ getPoolLabel(poolType) }}
           </h4>
           <div class="accordion-container">
-            <div v-for="(teamRecords, teamName) in pool" :key="teamName" class="accordion-item">
-              <div class="accordion-header" @click="toggleAccordion(teamName + poolType)">
+            <div
+              v-for="(teamRecords, teamName) in pool"
+              :key="teamName"
+              class="accordion-item"
+            >
+              <div
+                class="accordion-header"
+                @click="toggleAccordion(teamName + poolType)"
+              >
                 <span>{{ teamName }} ({{ teamRecords?.length || 0 }} Kayıt)</span>
                 <div class="header-actions">
                   <button
@@ -197,10 +219,13 @@ watchEffect(() => {
                   <i
                     class="fas fa-chevron-down"
                     :class="{ 'is-open': openAccordions.includes(teamName + poolType) }"
-                  ></i>
+                  />
                 </div>
               </div>
-              <div v-if="openAccordions.includes(teamName + poolType)" class="accordion-content">
+              <div
+                v-if="openAccordions.includes(teamName + poolType)"
+                class="accordion-content"
+              >
                 <div class="table-wrapper">
                   <table class="records-table">
                     <thead>
@@ -224,7 +249,9 @@ watchEffect(() => {
                         :key="record.id"
                         :class="`status-${record.status || 'unknown'}`"
                       >
-                        <td class="text-center">{{ record.slot || '-' }}</td>
+                        <td class="text-center">
+                          {{ record.slot || '-' }}
+                        </td>
                         <td class="text-center">
                           <span :class="`type-tag type-${record.invitationType || 'unknown'}`">
                             {{ (record.invitationType || 'N/A').toUpperCase() }}
@@ -237,7 +264,7 @@ watchEffect(() => {
                             :value="record.guestName || ''"
                             placeholder="Ad Soyad"
                             @input="updateRecordField(record.id, 'guestName', $event.target.value)"
-                          />
+                          >
                         </td>
                         <td>
                           <input
@@ -251,7 +278,7 @@ watchEffect(() => {
                             @focus="editingPhoneRecordId = record.id"
                             @blur="editingPhoneRecordId = null"
                             @input="updateRecordField(record.id, 'guestPhone', $event.target.value)"
-                          />
+                          >
                         </td>
                         <td>
                           <input
@@ -259,7 +286,7 @@ watchEffect(() => {
                             :value="record.opcName || ''"
                             placeholder="OPC"
                             @input="updateRecordField(record.id, 'opcName', $event.target.value)"
-                          />
+                          >
                         </td>
                         <td>
                           <input
@@ -269,7 +296,7 @@ watchEffect(() => {
                             @input="
                               updateRecordField(record.id, 'opcManagerName', $event.target.value)
                             "
-                          />
+                          >
                         </td>
                         <td>
                           <input
@@ -277,7 +304,7 @@ watchEffect(() => {
                             :value="record.confName || ''"
                             placeholder="Conf"
                             @input="updateRecordField(record.id, 'confName', $event.target.value)"
-                          />
+                          >
                         </td>
                         <td>
                           <input
@@ -287,7 +314,7 @@ watchEffect(() => {
                             @input="
                               updateRecordField(record.id, 'confManagerName', $event.target.value)
                             "
-                          />
+                          >
                         </td>
                         <td>
                           <input
@@ -295,14 +322,14 @@ watchEffect(() => {
                             :value="record.repName || ''"
                             placeholder="Rep Adı"
                             @input="updateRecordField(record.id, 'repName', $event.target.value)"
-                          />
+                          >
                         </td>
                         <td class="text-center">
                           <input
                             type="checkbox"
                             :checked="record.isSold || false"
                             @change="handleCheckboxChange(record, $event)"
-                          />
+                          >
                         </td>
                       </tr>
                     </tbody>

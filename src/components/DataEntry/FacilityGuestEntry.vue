@@ -180,15 +180,27 @@ onUnmounted(() => {
     <h3>Tesise Gelen Aileler (Dağıtıcı Gruplar Hariç)</h3>
     <p>Tesise doğrudan gelen veya davetsiz aileleri ekip bazında buradan kaydedin.</p>
 
-    <div v-if="isLoading" class="loading">Veriler yükleniyor...</div>
-    <div v-else class="card">
+    <div
+      v-if="isLoading"
+      class="loading"
+    >
+      Veriler yükleniyor...
+    </div>
+    <div
+      v-else
+      class="card"
+    >
       <div class="data-grid">
         <div class="grid-row header">
-          <div class="team-name">Ekip Adı</div>
+          <div class="team-name">
+            Ekip Adı
+          </div>
           <div>UP</div>
           <div>Oneleg</div>
           <div>Single</div>
-          <div class="total-col">Ekip Toplam</div>
+          <div class="total-col">
+            Ekip Toplam
+          </div>
         </div>
 
         <div
@@ -199,49 +211,63 @@ onUnmounted(() => {
           <div class="grid-row group-header">
             {{ groupName }}
           </div>
-          <div v-for="team in teams" :key="team.id" class="grid-row">
-            <div class="team-name">{{ team.name }}</div>
+          <div
+            v-for="team in teams"
+            :key="team.id"
+            class="grid-row"
+          >
+            <div class="team-name">
+              {{ team.name }}
+            </div>
             <input
               v-model.number="dailyGuestData[team.id].up"
               type="number"
               min="0"
               @input="saveDataForTeam(team.id)"
-            />
+            >
             <input
               v-model.number="dailyGuestData[team.id].oneleg"
               type="number"
               min="0"
               @input="saveDataForTeam(team.id)"
-            />
+            >
             <input
               v-model.number="dailyGuestData[team.id].single"
               type="number"
               min="0"
               @input="saveDataForTeam(team.id)"
-            />
+            >
             <div class="total-col">
               {{
                 (dailyGuestData[team.id].up || 0) +
-                (dailyGuestData[team.id].oneleg || 0) +
-                (dailyGuestData[team.id].single || 0)
+                  (dailyGuestData[team.id].oneleg || 0) +
+                  (dailyGuestData[team.id].single || 0)
               }}
             </div>
           </div>
           <div class="grid-row group-footer">
-            <div class="team-name">Grup Toplamı</div>
+            <div class="team-name">
+              Grup Toplamı
+            </div>
             <div>{{ totals.group[groupName]?.up }}</div>
             <div>{{ totals.group[groupName]?.oneleg }}</div>
             <div>{{ totals.group[groupName]?.single }}</div>
-            <div class="total-col">{{ totals.group[groupName]?.total }}</div>
+            <div class="total-col">
+              {{ totals.group[groupName]?.total }}
+            </div>
           </div>
         </div>
 
         <div class="grid-row grand-total">
-          <div class="team-name">GENEL TOPLAM</div>
+          <div class="team-name">
+            GENEL TOPLAM
+          </div>
           <div>{{ totals.grand.up }}</div>
           <div>{{ totals.grand.oneleg }}</div>
           <div>{{ totals.grand.single }}</div>
-          <div class="total-col">{{ totals.grand.total }}</div>
+          <div class="total-col">
+            {{ totals.grand.total }}
+          </div>
         </div>
       </div>
     </div>

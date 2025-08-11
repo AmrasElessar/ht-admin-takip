@@ -61,7 +61,7 @@ const runSetup = async () => {
   <div class="setup-container">
     <h1>Sistem İlk Kurulumu</h1>
     <div class="warning-card">
-      <h2><i class="fas fa-exclamation-triangle"></i> DİKKAT!</h2>
+      <h2><i class="fas fa-exclamation-triangle" /> DİKKAT!</h2>
       <p>
         Bu işlem, Firebase Firestore veritabanınızda `facilities`, `salesGroups`, `teams` ve
         `systemSettings` gibi temel koleksiyonları ve başlangıç verilerini oluşturacaktır. Var olan
@@ -70,12 +70,19 @@ const runSetup = async () => {
       </p>
     </div>
 
-    <button :disabled="isLoading" class="setup-button" @click="runSetup">
+    <button
+      :disabled="isLoading"
+      class="setup-button"
+      @click="runSetup"
+    >
       <span v-if="isLoading">Kuruluyor...</span>
       <span v-else>Sistemi İlk Kez Kur / Başlangıç Verilerini Oluştur</span>
     </button>
 
-    <div v-if="setupMessage" :class="['message', { success: !isError, error: isError }]">
+    <div
+      v-if="setupMessage"
+      :class="['message', { success: !isError, error: isError }]"
+    >
       {{ setupMessage }}
     </div>
   </div>

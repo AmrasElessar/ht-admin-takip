@@ -169,17 +169,29 @@ onMounted(fetchFacilities)
       <h3>Toplu Veri İşlemleri</h3>
       <p>Yeni verileri toplu ekleyin veya mevcut verilerinizi yedekleyin.</p>
       <div class="button-group">
-        <button class="btn-secondary" @click="downloadTemplate">
-          <i class="fas fa-file-alt"></i> Boş Şablon İndir
+        <button
+          class="btn-secondary"
+          @click="downloadTemplate"
+        >
+          <i class="fas fa-file-alt" /> Boş Şablon İndir
         </button>
-        <button class="btn-success" @click="triggerFileUpload">
-          <i class="fas fa-file-import"></i> CSV'den İçe Aktar
+        <button
+          class="btn-success"
+          @click="triggerFileUpload"
+        >
+          <i class="fas fa-file-import" /> CSV'den İçe Aktar
         </button>
-        <button class="btn-info" @click="exportData">
-          <i class="fas fa-file-export"></i> Tümünü Dışa Aktar (Yedekle)
+        <button
+          class="btn-info"
+          @click="exportData"
+        >
+          <i class="fas fa-file-export" /> Tümünü Dışa Aktar (Yedekle)
         </button>
-        <button class="btn-danger" @click="confirmClearAllData">
-          <i class="fas fa-trash-alt"></i> Tüm Tesisleri Sil
+        <button
+          class="btn-danger"
+          @click="confirmClearAllData"
+        >
+          <i class="fas fa-trash-alt" /> Tüm Tesisleri Sil
         </button>
       </div>
       <input
@@ -188,7 +200,7 @@ onMounted(fetchFacilities)
         style="display: none"
         accept=".csv"
         @change="handleFileUpload"
-      />
+      >
     </div>
 
     <div class="card">
@@ -200,37 +212,96 @@ onMounted(fetchFacilities)
         :initial-values="editingFacility"
         @submit="updateFacility"
       >
-        <Field v-model="editingFacility.name" name="name" type="text" :rules="isRequired" />
-        <ErrorMessage name="name" class="error-message" />
-        <Field v-model="editingFacility.city" name="city" type="text" :rules="isRequired" />
-        <ErrorMessage name="city" class="error-message" />
-        <button type="submit" :disabled="!meta.valid">Güncelle</button>
-        <button type="button" class="btn-cancel" @click="cancelEditFacility">İptal</button>
+        <Field
+          v-model="editingFacility.name"
+          name="name"
+          type="text"
+          :rules="isRequired"
+        />
+        <ErrorMessage
+          name="name"
+          class="error-message"
+        />
+        <Field
+          v-model="editingFacility.city"
+          name="city"
+          type="text"
+          :rules="isRequired"
+        />
+        <ErrorMessage
+          name="city"
+          class="error-message"
+        />
+        <button
+          type="submit"
+          :disabled="!meta.valid"
+        >
+          Güncelle
+        </button>
+        <button
+          type="button"
+          class="btn-cancel"
+          @click="cancelEditFacility"
+        >
+          İptal
+        </button>
       </Form>
 
-      <Form v-else v-slot="{ meta }" class="add-form" @submit="addFacility">
+      <Form
+        v-else
+        v-slot="{ meta }"
+        class="add-form"
+        @submit="addFacility"
+      >
         <Field
           name="newFacilityName"
           type="text"
           placeholder="Yeni tesis adı"
           :rules="isRequired"
         />
-        <ErrorMessage name="newFacilityName" class="error-message" />
+        <ErrorMessage
+          name="newFacilityName"
+          class="error-message"
+        />
 
-        <Field name="newFacilityCity" type="text" placeholder="Şehir" :rules="isRequired" />
-        <ErrorMessage name="newFacilityCity" class="error-message" />
+        <Field
+          name="newFacilityCity"
+          type="text"
+          placeholder="Şehir"
+          :rules="isRequired"
+        />
+        <ErrorMessage
+          name="newFacilityCity"
+          class="error-message"
+        />
 
-        <button type="submit" :disabled="!meta.valid">Ekle</button>
+        <button
+          type="submit"
+          :disabled="!meta.valid"
+        >
+          Ekle
+        </button>
       </Form>
 
       <ul class="item-list">
-        <li v-for="facility in facilities" :key="facility.id">
-          <span
-            ><strong>{{ facility.name }}</strong> ({{ facility.city }})</span
-          >
+        <li
+          v-for="facility in facilities"
+          :key="facility.id"
+        >
+          <span><strong>{{ facility.name }}</strong> ({{ facility.city }})</span>
           <div class="actions">
-            <button class="edit-btn" @click="startEditFacility(facility)">Düzenle</button>
-            <button class="delete-btn" @click="deleteFacility(facility.id)">Sil</button>
+            <button
+              class="edit-btn"
+              @click="startEditFacility(facility)"
+            >
+              Düzenle
+            </button>
+            <button
+              class="delete-btn"
+              @click="deleteFacility(facility.id)"
+            >
+              Sil
+            </button>
           </div>
         </li>
       </ul>

@@ -8,20 +8,32 @@ import UserProfileWidget from './UserProfileWidget.vue' // YENİ: Widget'ı impo
     <UserProfileWidget />
 
     <nav class="nav-menu">
-      <RouterLink to="/" class="nav-item">
-        <i class="fas fa-home"></i>
+      <RouterLink
+        to="/"
+        class="nav-item"
+      >
+        <i class="fas fa-home" />
         <span>Ana Sayfa</span>
       </RouterLink>
-      <RouterLink to="/veri-girisi" class="nav-item">
-        <i class="fas fa-keyboard"></i>
+      <RouterLink
+        to="/veri-girisi"
+        class="nav-item"
+      >
+        <i class="fas fa-keyboard" />
         <span>Veri Girişi</span>
       </RouterLink>
-      <RouterLink to="/raporlar" class="nav-item">
-        <i class="fas fa-chart-pie"></i>
+      <RouterLink
+        to="/raporlar"
+        class="nav-item"
+      >
+        <i class="fas fa-chart-pie" />
         <span>Raporlar</span>
       </RouterLink>
-      <RouterLink to="/ayarlar" class="nav-item">
-        <i class="fas fa-cog"></i>
+      <RouterLink
+        to="/ayarlar"
+        class="nav-item"
+      >
+        <i class="fas fa-cog" />
         <span>Ayarlar</span>
       </RouterLink>
     </nav>

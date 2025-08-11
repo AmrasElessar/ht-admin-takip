@@ -80,8 +80,12 @@ const registerWithEmail = async () => {
   <div class="login-container">
     <div class="login-box">
       <h2>HT Admin Takip</h2>
-      <p v-if="!isRegistering">Lütfen devam etmek için giriş yapın</p>
-      <p v-else>Yeni hesap oluşturun</p>
+      <p v-if="!isRegistering">
+        Lütfen devam etmek için giriş yapın
+      </p>
+      <p v-else>
+        Yeni hesap oluşturun
+      </p>
 
       <form @submit.prevent="isRegistering ? registerWithEmail() : signInWithEmail()">
         <input
@@ -90,31 +94,45 @@ const registerWithEmail = async () => {
           placeholder="E-posta Adresi"
           required
           autocomplete="email"
-        />
+        >
         <input
           v-model="password"
           type="password"
           placeholder="Şifre"
           required
           autocomplete="current-password"
-        />
-        <button type="submit" class="btn-primary">
+        >
+        <button
+          type="submit"
+          class="btn-primary"
+        >
           {{ isRegistering ? 'Kaydol' : 'Giriş Yap' }}
         </button>
       </form>
 
-      <div class="separator">veya</div>
+      <div class="separator">
+        veya
+      </div>
 
-      <button class="btn-google" @click="signInWithGoogle">
-        <i class="fab fa-google"></i> Google ile Giriş Yap
+      <button
+        class="btn-google"
+        @click="signInWithGoogle"
+      >
+        <i class="fab fa-google" /> Google ile Giriş Yap
       </button>
 
       <div class="toggle-mode">
         <template v-if="!isRegistering">
-          Hesabın yok mu? <a href="#" @click.prevent="isRegistering = true">Kaydol</a>
+          Hesabın yok mu? <a
+            href="#"
+            @click.prevent="isRegistering = true"
+          >Kaydol</a>
         </template>
         <template v-else>
-          Zaten hesabın var mı? <a href="#" @click.prevent="isRegistering = false">Giriş Yap</a>
+          Zaten hesabın var mı? <a
+            href="#"
+            @click.prevent="isRegistering = false"
+          >Giriş Yap</a>
         </template>
       </div>
     </div>

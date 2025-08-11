@@ -227,14 +227,14 @@ const sendWhatsappMessage = () => {
           :disabled="isLoading || reportData.length === 0"
           @click="exportToCSV"
         >
-          <i class="fas fa-file-csv"></i> CSV Olarak Dışa Aktar
+          <i class="fas fa-file-csv" /> CSV Olarak Dışa Aktar
         </button>
         <button
           class="whatsapp-share-btn"
           :disabled="isLoading || reportData.length === 0"
           @click="openShareModal"
         >
-          <i class="fab fa-whatsapp"></i> WhatsApp ile Paylaş
+          <i class="fab fa-whatsapp" /> WhatsApp ile Paylaş
         </button>
       </div>
     </div>
@@ -242,16 +242,29 @@ const sendWhatsappMessage = () => {
     <div class="filter-bar">
       <div class="form-group">
         <label for="start-date">Başlangıç Tarihi</label>
-        <input id="start-date" v-model="startDate" type="date" />
+        <input
+          id="start-date"
+          v-model="startDate"
+          type="date"
+        >
       </div>
       <div class="form-group">
         <label for="end-date">Bitiş Tarihi</label>
-        <input id="end-date" v-model="endDate" type="date" />
+        <input
+          id="end-date"
+          v-model="endDate"
+          type="date"
+        >
       </div>
       <div class="form-group">
         <label for="facility-filter">Tesis</label>
-        <select id="facility-filter" v-model="selectedFacilityFilter">
-          <option value="all">Tüm Tesisler</option>
+        <select
+          id="facility-filter"
+          v-model="selectedFacilityFilter"
+        >
+          <option value="all">
+            Tüm Tesisler
+          </option>
           <option
             v-for="facility in userStore.allFacilities"
             :key="facility.id"
@@ -263,9 +276,18 @@ const sendWhatsappMessage = () => {
       </div>
       <div class="form-group">
         <label for="group-filter">Satış Grubu</label>
-        <select id="group-filter" v-model="selectedGroupFilter">
-          <option value="all">Tüm Gruplar</option>
-          <option v-for="group in userStore.allSalesGroups" :key="group.id" :value="group.id">
+        <select
+          id="group-filter"
+          v-model="selectedGroupFilter"
+        >
+          <option value="all">
+            Tüm Gruplar
+          </option>
+          <option
+            v-for="group in userStore.allSalesGroups"
+            :key="group.id"
+            :value="group.id"
+          >
             {{ group.name }}
           </option>
         </select>
@@ -274,22 +296,38 @@ const sendWhatsappMessage = () => {
 
     <p>Seçilen tarih aralığındaki tüm operasyonların ekip bazında detaylı dökümü.</p>
 
-    <div v-if="!isLoading && reportData.length > 0" class="chart-container card">
+    <div
+      v-if="!isLoading && reportData.length > 0"
+      class="chart-container card"
+    >
       <h3>Operasyon Hunisi (Funnel) Özeti</h3>
       <div class="chart-wrapper">
         <FunnelChart :chart-data="chartData" />
       </div>
     </div>
 
-    <div v-if="isLoading" class="table-container">
+    <div
+      v-if="isLoading"
+      class="table-container"
+    >
       <table class="reports-table">
         <thead>
           <tr>
-            <th rowspan="2">Tarih</th>
-            <th rowspan="2">Ekip / Tesis</th>
-            <th colspan="4">Davet</th>
-            <th colspan="4">Dağıtılan</th>
-            <th colspan="5">Masaya Oturan</th>
+            <th rowspan="2">
+              Tarih
+            </th>
+            <th rowspan="2">
+              Ekip / Tesis
+            </th>
+            <th colspan="4">
+              Davet
+            </th>
+            <th colspan="4">
+              Dağıtılan
+            </th>
+            <th colspan="5">
+              Masaya Oturan
+            </th>
           </tr>
           <tr>
             <th>U</th>
@@ -308,7 +346,10 @@ const sendWhatsappMessage = () => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="i in 5" :key="i">
+          <tr
+            v-for="i in 5"
+            :key="i"
+          >
             <td><SkeletonLoader style="height: 20px" /></td>
             <td>
               <div>
@@ -319,34 +360,58 @@ const sendWhatsappMessage = () => {
             <td><SkeletonLoader style="height: 20px" /></td>
             <td><SkeletonLoader style="height: 20px" /></td>
             <td><SkeletonLoader style="height: 20px" /></td>
-            <td class="total-col"><SkeletonLoader style="height: 20px" /></td>
+            <td class="total-col">
+              <SkeletonLoader style="height: 20px" />
+            </td>
             <td><SkeletonLoader style="height: 20px" /></td>
             <td><SkeletonLoader style="height: 20px" /></td>
             <td><SkeletonLoader style="height: 20px" /></td>
-            <td class="total-col"><SkeletonLoader style="height: 20px" /></td>
+            <td class="total-col">
+              <SkeletonLoader style="height: 20px" />
+            </td>
             <td><SkeletonLoader style="height: 20px" /></td>
             <td><SkeletonLoader style="height: 20px" /></td>
             <td><SkeletonLoader style="height: 20px" /></td>
-            <td class="total-col"><SkeletonLoader style="height: 20px" /></td>
-            <td class="total-col"><SkeletonLoader style="height: 20px" /></td>
+            <td class="total-col">
+              <SkeletonLoader style="height: 20px" />
+            </td>
+            <td class="total-col">
+              <SkeletonLoader style="height: 20px" />
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div v-else-if="reportData.length === 0" class="no-data">
+    <div
+      v-else-if="reportData.length === 0"
+      class="no-data"
+    >
       Seçilen filtrelere uygun kayıt bulunamadı.
     </div>
 
-    <div v-else class="table-container">
+    <div
+      v-else
+      class="table-container"
+    >
       <table class="reports-table">
         <thead>
           <tr>
-            <th rowspan="2">Tarih</th>
-            <th rowspan="2">Ekip / Tesis</th>
-            <th colspan="4">Davet</th>
-            <th colspan="4">Dağıtılan</th>
-            <th colspan="5">Masaya Oturan</th>
+            <th rowspan="2">
+              Tarih
+            </th>
+            <th rowspan="2">
+              Ekip / Tesis
+            </th>
+            <th colspan="4">
+              Davet
+            </th>
+            <th colspan="4">
+              Dağıtılan
+            </th>
+            <th colspan="5">
+              Masaya Oturan
+            </th>
           </tr>
           <tr>
             <th>U</th>
@@ -365,7 +430,10 @@ const sendWhatsappMessage = () => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in reportData.map(getRowTotals)" :key="`${row.date}_${row.teamId}`">
+          <tr
+            v-for="row in reportData.map(getRowTotals)"
+            :key="`${row.date}_${row.teamId}`"
+          >
             <td>{{ row.date }}</td>
             <td>
               <div>
@@ -376,16 +444,24 @@ const sendWhatsappMessage = () => {
             <td>{{ row.invited.up }}</td>
             <td>{{ row.invited.oneleg }}</td>
             <td>{{ row.invited.single }}</td>
-            <td class="total-col">{{ row.invited.total }}</td>
+            <td class="total-col">
+              {{ row.invited.total }}
+            </td>
             <td>{{ row.distributed.up }}</td>
             <td>{{ row.distributed.oneleg }}</td>
             <td>{{ row.distributed.single }}</td>
-            <td class="total-col">{{ row.distributed.total }}</td>
+            <td class="total-col">
+              {{ row.distributed.total }}
+            </td>
             <td>{{ row.presented.up }}</td>
             <td>{{ row.presented.oneleg }}</td>
             <td>{{ row.presented.single }}</td>
-            <td class="total-col">{{ row.presented.total }}</td>
-            <td class="total-col">{{ row.presented.tableCount }}</td>
+            <td class="total-col">
+              {{ row.presented.total }}
+            </td>
+            <td class="total-col">
+              {{ row.presented.tableCount }}
+            </td>
           </tr>
         </tbody>
       </table>

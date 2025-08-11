@@ -1,7 +1,11 @@
 <!-- src/components/common/XPToast.vue -->
 <template>
   <teleport to="body">
-    <transition-group name="toast" tag="div" class="toast-container">
+    <transition-group
+      name="toast"
+      tag="div"
+      class="toast-container"
+    >
       <div
         v-for="toast in activeToasts"
         :key="toast.id"
@@ -10,14 +14,22 @@
         <div class="toast-content">
           <span class="toast-icon">{{ getIcon(toast.type) }}</span>
           <span class="toast-message">{{ toast.message }}</span>
-          <span v-if="toast.xp" class="toast-xp"
-            >{{ toast.xp > 0 ? '+' : '' }}{{ toast.xp }} XP</span
-          >
+          <span
+            v-if="toast.xp"
+            class="toast-xp"
+          >{{ toast.xp > 0 ? '+' : '' }}{{ toast.xp }} XP</span>
         </div>
 
         <!-- Level up için özel animasyon -->
-        <div v-if="toast.type === 'level-up'" class="level-up-particles">
-          <div v-for="i in 8" :key="i" class="particle"></div>
+        <div
+          v-if="toast.type === 'level-up'"
+          class="level-up-particles"
+        >
+          <div
+            v-for="i in 8"
+            :key="i"
+            class="particle"
+          />
         </div>
       </div>
     </transition-group>

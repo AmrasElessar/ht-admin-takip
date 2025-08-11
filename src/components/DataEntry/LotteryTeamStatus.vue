@@ -135,48 +135,80 @@ const openManualAssignModal = (team) => {
 
 <template>
   <div class="card team-status-panel">
-    <h4 class="collapsible-header" @click="isTeamStatusVisible = !isTeamStatusVisible">
+    <h4
+      class="collapsible-header"
+      @click="isTeamStatusVisible = !isTeamStatusVisible"
+    >
       <span>Ekip Atama Durumları</span>
-      <i class="fas fa-chevron-down" :class="{ 'is-open': isTeamStatusVisible }"></i>
+      <i
+        class="fas fa-chevron-down"
+        :class="{ 'is-open': isTeamStatusVisible }"
+      />
     </h4>
 
     <div v-if="isTeamStatusVisible">
-      <div v-if="teamStatusSummary.length === 0" class="no-teams-message">
+      <div
+        v-if="teamStatusSummary.length === 0"
+        class="no-teams-message"
+      >
         <p>Henüz ekip bilgisi bulunamadı.</p>
       </div>
 
-      <div v-else class="team-status-grid detailed">
+      <div
+        v-else
+        class="team-status-grid detailed"
+      >
         <div class="status-header">
-          <div class="team-name">Ekip Adı</div>
+          <div class="team-name">
+            Ekip Adı
+          </div>
           <div>Atanan UP</div>
           <div>Atanan Oneleg</div>
           <div>Atanan Single</div>
-          <div class="credit-col">Hak Ediş Alacağı</div>
+          <div class="credit-col">
+            Hak Ediş Alacağı
+          </div>
           <div>Manuel Atama</div>
         </div>
 
-        <div v-for="team in teamStatusSummary" :key="team.teamId" class="status-row">
-          <div class="team-name" :title="`İptal: ${team.cancelled.total || 0}`">
+        <div
+          v-for="team in teamStatusSummary"
+          :key="team.teamId"
+          class="status-row"
+        >
+          <div
+            class="team-name"
+            :title="`İptal: ${team.cancelled.total || 0}`"
+          >
             {{ team.teamName || 'İsimsiz Ekip' }}
           </div>
           <div>{{ (team.assigned.up || 0) - (team.cancelled.up || 0) }}</div>
           <div>{{ (team.assigned.oneleg || 0) - (team.cancelled.oneleg || 0) }}</div>
           <div>{{ (team.assigned.single || 0) - (team.cancelled.single || 0) }}</div>
           <div class="credit-col">
-            <span v-if="(team.credit.up || 0) > 0" class="credit-badge up">
+            <span
+              v-if="(team.credit.up || 0) > 0"
+              class="credit-badge up"
+            >
               {{ team.credit.up }} UP
             </span>
-            <span v-if="(team.credit.oneleg || 0) > 0" class="credit-badge oneleg">
+            <span
+              v-if="(team.credit.oneleg || 0) > 0"
+              class="credit-badge oneleg"
+            >
               {{ team.credit.oneleg }} OL
             </span>
-            <span v-if="(team.credit.single || 0) > 0" class="credit-badge single">
+            <span
+              v-if="(team.credit.single || 0) > 0"
+              class="credit-badge single"
+            >
               {{ team.credit.single }} SG
             </span>
             <span
               v-if="
                 (team.credit.up || 0) === 0 &&
-                (team.credit.oneleg || 0) === 0 &&
-                (team.credit.single || 0) === 0
+                  (team.credit.oneleg || 0) === 0 &&
+                  (team.credit.single || 0) === 0
               "
               class="no-credit"
             >

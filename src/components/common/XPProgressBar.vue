@@ -1,5 +1,8 @@
 <template>
-  <div class="xp-container" :class="'size-' + size">
+  <div
+    class="xp-container"
+    :class="'size-' + size"
+  >
     <div class="progress-bar">
       <div
         class="progress-fill"
@@ -8,7 +11,10 @@
           background: getLevelColor(),
         }"
       >
-        <span v-if="showText" class="progress-text">
+        <span
+          v-if="showText"
+          class="progress-text"
+        >
           <span v-if="xpStore.isMaxLevel">
             {{ xpStore.currentXPInLevel.toLocaleString() }} /
             {{ xpStore.currentLevelMaxXP.toLocaleString() }} XP
@@ -24,7 +30,7 @@
         v-if="glowActive"
         class="progress-glow"
         :style="{ width: `${xpStore.progressPercent}%` }"
-      ></div>
+      />
     </div>
   </div>
 </template>

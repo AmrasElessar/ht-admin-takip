@@ -56,14 +56,30 @@ const updateTeamLimit = (teamId, event) => {
   <div class="rule-builder">
     <h6>1. Kurala Kaynak Ekle</h6>
     <div class="source-selectors">
-      <select v-model="lotteryStore.newRule.sourcePool" class="source-select">
-        <option value="tour">Tur Havuzu</option>
-        <option value="privateVehicle">K.Araçlı Havuzu</option>
+      <select
+        v-model="lotteryStore.newRule.sourcePool"
+        class="source-select"
+      >
+        <option value="tour">
+          Tur Havuzu
+        </option>
+        <option value="privateVehicle">
+          K.Araçlı Havuzu
+        </option>
       </select>
-      <select v-model="lotteryStore.newRule.sourceType" class="source-select">
-        <option value="up">UP</option>
-        <option value="oneleg">Oneleg</option>
-        <option value="single">Single</option>
+      <select
+        v-model="lotteryStore.newRule.sourceType"
+        class="source-select"
+      >
+        <option value="up">
+          UP
+        </option>
+        <option value="oneleg">
+          Oneleg
+        </option>
+        <option value="single">
+          Single
+        </option>
       </select>
       <input
         v-model.number="lotteryStore.newRule.sourceCount"
@@ -71,18 +87,29 @@ const updateTeamLimit = (teamId, event) => {
         min="1"
         placeholder="Adet"
         class="source-input"
-      />
-      <button class="btn-add-source" @click="lotteryStore.addSourceToRule">Ekle</button>
+      >
+      <button
+        class="btn-add-source"
+        @click="lotteryStore.addSourceToRule"
+      >
+        Ekle
+      </button>
     </div>
-    <div v-if="lotteryStore.newRule.sources.length > 0" class="source-list">
+    <div
+      v-if="lotteryStore.newRule.sources.length > 0"
+      class="source-list"
+    >
       <ul>
-        <li v-for="(source, index) in lotteryStore.newRule.sources" :key="index">
-          <span
-            >{{ source.count }} adet {{ source.pool === 'tour' ? 'Tur' : 'K.Araçlı' }} ({{
-              source.type.toUpperCase()
-            }})</span
-          >
-          <button @click="lotteryStore.removeSourceFromRule(index)">&times;</button>
+        <li
+          v-for="(source, index) in lotteryStore.newRule.sources"
+          :key="index"
+        >
+          <span>{{ source.count }} adet {{ source.pool === 'tour' ? 'Tur' : 'K.Araçlı' }} ({{
+            source.type.toUpperCase()
+          }})</span>
+          <button @click="lotteryStore.removeSourceFromRule(index)">
+            &times;
+          </button>
         </li>
       </ul>
     </div>
@@ -90,7 +117,11 @@ const updateTeamLimit = (teamId, event) => {
     <h6>2. Dağıtım Yöntemi</h6>
     <div class="method-selector">
       <label>
-        <input v-model="lotteryStore.newRule.method" type="radio" :value="LOTTERY_METHODS.EQUAL" />
+        <input
+          v-model="lotteryStore.newRule.method"
+          type="radio"
+          :value="LOTTERY_METHODS.EQUAL"
+        >
         Eşit Dağıtım
       </label>
       <label>
@@ -98,7 +129,7 @@ const updateTeamLimit = (teamId, event) => {
           v-model="lotteryStore.newRule.method"
           type="radio"
           :value="LOTTERY_METHODS.SEQUENTIAL"
-        />
+        >
         Sıralı Dağıtım
       </label>
     </div>
@@ -106,11 +137,19 @@ const updateTeamLimit = (teamId, event) => {
     <h6>3. Dağıtım Hedefi ve Limitler</h6>
     <div class="target-selector">
       <label>
-        <input v-model="lotteryStore.newRule.targetType" type="radio" value="group" />
+        <input
+          v-model="lotteryStore.newRule.targetType"
+          type="radio"
+          value="group"
+        >
         Gruba Göre
       </label>
       <label>
-        <input v-model="lotteryStore.newRule.targetType" type="radio" value="custom" />
+        <input
+          v-model="lotteryStore.newRule.targetType"
+          type="radio"
+          value="custom"
+        >
         Özel Ekip Seçimi
       </label>
     </div>
@@ -119,13 +158,30 @@ const updateTeamLimit = (teamId, event) => {
         v-if="lotteryStore.newRule.targetType === 'group'"
         v-model="lotteryStore.newRule.targetGroupId"
       >
-        <option value="" disabled>Bir grup seçin...</option>
-        <option v-for="group in groupsWithAllOption" :key="group.id" :value="group.id">
+        <option
+          value=""
+          disabled
+        >
+          Bir grup seçin...
+        </option>
+        <option
+          v-for="group in groupsWithAllOption"
+          :key="group.id"
+          :value="group.id"
+        >
           {{ group.name }}
         </option>
       </select>
-      <select v-else v-model="lotteryStore.newRule.customTeamIds" multiple>
-        <option v-for="team in availableCustomTeams" :key="team.id" :value="team.id">
+      <select
+        v-else
+        v-model="lotteryStore.newRule.customTeamIds"
+        multiple
+      >
+        <option
+          v-for="team in availableCustomTeams"
+          :key="team.id"
+          :value="team.id"
+        >
           {{ team.name }}
         </option>
       </select>
@@ -135,11 +191,15 @@ const updateTeamLimit = (teamId, event) => {
       <div
         v-if="
           targetTeamsForCurrentRule.length > 0 &&
-          String(lotteryStore.newRule.method).toLowerCase() === 'equal'
+            String(lotteryStore.newRule.method).toLowerCase() === 'equal'
         "
         class="team-limits"
       >
-        <div v-for="team in targetTeamsForCurrentRule" :key="team.id" class="limit-item">
+        <div
+          v-for="team in targetTeamsForCurrentRule"
+          :key="team.id"
+          class="limit-item"
+        >
           <label>{{ team.name }}</label>
           <input
             type="number"
@@ -149,7 +209,7 @@ const updateTeamLimit = (teamId, event) => {
               (lotteryStore.newRule.teamLimits && lotteryStore.newRule.teamLimits[team.id]) ?? ''
             "
             @input="updateTeamLimit(team.id, $event)"
-          />
+          >
         </div>
       </div>
     </div>
@@ -159,7 +219,7 @@ const updateTeamLimit = (teamId, event) => {
       :disabled="!lotteryStore.isRuleValid"
       @click="lotteryStore.addRule"
     >
-      <i class="fas fa-plus-circle"></i> Kuralı Listeye Ekle
+      <i class="fas fa-plus-circle" /> Kuralı Listeye Ekle
     </button>
   </div>
 </template>

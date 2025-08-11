@@ -30,14 +30,36 @@ const saveProfile = () => {
     <p>Lütfen veri girişi yapacağınız sorumlu olduğunuz tesisi seçin.</p>
     <div class="card">
       <h3>Tesis Seçimi</h3>
-      <select v-model="selectedFacilityId" class="profile-select">
-        <option disabled value="">Bir tesis seçin...</option>
-        <option v-for="facility in facilities" :key="facility.id" :value="facility.id">
+      <select
+        v-model="selectedFacilityId"
+        class="profile-select"
+      >
+        <option
+          disabled
+          value=""
+        >
+          Bir tesis seçin...
+        </option>
+        <option
+          v-for="facility in facilities"
+          :key="facility.id"
+          :value="facility.id"
+        >
           {{ facility.name }} ({{ facility.city }})
         </option>
       </select>
-      <button class="save-btn" @click="saveProfile">Kaydet</button>
-      <p v-if="successMessage" class="message success">{{ successMessage }}</p>
+      <button
+        class="save-btn"
+        @click="saveProfile"
+      >
+        Kaydet
+      </button>
+      <p
+        v-if="successMessage"
+        class="message success"
+      >
+        {{ successMessage }}
+      </p>
     </div>
   </div>
 </template>

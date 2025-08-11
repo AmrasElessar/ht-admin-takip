@@ -31,20 +31,39 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <div class="modal-backdrop" @click="emit('close')">
-    <div class="modal-content" @click.stop>
+  <div
+    class="modal-backdrop"
+    @click="emit('close')"
+  >
+    <div
+      class="modal-content"
+      @click.stop
+    >
       <header class="modal-header">
         <h3>Davet Detayını Düzenle</h3>
         <p>ID: {{ invitation.id }}</p>
       </header>
-      <form class="modal-body" @submit.prevent="handleSave">
+      <form
+        class="modal-body"
+        @submit.prevent="handleSave"
+      >
         <div class="form-group">
           <label for="name">İsim Soyisim</label>
-          <input id="name" v-model="editableDetails.name" type="text" placeholder="İsim..." />
+          <input
+            id="name"
+            v-model="editableDetails.name"
+            type="text"
+            placeholder="İsim..."
+          >
         </div>
         <div class="form-group">
           <label for="phone">Telefon</label>
-          <input id="phone" v-model="editableDetails.phone" type="tel" placeholder="Telefon..." />
+          <input
+            id="phone"
+            v-model="editableDetails.phone"
+            type="tel"
+            placeholder="Telefon..."
+          >
         </div>
         <div class="form-group">
           <label for="notes">Notlar</label>
@@ -53,11 +72,22 @@ const handleSave = async () => {
             v-model="editableDetails.notes"
             rows="3"
             placeholder="Ek notlar..."
-          ></textarea>
+          />
         </div>
         <footer class="modal-footer">
-          <button type="button" class="btn-secondary" @click="emit('close')">İptal</button>
-          <button type="submit" class="btn-primary">Kaydet</button>
+          <button
+            type="button"
+            class="btn-secondary"
+            @click="emit('close')"
+          >
+            İptal
+          </button>
+          <button
+            type="submit"
+            class="btn-primary"
+          >
+            Kaydet
+          </button>
         </footer>
       </form>
     </div>

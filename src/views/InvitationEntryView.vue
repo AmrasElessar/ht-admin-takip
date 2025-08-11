@@ -62,7 +62,7 @@ const handleSubmit = async (type) => {
     <div class="content-wrapper">
       <div class="entry-panel">
         <section class="entry-section">
-          <h2><i class="fas fa-bus"></i> Tur ile Gelenler</h2>
+          <h2><i class="fas fa-bus" /> Tur ile Gelenler</h2>
           <form @submit.prevent="handleSubmit('tour')">
             <div class="form-group">
               <label for="tour-up">UP</label>
@@ -72,7 +72,7 @@ const handleSubmit = async (type) => {
                 type="number"
                 min="0"
                 placeholder="Sayı girin..."
-              />
+              >
             </div>
             <div class="form-group">
               <label for="tour-oneleg">One Leg</label>
@@ -82,7 +82,7 @@ const handleSubmit = async (type) => {
                 type="number"
                 min="0"
                 placeholder="Sayı girin..."
-              />
+              >
             </div>
             <div class="form-group">
               <label for="tour-single">Single</label>
@@ -92,7 +92,7 @@ const handleSubmit = async (type) => {
                 type="number"
                 min="0"
                 placeholder="Sayı girin..."
-              />
+              >
             </div>
             <div class="form-group">
               <label for="tour-cancelled">İptal</label>
@@ -102,16 +102,19 @@ const handleSubmit = async (type) => {
                 type="number"
                 min="0"
                 placeholder="Sayı girin..."
-              />
+              >
             </div>
-            <button type="submit" :disabled="invitationStore.isLoading">
+            <button
+              type="submit"
+              :disabled="invitationStore.isLoading"
+            >
               {{ invitationStore.isLoading ? 'Ekleniyor...' : 'Tur Kayıtlarını Ekle' }}
             </button>
           </form>
         </section>
 
         <section class="entry-section">
-          <h2><i class="fas fa-car"></i> Kendi Aracıyla Gelenler</h2>
+          <h2><i class="fas fa-car" /> Kendi Aracıyla Gelenler</h2>
           <form @submit.prevent="handleSubmit('own_vehicle')">
             <div class="form-group">
               <label for="vehicle-up">UP</label>
@@ -121,7 +124,7 @@ const handleSubmit = async (type) => {
                 type="number"
                 min="0"
                 placeholder="Sayı girin..."
-              />
+              >
             </div>
             <div class="form-group">
               <label for="vehicle-oneleg">One Leg</label>
@@ -131,7 +134,7 @@ const handleSubmit = async (type) => {
                 type="number"
                 min="0"
                 placeholder="Sayı girin..."
-              />
+              >
             </div>
             <div class="form-group">
               <label for="vehicle-single">Single</label>
@@ -141,7 +144,7 @@ const handleSubmit = async (type) => {
                 type="number"
                 min="0"
                 placeholder="Sayı girin..."
-              />
+              >
             </div>
             <div class="form-group">
               <label for="vehicle-cancelled">İptal</label>
@@ -151,9 +154,12 @@ const handleSubmit = async (type) => {
                 type="number"
                 min="0"
                 placeholder="Sayı girin..."
-              />
+              >
             </div>
-            <button type="submit" :disabled="invitationStore.isLoading">
+            <button
+              type="submit"
+              :disabled="invitationStore.isLoading"
+            >
               {{ invitationStore.isLoading ? 'Ekleniyor...' : 'Araç Kayıtlarını Ekle' }}
             </button>
           </form>

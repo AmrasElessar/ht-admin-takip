@@ -5,69 +5,113 @@
       <div class="filters-container">
         <div class="form-group">
           <label for="start-date">Başlangıç:</label>
-          <input id="start-date" v-model="startDate" type="date" />
+          <input
+            id="start-date"
+            v-model="startDate"
+            type="date"
+          >
         </div>
         <div class="form-group">
           <label for="end-date">Bitiş:</label>
-          <input id="end-date" v-model="endDate" type="date" />
+          <input
+            id="end-date"
+            v-model="endDate"
+            type="date"
+          >
         </div>
-        <button class="refresh-btn" @click="fetchDashboardData">📊 Verileri Yenile</button>
+        <button
+          class="refresh-btn"
+          @click="fetchDashboardData"
+        >
+          📊 Verileri Yenile
+        </button>
       </div>
     </div>
 
     <!-- Geliştirme Ortamı Uyarısı -->
-    <div v-if="isDevelopment" class="dev-warning">
+    <div
+      v-if="isDevelopment"
+      class="dev-warning"
+    >
       🚧 <strong>Geliştirme Modu:</strong> Firebase Emulator kullanılıyor. Gerçek veriler
       görüntülenmeyebilir.
     </div>
 
-    <div v-if="isLoading" class="dashboard-grid">
-      <SkeletonLoader v-for="i in 6" :key="i" style="height: 150px" />
+    <div
+      v-if="isLoading"
+      class="dashboard-grid"
+    >
+      <SkeletonLoader
+        v-for="i in 6"
+        :key="i"
+        style="height: 150px"
+      />
     </div>
 
-    <div v-else-if="summaryData" class="dashboard-grid">
+    <div
+      v-else-if="summaryData"
+      class="dashboard-grid"
+    >
       <div class="summary-card">
-        <h3><i class="fas fa-paper-plane"></i> Toplam Davet</h3>
-        <p class="big-number">{{ summaryData.totalInvited || 0 }}</p>
+        <h3><i class="fas fa-paper-plane" /> Toplam Davet</h3>
+        <p class="big-number">
+          {{ summaryData.totalInvited || 0 }}
+        </p>
         <small>Tüm ekiplerin davet ettiği aile sayısı.</small>
       </div>
 
       <div class="summary-card">
-        <h3><i class="fas fa-sitemap"></i> Toplam Dağıtılan</h3>
-        <p class="big-number">{{ summaryData.totalDistributed || 0 }}</p>
+        <h3><i class="fas fa-sitemap" /> Toplam Dağıtılan</h3>
+        <p class="big-number">
+          {{ summaryData.totalDistributed || 0 }}
+        </p>
         <small>Davet havuzundan ekiplere atanan aile sayısı.</small>
       </div>
 
       <div class="summary-card">
-        <h3><i class="fas fa-chair"></i> Toplam Masaya Oturan</h3>
-        <p class="big-number">{{ summaryData.totalPresented || 0 }}</p>
+        <h3><i class="fas fa-chair" /> Toplam Masaya Oturan</h3>
+        <p class="big-number">
+          {{ summaryData.totalPresented || 0 }}
+        </p>
         <small>Dağıtım sonrası sunuma katılan aile sayısı.</small>
       </div>
 
       <div class="summary-card">
-        <h3><i class="fas fa-border-all"></i> Toplam Masa</h3>
-        <p class="big-number">{{ summaryData.totalTables || 0 }}</p>
+        <h3><i class="fas fa-border-all" /> Toplam Masa</h3>
+        <p class="big-number">
+          {{ summaryData.totalTables || 0 }}
+        </p>
         <small>Sunum yapılan toplam masa sayısı.</small>
       </div>
 
       <div class="summary-card accent">
-        <h3><i class="fas fa-bullseye"></i> Davet ➔ Dağıtım Verimi</h3>
-        <p class="big-number">{{ summaryData.efficiencyInvitationToDistribution || 0 }}%</p>
+        <h3><i class="fas fa-bullseye" /> Davet ➔ Dağıtım Verimi</h3>
+        <p class="big-number">
+          {{ summaryData.efficiencyInvitationToDistribution || 0 }}%
+        </p>
         <small>Davet edilenlerin ne kadarının dağıtıma geçtiği.</small>
       </div>
 
       <div class="summary-card accent">
-        <h3><i class="fas fa-handshake"></i> Dağıtım ➔ Masa Verimi</h3>
-        <p class="big-number">{{ summaryData.efficiencyDistributionToPresentation || 0 }}%</p>
+        <h3><i class="fas fa-handshake" /> Dağıtım ➔ Masa Verimi</h3>
+        <p class="big-number">
+          {{ summaryData.efficiencyDistributionToPresentation || 0 }}%
+        </p>
         <small>Dağıtılanların ne kadarının masaya oturduğu.</small>
       </div>
 
       <div class="leaderboard-container">
-        <h2><i class="fas fa-trophy"></i> Liderlik Tablosu</h2>
-        <div v-if="leaderboardData.length === 0" class="no-data">
+        <h2><i class="fas fa-trophy" /> Liderlik Tablosu</h2>
+        <div
+          v-if="leaderboardData.length === 0"
+          class="no-data"
+        >
           {{ isDevelopment ? 'Geliştirme modunda test verileri yüklenebilir.' : 'Henüz veri yok.' }}
         </div>
-        <ol v-else class="leaderboard">
+        <ol
+          v-else
+          class="leaderboard"
+        >
           <li
             v-for="(team, index) in leaderboardData"
             :key="team.name"
@@ -84,18 +128,29 @@
       </div>
     </div>
 
-    <div v-else class="no-data">
+    <div
+      v-else
+      class="no-data"
+    >
       <div class="no-data-content">
         <h3>📊 Veri Bulunamadı</h3>
         <p>Seçilen tarih aralığında özet veri bulunamadı.</p>
-        <div v-if="isDevelopment" class="dev-tips">
+        <div
+          v-if="isDevelopment"
+          class="dev-tips"
+        >
           <h4>🛠️ Geliştirme İpuçları:</h4>
           <ul>
             <li>Firebase Emulator çalışıyor mu? <code>firebase emulators:start</code></li>
             <li>Firestore'da test verileri var mı?</li>
             <li>Tarih aralığını genişletmeyi deneyin</li>
           </ul>
-          <button class="demo-btn" @click="loadDemoData">🎭 Demo Verileri Yükle</button>
+          <button
+            class="demo-btn"
+            @click="loadDemoData"
+          >
+            🎭 Demo Verileri Yükle
+          </button>
         </div>
       </div>
     </div>

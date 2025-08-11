@@ -11,8 +11,11 @@ import { RouterLink } from 'vue-router'
     <div class="tool-list card">
       <h3>Mevcut Araçlar</h3>
       <nav>
-        <RouterLink to="/tools/form-builder" class="tool-link">
-          <i class="fas fa-file-alt"></i> Form Oluşturucu
+        <RouterLink
+          to="/tools/form-builder"
+          class="tool-link"
+        >
+          <i class="fas fa-file-alt" /> Form Oluşturucu
           <small>Yeni formlar tanımlayın ve verileri girin.</small>
         </RouterLink>
       </nav>

@@ -207,47 +207,87 @@ watchEffect(() => {
   <div class="arrival-report">
     <div class="header-actions">
       <h3>Geliş Yönetimi Raporu</h3>
-      <button class="whatsapp-share-btn" @click="generateReport">
-        <i class="fab fa-whatsapp"></i> WhatsApp ile Paylaş
+      <button
+        class="whatsapp-share-btn"
+        @click="generateReport"
+      >
+        <i class="fab fa-whatsapp" /> WhatsApp ile Paylaş
       </button>
     </div>
     <p>Seçili güne ait Davet Girişi ve Tesise Gelen misafirlerin birleşik toplamlarıdır.</p>
 
-    <div v-if="isLoading" class="loading">Rapor oluşturuluyor...</div>
-    <div v-else-if="Object.keys(combinedData).length === 0" class="no-data">
+    <div
+      v-if="isLoading"
+      class="loading"
+    >
+      Rapor oluşturuluyor...
+    </div>
+    <div
+      v-else-if="Object.keys(combinedData).length === 0"
+      class="no-data"
+    >
       Gösterilecek veri bulunamadı.
     </div>
-    <div v-else class="card">
-      <div v-for="(teams, groupName) in combinedData" :key="groupName" class="group-section">
-        <h4 class="group-header">{{ groupName }}</h4>
+    <div
+      v-else
+      class="card"
+    >
+      <div
+        v-for="(teams, groupName) in combinedData"
+        :key="groupName"
+        class="group-section"
+      >
+        <h4 class="group-header">
+          {{ groupName }}
+        </h4>
         <div class="table-grid header">
-          <div class="team-name">Ekip Adı</div>
+          <div class="team-name">
+            Ekip Adı
+          </div>
           <div>Toplam UP</div>
           <div>Toplam Oneleg</div>
           <div>Toplam Single</div>
-          <div class="total-col">Ekip Toplam</div>
+          <div class="total-col">
+            Ekip Toplam
+          </div>
         </div>
-        <div v-for="team in teams" :key="team.id" class="table-grid row">
-          <div class="team-name">{{ team.teamName }}</div>
+        <div
+          v-for="team in teams"
+          :key="team.id"
+          class="table-grid row"
+        >
+          <div class="team-name">
+            {{ team.teamName }}
+          </div>
           <div>{{ team.totalUp }}</div>
           <div>{{ team.totalOneleg }}</div>
           <div>{{ team.totalSingle }}</div>
-          <div class="total-col">{{ team.totalUp + team.totalOneleg + team.totalSingle }}</div>
+          <div class="total-col">
+            {{ team.totalUp + team.totalOneleg + team.totalSingle }}
+          </div>
         </div>
         <div class="table-grid footer">
-          <div class="team-name">Grup Toplamı</div>
+          <div class="team-name">
+            Grup Toplamı
+          </div>
           <div>{{ reportTotals.group[groupName]?.up }}</div>
           <div>{{ reportTotals.group[groupName]?.oneleg }}</div>
           <div>{{ reportTotals.group[groupName]?.single }}</div>
-          <div class="total-col">{{ reportTotals.group[groupName]?.total }}</div>
+          <div class="total-col">
+            {{ reportTotals.group[groupName]?.total }}
+          </div>
         </div>
       </div>
       <div class="table-grid grand-total">
-        <div class="team-name">GENEL TOPLAM</div>
+        <div class="team-name">
+          GENEL TOPLAM
+        </div>
         <div>{{ reportTotals.grand.up }}</div>
         <div>{{ reportTotals.grand.oneleg }}</div>
         <div>{{ reportTotals.grand.single }}</div>
-        <div class="total-col">{{ reportTotals.grand.total }}</div>
+        <div class="total-col">
+          {{ reportTotals.grand.total }}
+        </div>
       </div>
     </div>
 

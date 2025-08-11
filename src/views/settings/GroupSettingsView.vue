@@ -147,17 +147,29 @@ onMounted(fetchSalesGroups)
     <div class="card data-actions-card">
       <h3>Toplu Veri İşlemleri</h3>
       <div class="button-group">
-        <button class="btn-secondary" @click="downloadTemplate">
-          <i class="fas fa-file-alt"></i> Boş Şablon İndir
+        <button
+          class="btn-secondary"
+          @click="downloadTemplate"
+        >
+          <i class="fas fa-file-alt" /> Boş Şablon İndir
         </button>
-        <button class="btn-success" @click="triggerFileUpload">
-          <i class="fas fa-file-import"></i> CSV'den İçe Aktar
+        <button
+          class="btn-success"
+          @click="triggerFileUpload"
+        >
+          <i class="fas fa-file-import" /> CSV'den İçe Aktar
         </button>
-        <button class="btn-info" @click="exportData">
-          <i class="fas fa-file-export"></i> Tümünü Dışa Aktar
+        <button
+          class="btn-info"
+          @click="exportData"
+        >
+          <i class="fas fa-file-export" /> Tümünü Dışa Aktar
         </button>
-        <button class="btn-danger" @click="confirmClearAllData">
-          <i class="fas fa-trash-alt"></i> Tüm Grupları Sil
+        <button
+          class="btn-danger"
+          @click="confirmClearAllData"
+        >
+          <i class="fas fa-trash-alt" /> Tüm Grupları Sil
         </button>
       </div>
       <input
@@ -166,7 +178,7 @@ onMounted(fetchSalesGroups)
         style="display: none"
         accept=".csv"
         @change="handleFileUpload"
-      />
+      >
     </div>
 
     <div class="card">
@@ -185,7 +197,10 @@ onMounted(fetchSalesGroups)
           class="form-input"
           placeholder="Grup Adı"
         />
-        <ErrorMessage name="name" class="error-message" />
+        <ErrorMessage
+          name="name"
+          class="error-message"
+        />
 
         <Field
           v-model.number="editingGroup.sortOrder"
@@ -193,7 +208,10 @@ onMounted(fetchSalesGroups)
           type="number"
           class="order-input"
         />
-        <ErrorMessage name="sortOrder" class="error-message" />
+        <ErrorMessage
+          name="sortOrder"
+          class="error-message"
+        />
 
         <div class="checkbox-wrapper">
           <Field
@@ -204,8 +222,19 @@ onMounted(fetchSalesGroups)
           />
           <label>Dağıtıcı Grup mu?</label>
         </div>
-        <button type="submit" :disabled="!meta.valid">Güncelle</button>
-        <button type="button" class="btn-cancel" @click="cancelEdit">İptal</button>
+        <button
+          type="submit"
+          :disabled="!meta.valid"
+        >
+          Güncelle
+        </button>
+        <button
+          type="button"
+          class="btn-cancel"
+          @click="cancelEdit"
+        >
+          İptal
+        </button>
       </Form>
 
       <Form
@@ -215,8 +244,16 @@ onMounted(fetchSalesGroups)
         :validation-schema="addGroupSchema"
         @submit="addSalesGroup"
       >
-        <Field name="newGroupName" type="text" placeholder="Yeni grup adı" class="form-input" />
-        <ErrorMessage name="newGroupName" class="error-message" />
+        <Field
+          name="newGroupName"
+          type="text"
+          placeholder="Yeni grup adı"
+          class="form-input"
+        />
+        <ErrorMessage
+          name="newGroupName"
+          class="error-message"
+        />
 
         <Field
           name="newGroupOrder"
@@ -225,17 +262,32 @@ onMounted(fetchSalesGroups)
           placeholder="Sıra"
           :initial-value="99"
         />
-        <ErrorMessage name="newGroupOrder" class="error-message" />
+        <ErrorMessage
+          name="newGroupOrder"
+          class="error-message"
+        />
 
         <div class="checkbox-wrapper">
-          <Field name="newGroupIsDistributor" type="checkbox" :value="true" />
+          <Field
+            name="newGroupIsDistributor"
+            type="checkbox"
+            :value="true"
+          />
           <label>Dağıtıcı Grup mu?</label>
         </div>
-        <button type="submit" :disabled="!meta.valid">Ekle</button>
+        <button
+          type="submit"
+          :disabled="!meta.valid"
+        >
+          Ekle
+        </button>
       </Form>
 
       <ul class="item-list">
-        <li v-for="group in salesGroups" :key="group.id">
+        <li
+          v-for="group in salesGroups"
+          :key="group.id"
+        >
           <div class="group-info">
             <span class="sort-order">{{ group.sortOrder }}</span>
             <span>{{ group.name }}</span>
@@ -243,11 +295,21 @@ onMounted(fetchSalesGroups)
               v-if="group.isDistributor"
               class="fas fa-share-alt distributor-icon"
               title="Bu bir dağıtıcı gruptur"
-            ></i>
+            />
           </div>
           <div class="actions">
-            <button class="edit-btn" @click="startEditGroup(group)">Düzenle</button>
-            <button class="delete-btn" @click="deleteSalesGroup(group.id)">Sil</button>
+            <button
+              class="edit-btn"
+              @click="startEditGroup(group)"
+            >
+              Düzenle
+            </button>
+            <button
+              class="delete-btn"
+              @click="deleteSalesGroup(group.id)"
+            >
+              Sil
+            </button>
           </div>
         </li>
       </ul>

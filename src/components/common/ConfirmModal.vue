@@ -43,26 +43,43 @@ watch(
 </script>
 
 <template>
-  <BaseModal :show="show" @close="emit('close')">
+  <BaseModal
+    :show="show"
+    @close="emit('close')"
+  >
     <template #header>
       <h3 class="modal-title">
-        <i class="fas fa-exclamation-triangle"></i>
+        <i class="fas fa-exclamation-triangle" />
         {{ title }}
       </h3>
     </template>
 
-    <p class="modal-message">{{ message }}</p>
+    <p class="modal-message">
+      {{ message }}
+    </p>
 
-    <div v-if="confirmationText" class="confirmation-input-area">
+    <div
+      v-if="confirmationText"
+      class="confirmation-input-area"
+    >
       <p>
         Lütfen devam etmek için aşağıdaki metni kutucuğa yazın:
         <strong>{{ confirmationText }}</strong>
       </p>
-      <input v-model="userInput" type="text" :placeholder="confirmationText" />
+      <input
+        v-model="userInput"
+        type="text"
+        :placeholder="confirmationText"
+      >
     </div>
 
     <template #actions>
-      <button class="btn-cancel" @click="emit('close')">İptal</button>
+      <button
+        class="btn-cancel"
+        @click="emit('close')"
+      >
+        İptal
+      </button>
       <button
         class="btn-confirm-danger"
         :disabled="confirmationText && !isConfirmationMatch"

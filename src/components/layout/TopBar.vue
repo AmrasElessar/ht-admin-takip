@@ -61,22 +61,37 @@ onUnmounted(() => {
       <span>Sistem Adı: HT Admin Takip</span>
     </div>
     <div class="right-section">
-      <button class="theme-toggle-btn" title="Temayı Değiştir" @click="themeStore.toggleTheme">
-        <i v-if="themeStore.currentTheme === 'light'" class="fas fa-moon"></i>
-        <i v-else class="fas fa-sun"></i>
+      <button
+        class="theme-toggle-btn"
+        title="Temayı Değiştir"
+        @click="themeStore.toggleTheme"
+      >
+        <i
+          v-if="themeStore.currentTheme === 'light'"
+          class="fas fa-moon"
+        />
+        <i
+          v-else
+          class="fas fa-sun"
+        />
       </button>
       <span>Saat: {{ currentTime }}</span>
       <span>Tarih: {{ currentDate }}</span>
 
       <div class="online-container">
         <span class="online-indicator">
-          <i class="fas fa-circle online-icon"></i>
+          <i class="fas fa-circle online-icon" />
           Online: ({{ userStore.onlineUserCount }})
         </span>
         <div class="online-tooltip">
-          <div v-if="userStore.onlineUserCount === 0">Kimse aktif değil.</div>
+          <div v-if="userStore.onlineUserCount === 0">
+            Kimse aktif değil.
+          </div>
           <ul>
-            <li v-for="user in userStore.onlineUsers" :key="user.uid">
+            <li
+              v-for="user in userStore.onlineUsers"
+              :key="user.uid"
+            >
               <span>{{ user.displayName }}</span>
               <span class="tab-info">{{ user.currentTab }}</span>
             </li>
@@ -84,8 +99,11 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <button class="logout-btn" @click="handleSignOut">
-        <i class="fas fa-sign-out-alt"></i> Çıkış Yap
+      <button
+        class="logout-btn"
+        @click="handleSignOut"
+      >
+        <i class="fas fa-sign-out-alt" /> Çıkış Yap
       </button>
     </div>
   </header>

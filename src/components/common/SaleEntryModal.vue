@@ -34,7 +34,10 @@ const handleSave = () => {
 </script>
 
 <template>
-  <BaseModal :show="show" @close="$emit('close')">
+  <BaseModal
+    :show="show"
+    @close="$emit('close')"
+  >
     <template #header>
       <h3>Satış Bilgilerini Girin</h3>
       <small>{{ record.guestName }}</small>
@@ -43,21 +46,46 @@ const handleSave = () => {
     <div class="form-grid">
       <div class="form-group">
         <label for="volume">Volume</label>
-        <input id="volume" v-model.number="saleData.volume" type="number" min="0" />
+        <input
+          id="volume"
+          v-model.number="saleData.volume"
+          type="number"
+          min="0"
+        >
       </div>
       <div class="form-group">
         <label for="downPayment">Peşinat</label>
-        <input id="downPayment" v-model.number="saleData.downPayment" type="number" min="0" />
+        <input
+          id="downPayment"
+          v-model.number="saleData.downPayment"
+          type="number"
+          min="0"
+        >
       </div>
       <div class="form-group">
         <label for="installments">Vade Sayısı</label>
-        <input id="installments" v-model.number="saleData.installments" type="number" min="0" />
+        <input
+          id="installments"
+          v-model.number="saleData.installments"
+          type="number"
+          min="0"
+        >
       </div>
     </div>
 
     <template #actions>
-      <button class="btn-cancel" @click="$emit('close')">İptal</button>
-      <button class="btn-confirm" @click="handleSave">Kaydet</button>
+      <button
+        class="btn-cancel"
+        @click="$emit('close')"
+      >
+        İptal
+      </button>
+      <button
+        class="btn-confirm"
+        @click="handleSave"
+      >
+        Kaydet
+      </button>
     </template>
   </BaseModal>
 </template>

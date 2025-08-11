@@ -83,7 +83,10 @@ const createProfileForCurrentUser = async () => {
         olmak için bu fonksiyonu manuel tetikleyebilirsiniz (sadece test amaçlı, çünkü onAuthCreate
         trigger'ı devre dışı).
       </p>
-      <button :disabled="isLoadingProfile || !isUserLoggedIn" @click="createProfileForCurrentUser">
+      <button
+        :disabled="isLoadingProfile || !isUserLoggedIn"
+        @click="createProfileForCurrentUser"
+      >
         <span v-if="isLoadingProfile">Profil Oluşturuluyor...</span>
         <span v-else>KENDİ PROFİLİMİ OLUŞTUR (Firestore)</span>
       </button>

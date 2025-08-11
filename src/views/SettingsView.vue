@@ -4,8 +4,11 @@
       <h1>Ayarlar</h1>
       <nav>
         <!-- Her kullanıcı kendi profiline erişebilir -->
-        <RouterLink to="/ayarlar/profil" class="nav-link">
-          <i class="fas fa-user-circle"></i> Profilim
+        <RouterLink
+          to="/ayarlar/profil"
+          class="nav-link"
+        >
+          <i class="fas fa-user-circle" /> Profilim
         </RouterLink>
 
         <!-- Sadece Kurucu ve Super Admin -->
@@ -14,27 +17,43 @@
           to="/ayarlar/kullanicilar"
           class="nav-link"
         >
-          <i class="fas fa-users-cog"></i> Kullanıcı Yönetimi
+          <i class="fas fa-users-cog" /> Kullanıcı Yönetimi
         </RouterLink>
 
         <!-- Sadece Kurucu -->
-        <RouterLink v-if="permissions.canEditFacilities" to="/ayarlar/tesisler" class="nav-link">
-          <i class="fas fa-building"></i> Tesis Yönetimi
+        <RouterLink
+          v-if="permissions.canEditFacilities"
+          to="/ayarlar/tesisler"
+          class="nav-link"
+        >
+          <i class="fas fa-building" /> Tesis Yönetimi
         </RouterLink>
 
         <!-- Kurucu ve Super Admin -->
-        <RouterLink v-if="permissions.canEditSalesGroups" to="/ayarlar/gruplar" class="nav-link">
-          <i class="fas fa-users"></i> Grup Yönetimi
+        <RouterLink
+          v-if="permissions.canEditSalesGroups"
+          to="/ayarlar/gruplar"
+          class="nav-link"
+        >
+          <i class="fas fa-users" /> Grup Yönetimi
         </RouterLink>
 
         <!-- Kurucu ve Super Admin -->
-        <RouterLink v-if="permissions.canEditTeams" to="/ayarlar/ekipler" class="nav-link">
-          <i class="fas fa-user-friends"></i> Ekip Yönetimi
+        <RouterLink
+          v-if="permissions.canEditTeams"
+          to="/ayarlar/ekipler"
+          class="nav-link"
+        >
+          <i class="fas fa-user-friends" /> Ekip Yönetimi
         </RouterLink>
 
         <!-- Sadece Kurucu -->
-        <RouterLink v-if="permissions.canEditAnnouncements" to="/ayarlar/duyuru" class="nav-link">
-          <i class="fas fa-bullhorn"></i> Duyuru Yönetimi
+        <RouterLink
+          v-if="permissions.canEditAnnouncements"
+          to="/ayarlar/duyuru"
+          class="nav-link"
+        >
+          <i class="fas fa-bullhorn" /> Duyuru Yönetimi
         </RouterLink>
 
         <!-- Sadece Kurucu -->
@@ -43,7 +62,7 @@
           to="/ayarlar/whatsapp"
           class="nav-link"
         >
-          <i class="fab fa-whatsapp"></i> WhatsApp Şablonu
+          <i class="fab fa-whatsapp" /> WhatsApp Şablonu
         </RouterLink>
 
         <!-- Sadece Kurucu - Tehlikeli alan -->
@@ -52,7 +71,7 @@
           to="/ayarlar/reset"
           class="nav-link danger-link"
         >
-          <i class="fas fa-bomb"></i> Sistemi Sıfırla
+          <i class="fas fa-bomb" /> Sistemi Sıfırla
         </RouterLink>
       </nav>
     </aside>

@@ -72,9 +72,16 @@ watch(
   <div>
     <h2>Kullanıcı Yönetimi</h2>
     <p>Sistemdeki tüm kullanıcıları, rollerini ve atamalarını buradan yönetin.</p>
-    <div v-if="isLoading">Veriler yükleniyor...</div>
-    <div v-else-if="userStore.allUsers.length === 0">Henüz hiç kullanıcı bulunamadı.</div>
-    <div v-else class="user-list">
+    <div v-if="isLoading">
+      Veriler yükleniyor...
+    </div>
+    <div v-else-if="userStore.allUsers.length === 0">
+      Henüz hiç kullanıcı bulunamadı.
+    </div>
+    <div
+      v-else
+      class="user-list"
+    >
       <Form
         v-for="user in userStore.allUsers"
         :key="user.id"
@@ -87,11 +94,11 @@ watch(
           <img
             :src="
               user.photoURL ||
-              `https://ui-avatars.com/api/?name=${user.displayName || user.email}&background=random&color=fff`
+                `https://ui-avatars.com/api/?name=${user.displayName || user.email}&background=random&color=fff`
             "
             alt="avatar"
             class="avatar"
-          />
+          >
           <div>
             <strong>{{ user.displayName || 'İsim Yok' }}</strong>
             <small>{{ user.email }}</small>
@@ -101,18 +108,38 @@ watch(
         <div class="user-controls">
           <div class="form-group">
             <label>Durum</label>
-            <Field v-model="user.disabled" name="disabled" as="select">
-              <option :value="false">Aktif</option>
-              <option :value="true">Engelli</option>
+            <Field
+              v-model="user.disabled"
+              name="disabled"
+              as="select"
+            >
+              <option :value="false">
+                Aktif
+              </option>
+              <option :value="true">
+                Engelli
+              </option>
             </Field>
           </div>
           <div class="form-group">
             <label>Rol</label>
-            <Field v-model="user.role" name="role" as="select">
-              <option value="yok">Rol Yok</option>
-              <option value="kullanici">Kullanıcı</option>
-              <option value="superadmin">Super Admin</option>
-              <option value="kurucu">Kurucu</option>
+            <Field
+              v-model="user.role"
+              name="role"
+              as="select"
+            >
+              <option value="yok">
+                Rol Yok
+              </option>
+              <option value="kullanici">
+                Kullanıcı
+              </option>
+              <option value="superadmin">
+                Super Admin
+              </option>
+              <option value="kurucu">
+                Kurucu
+              </option>
             </Field>
           </div>
 
@@ -122,7 +149,11 @@ watch(
           >
             <label>Atanacak Tesisler</label>
             <div class="checkbox-container">
-              <label v-for="facility in facilities" :key="facility.id" class="checkbox-label">
+              <label
+                v-for="facility in facilities"
+                :key="facility.id"
+                class="checkbox-label"
+              >
                 <Field
                   v-model="user.assignedFacilityIds"
                   name="assignedFacilityIds"
@@ -136,7 +167,13 @@ watch(
         </div>
 
         <div class="user-actions">
-          <button type="submit" class="save-btn" :disabled="!meta.dirty">Kaydet</button>
+          <button
+            type="submit"
+            class="save-btn"
+            :disabled="!meta.dirty"
+          >
+            Kaydet
+          </button>
         </div>
       </Form>
     </div>

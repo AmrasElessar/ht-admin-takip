@@ -42,19 +42,40 @@ const handleImport = () => {
 </script>
 
 <template>
-  <div class="modal-backdrop" @click="emit('close')">
-    <div class="modal-content" @click.stop>
+  <div
+    class="modal-backdrop"
+    @click="emit('close')"
+  >
+    <div
+      class="modal-content"
+      @click.stop
+    >
       <header class="modal-header">
         <h3>CSV Dosyasından İçe Aktar</h3>
       </header>
       <div class="modal-body">
         <p>Lütfen belirtilen şablona uygun bir <strong>.csv</strong> dosyası seçin.</p>
         <p>Gerekli sütunlar: <strong>isim, telefon, notlar, tip, durum</strong></p>
-        <input type="file" accept=".csv" @change="handleFileChange" />
-        <p v-if="feedback" class="feedback">{{ feedback }}</p>
+        <input
+          type="file"
+          accept=".csv"
+          @change="handleFileChange"
+        >
+        <p
+          v-if="feedback"
+          class="feedback"
+        >
+          {{ feedback }}
+        </p>
       </div>
       <footer class="modal-footer">
-        <button type="button" class="btn-secondary" @click="emit('close')">İptal</button>
+        <button
+          type="button"
+          class="btn-secondary"
+          @click="emit('close')"
+        >
+          İptal
+        </button>
         <button
           type="button"
           class="btn-primary"

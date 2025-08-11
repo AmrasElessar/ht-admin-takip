@@ -45,7 +45,10 @@ const handleAssign = async (team) => {
       <h3>
         Çekilişe Uygun Davet Sayısı: <strong>{{ invitationStore.lotteryPool.length }}</strong>
       </h3>
-      <div v-if="lastAssignment" class="last-assignment">
+      <div
+        v-if="lastAssignment"
+        class="last-assignment"
+      >
         Son Atama: <strong>{{ lastAssignment.invitationId.slice(0, 8) }}...</strong> ID'li davet,
         <strong>{{ lastAssignment.teamName }}</strong> ekibine verildi.
       </div>
@@ -63,7 +66,7 @@ const handleAssign = async (team) => {
           :disabled="isAssigning || invitationStore.lotteryPool.length === 0"
           @click="handleAssign(team)"
         >
-          <i class="fas fa-ticket-alt"></i> Rastgele Davet Ata
+          <i class="fas fa-ticket-alt" /> Rastgele Davet Ata
         </button>
       </div>
     </div>

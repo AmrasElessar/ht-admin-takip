@@ -8,7 +8,7 @@ import { toast } from '@/plugins/toast' // ✅ DOĞRU: kendi global interface'in
  * @param {import('vue').App} app - Vue uygulama instance'ı.
  */
 export function setupGlobalErrorHandler(app) {
-  app.config.errorHandler = (error, _instance, _info) => {
+  app.config.errorHandler = (error) => {
     console.error('MERKEZİ HATA YAKALAYICI:', error)
     toast.error('Beklenmedik bir hata oluştu.')
   }

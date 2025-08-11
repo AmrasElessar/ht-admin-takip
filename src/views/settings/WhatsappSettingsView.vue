@@ -90,7 +90,10 @@ onMounted(fetchTemplates)
         >
           Tanıtım Katılım Raporu
         </button>
-        <button :class="{ active: activeTemplateTab === 'bus' }" @click="activeTemplateTab = 'bus'">
+        <button
+          :class="{ active: activeTemplateTab === 'bus' }"
+          @click="activeTemplateTab = 'bus'"
+        >
           Otobüs Raporu
         </button>
         <button
@@ -107,39 +110,48 @@ onMounted(fetchTemplates)
         </button>
       </div>
 
-      <div v-if="isLoading">Şablonlar yükleniyor...</div>
-      <div v-else class="template-editor">
+      <div v-if="isLoading">
+        Şablonlar yükleniyor...
+      </div>
+      <div
+        v-else
+        class="template-editor"
+      >
         <textarea
           v-if="activeTemplateTab === 'invitation'"
           v-model="templates.invitation"
           rows="18"
-        ></textarea>
+        />
         <textarea
           v-if="activeTemplateTab === 'arrival'"
           v-model="templates.arrival"
           rows="18"
-        ></textarea>
+        />
         <textarea
           v-if="activeTemplateTab === 'voucher'"
           v-model="templates.voucher"
           rows="18"
-        ></textarea>
-        <textarea v-if="activeTemplateTab === 'bus'" v-model="templates.bus" rows="18"></textarea>
+        />
+        <textarea
+          v-if="activeTemplateTab === 'bus'"
+          v-model="templates.bus"
+          rows="18"
+        />
         <textarea
           v-if="activeTemplateTab === 'invitation_report'"
           v-model="templates.invitation_report"
           rows="18"
-        ></textarea>
+        />
         <textarea
           v-if="activeTemplateTab === 'facility_arrival_report'"
           v-model="templates.facility_arrival_report"
           rows="18"
-        ></textarea>
+        />
         <textarea
           v-if="activeTemplateTab === 'presentation_report'"
           v-model="templates.presentation_report"
           rows="18"
-        ></textarea>
+        />
 
         <div class="variables-guide">
           <h4>Kullanılabilir Değişkenler</h4>
@@ -148,10 +160,10 @@ onMounted(fetchTemplates)
           <div
             v-if="
               activeTemplateTab === 'invitation' ||
-              activeTemplateTab === 'arrival' ||
-              activeTemplateTab === 'voucher' ||
-              activeTemplateTab === 'facility_arrival_report' ||
-              activeTemplateTab === 'presentation_report'
+                activeTemplateTab === 'arrival' ||
+                activeTemplateTab === 'voucher' ||
+                activeTemplateTab === 'facility_arrival_report' ||
+                activeTemplateTab === 'presentation_report'
             "
           >
             <ul>
@@ -199,7 +211,9 @@ onMounted(fetchTemplates)
               <li v-if="activeTemplateTab === 'invitation' || activeTemplateTab === 'arrival'">
                 <code>[EKIP_UP]</code>, <code>[EKIP_ONELEG]</code>, <code>[EKIP_SINGLE]</code>
               </li>
-              <li v-if="activeTemplateTab === 'arrival'"><code>[EKIP_MASA]</code></li>
+              <li v-if="activeTemplateTab === 'arrival'">
+                <code>[EKIP_MASA]</code>
+              </li>
               <li v-if="activeTemplateTab === 'voucher'">
                 <code>[EKIP_MISAFIR]</code>, <code>[EKIP_PERSONEL]</code>
               </li>
@@ -253,7 +267,12 @@ onMounted(fetchTemplates)
           </div>
         </div>
       </div>
-      <button class="save-btn" @click="saveTemplates">Tüm Şablonları Kaydet</button>
+      <button
+        class="save-btn"
+        @click="saveTemplates"
+      >
+        Tüm Şablonları Kaydet
+      </button>
     </div>
   </div>
 </template>

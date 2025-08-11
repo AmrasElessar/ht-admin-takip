@@ -36,43 +36,75 @@ const openDetailModal = (invitation) => {
     <h1>Davet Takip Paneli</h1>
     <div class="page-header">
       <h1>Davet Takip Paneli</h1>
-      <button @click="isImportModalOpen = true">CSV'den İçe Aktar</button>
+      <button @click="isImportModalOpen = true">
+        CSV'den İçe Aktar
+      </button>
     </div>
-    <div v-if="invitationStore.isLoading">Yükleniyor...</div>
-    <div v-else class="lists-container">
-      <details class="accordion" open>
+    <div v-if="invitationStore.isLoading">
+      Yükleniyor...
+    </div>
+    <div
+      v-else
+      class="lists-container"
+    >
+      <details
+        class="accordion"
+        open
+      >
         <summary>
-          <h2><i class="fas fa-bus"></i> Tur Listesi ({{ tourList.length }})</h2>
+          <h2><i class="fas fa-bus" /> Tur Listesi ({{ tourList.length }})</h2>
         </summary>
         <ul class="invitation-list">
-          <li v-if="tourList.length === 0">Bu kategoride kayıt yok.</li>
-          <li v-for="item in tourList" :key="item.id" class="list-item">
+          <li v-if="tourList.length === 0">
+            Bu kategoride kayıt yok.
+          </li>
+          <li
+            v-for="item in tourList"
+            :key="item.id"
+            class="list-item"
+          >
             <span class="status">{{ item.status.toUpperCase() }}</span>
             <span class="name">{{ item.details.name || 'Detay Girilmemiş' }}</span>
             <span class="phone">{{ item.details.phone }}</span>
-            <button @click="openDetailModal(item)">Detay Gir/Düzenle</button>
+            <button @click="openDetailModal(item)">
+              Detay Gir/Düzenle
+            </button>
           </li>
         </ul>
       </details>
 
-      <details class="accordion" open>
+      <details
+        class="accordion"
+        open
+      >
         <summary>
-          <h2><i class="fas fa-car"></i> Kendi Aracı Listesi ({{ ownVehicleList.length }})</h2>
+          <h2><i class="fas fa-car" /> Kendi Aracı Listesi ({{ ownVehicleList.length }})</h2>
         </summary>
         <ul class="invitation-list">
-          <li v-if="ownVehicleList.length === 0">Bu kategoride kayıt yok.</li>
-          <li v-for="item in ownVehicleList" :key="item.id" class="list-item">
+          <li v-if="ownVehicleList.length === 0">
+            Bu kategoride kayıt yok.
+          </li>
+          <li
+            v-for="item in ownVehicleList"
+            :key="item.id"
+            class="list-item"
+          >
             <span class="status">{{ item.status.toUpperCase() }}</span>
             <span class="name">{{ item.details.name || 'Detay Girilmemiş' }}</span>
             <span class="phone">{{ item.details.phone }}</span>
-            <button @click="openDetailModal(item)">Detay Gir/Düzenle</button>
+            <button @click="openDetailModal(item)">
+              Detay Gir/Düzenle
+            </button>
           </li>
         </ul>
       </details>
     </div>
   </div>
 
-  <CsvImportModal v-if="isImportModalOpen" @close="isImportModalOpen = false" />
+  <CsvImportModal
+    v-if="isImportModalOpen"
+    @close="isImportModalOpen = false"
+  />
   <InvitationDetailModal
     v-if="isModalOpen"
     :invitation="selectedInvitation"

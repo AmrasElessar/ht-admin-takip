@@ -26,39 +26,49 @@ const handleInput = (teamId, dataType, value) => {
     <h4>{{ title }}</h4>
     <div class="data-grid">
       <div class="grid-row header">
-        <div class="team-name">Ekip Adı</div>
+        <div class="team-name">
+          Ekip Adı
+        </div>
         <div>UP</div>
         <div>Oneleg</div>
         <div>Single</div>
-        <div class="total-col">Ekip Toplam</div>
+        <div class="total-col">
+          Ekip Toplam
+        </div>
       </div>
-      <div v-for="team in teams" :key="team.id" class="grid-row">
-        <div class="team-name">{{ team.name }}</div>
+      <div
+        v-for="team in teams"
+        :key="team.id"
+        class="grid-row"
+      >
+        <div class="team-name">
+          {{ team.name }}
+        </div>
 
         <input
           :value="poolData[team.id]?.up"
           type="number"
           min="0"
           @input="handleInput(team.id, 'up', $event.target.value)"
-        />
+        >
         <input
           :value="poolData[team.id]?.oneleg"
           type="number"
           min="0"
           @input="handleInput(team.id, 'oneleg', $event.target.value)"
-        />
+        >
         <input
           :value="poolData[team.id]?.single"
           type="number"
           min="0"
           @input="handleInput(team.id, 'single', $event.target.value)"
-        />
+        >
 
         <div class="total-col">
           {{
             (poolData[team.id]?.up || 0) +
-            (poolData[team.id]?.oneleg || 0) +
-            (poolData[team.id]?.single || 0)
+              (poolData[team.id]?.oneleg || 0) +
+              (poolData[team.id]?.single || 0)
           }}
         </div>
       </div>

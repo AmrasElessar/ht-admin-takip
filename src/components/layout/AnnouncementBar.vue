@@ -34,8 +34,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="isEnabled" class="announcement-bar">
-    <div class="marquee-content" :style="{ animationDuration: speed + 's' }">
+  <div
+    v-if="isEnabled"
+    class="announcement-bar"
+  >
+    <div
+      class="marquee-content"
+      :style="{ animationDuration: speed + 's' }"
+    >
       <span>{{ announcementText }}</span>
       <span>{{ announcementText }}</span>
     </div>
